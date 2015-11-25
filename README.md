@@ -21,6 +21,7 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * George Heald <heald somewhere astron.nl>
 * Sarrvesh Sridhar <sarrvesh somewhere astro.rug.nl>
 * Andreas Horneffer <ahorneffer somewhere mpifr-bonn.mpg.de>
+
 With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> for developing the 
 genericpipeline.
 
