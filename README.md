@@ -2,7 +2,7 @@
 ## The LOFAR pre-facet calibration pipeline.
 
 Parsets for the genericpipeline that do the first calibration of LOFAR data. Originally in order 
-to prepare said data for the Factor facet calibration (https://github.com/revoltek/factor), but 
+to prepare said data for the Factor facet calibration (https://github.com/lofar-astron/factor), but 
 also useful if you don't plan to run Factor.
 
 It includes:
