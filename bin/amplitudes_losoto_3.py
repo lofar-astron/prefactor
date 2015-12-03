@@ -290,7 +290,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
         amp_yy_tmp = np.copy(amplitude_arraytmp[1,source_id,antenna_id,:,time])
         freq_tmp = amptab.freq[:]
         assert len(amp_xx_tmp[:]) == len(freq_tmp[:])
-        mask_xx = np.less(amp_xx_tmp,1.)
+        mask_xx = np.not_equal(amp_xx_tmp,1.)
         for bad in bad_sblist:
             mask_xx = np.logical_and(SBgrid!=bad,mask_xx)
         if np.sum(mask_xx)>2:
@@ -301,7 +301,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
             amps_array_flagged[antenna_id,time,:,0] = np.interp(freqs_new,freq_xx_tointer,amps_xx_tointer)
         elif time>0:
             amps_array_flagged[antenna_id,time,:,0] = amps_array_flagged[antenna_id,(time-1),:,0]
-        mask_yy = np.less(amp_yy_tmp,1.)
+        mask_yy = np.not_equal(amp_yy_tmp,1.)
         for bad in bad_sblist:
             mask_yy = np.logical_and(SBgrid!=bad,mask_yy)
         if np.sum(mask_yy)>2:
