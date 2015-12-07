@@ -242,6 +242,7 @@ dpppconcat.argument.msin.missingdata    =  True    #\ these two lines will make 
 dpppconcat.argument.msin.orderms        =  False   #/ concatenating data
 dpppconcat.argument.msout.datacolumn    =  DATA
 dpppconcat.argument.steps               =  [flag]      # run the aoflagger (this used to be an extra step)
+dpppconcat.argument.flag.type           =  aoflagger
 dpppconcat.argument.flag.keepstatistics =  false
 dpppconcat.argument.flag.memoryperc     =  10
 dpppconcat.argument.flag.strategy       =  {{ flagging_strategy }}
