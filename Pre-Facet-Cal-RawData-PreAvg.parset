@@ -311,7 +311,7 @@ gsmcalibtarget.control.type          =  python-calibrate-stand-alone
 gsmcalibtarget.control.max_per_node  =  12                            # feel free to adjust this value to match your system  
 gsmcalibtarget.argument.force        =  True 
 gsmcalibtarget.argument.observation  =  dpppaverage.output.mapfile
-gsmcalibtarget.argument.parmdb-name  =  instrument_directioninpendent
+gsmcalibtarget.argument.parmdb-name  =  instrument_directionindependent
 gsmcalibtarget.argument.parset       =  {{ gsm_cal_parset }}  
 gsmcalibtarget.argument.catalog      =  {{ target_skymodel }}     
 
@@ -320,7 +320,7 @@ gsmcal_parmmap.control.kind               =  plugin
 gsmcal_parmmap.control.type               =  createMapfile
 gsmcal_parmmap.control.method             =  add_suffix_to_file
 gsmcal_parmmap.control.mapfile_in         =  dpppaverage.output.mapfile
-gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directioninpendent
+gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
 gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir  
 gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
 
