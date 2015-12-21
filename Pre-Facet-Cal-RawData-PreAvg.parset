@@ -307,13 +307,15 @@ dpppaverage.argument.avg.freqstep        = {{ avg_freqstep_2nd }}     # average 
 dpppaverage.argument.avg.timestep        = {{ avg_timestep_2nd }}     # average to 4 second intervals 
 
 # phase calibration on the gsm skymodel
-gsmcalibtarget.control.type          =  python-calibrate-stand-alone  
-gsmcalibtarget.control.max_per_node  =  12                            # feel free to adjust this value to match your system  
-gsmcalibtarget.argument.force        =  True 
-gsmcalibtarget.argument.observation  =  dpppaverage.output.mapfile
-gsmcalibtarget.argument.parmdb-name  =  instrument_directionindependent
-gsmcalibtarget.argument.parset       =  {{ gsm_cal_parset }}  
-gsmcalibtarget.argument.catalog      =  {{ target_skymodel }}     
+gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
+gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system  
+gsmcalibtarget.argument.force                          =  True 
+gsmcalibtarget.argument.observation                    =  dpppaverage.output.mapfile
+gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
+gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
+gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 0  # default: solution-cell spans all frequency channels
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time = 1  # default: one solution per time-step
 
 # generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
 gsmcal_parmmap.control.kind               =  plugin
