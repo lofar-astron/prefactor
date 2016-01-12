@@ -337,7 +337,8 @@ print '# FREQUENCIES', len(amptab.freq)
 
 ppservers = ()
 # Creates jobserver with ncpus workers
-job_server = pp.Server(ncpus, ppservers=ppservers)
+mysecret = 'fit_clocktec'+str(os.getpid())
+job_server = pp.Server(ncpus, ppservers=ppservers, secret=mysecret)
 print "Starting pp with", job_server.get_ncpus(), "workers"
 
 
