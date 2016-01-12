@@ -89,7 +89,7 @@ dumb_smart_demixing_cal.control.type         =  pythonplugin
 dumb_smart_demixing_cal.control.executable   =  {{ dumb_smart_script }}
 dumb_smart_demixing_cal.argument.flags       =  sortmap_cal.output.mapfile
 dumb_smart_demixing_cal.argument.sourcelist  =  "CasA CygA VirA TauA"
-dumb_smart_demixing_cal.argument.elevlimit   =  10deg
+dumb_smart_demixing_cal.argument.elevlimit   =  0deg
 
 # run NDPPP on the calibrator data
 # My data is raw, non pre-processed data, so the parset looks different!
@@ -232,7 +232,7 @@ dumb_smart_demixing_target.control.type         =  pythonplugin
 dumb_smart_demixing_target.control.executable   =  {{ dumb_smart_script }}
 dumb_smart_demixing_target.argument.flags       =  sortmap_target.output.mapfile
 dumb_smart_demixing_target.argument.sourcelist  =  "CasA CygA VirA TauA"
-dumb_smart_demixing_target.argument.elevlimit   =  10deg
+dumb_smart_demixing_target.argument.elevlimit   =  0deg
 
 # run NDPPP on the calibrator data
 # My data is raw, non pre-processed data, so the parset looks different!
