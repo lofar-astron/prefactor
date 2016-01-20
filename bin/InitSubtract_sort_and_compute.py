@@ -252,8 +252,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
             file_single_map.append(DataProduct('localhost', filename, False))
         (imsize_high_res, imsize_low_res) = band.get_image_sizes(float(cellsize_highres_deg), float(cellsize_lowres_deg),
                                                                  float(fieldsize_highres), float(fieldsize_lowres))
-        high_size_map.append(DataProduct('localhost', str(imsize_high_res), False))
-        low_size_map.append(DataProduct('localhost', str(imsize_low_res), False))
+        high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res), False))
+        low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res), False))
 
     print "InitSubtract_sort_and_compute.py: Computing averaging steps."
     (freqstep, timestep) = bands[0].get_averaging_steps()

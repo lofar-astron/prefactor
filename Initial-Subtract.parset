@@ -131,7 +131,7 @@ wsclean_high1.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1.argument.scale                    =   0.00208
 wsclean_high1.argument.mem                      =   {{ max_percent_memory }}
 wsclean_high1.argument.j                        =   {{ max_cpus_per_img }}
-wsclean_high1.argument.tempdir                  =   {{ local_dir }}
+wsclean_high1.argument.tempdir                  =   {{ local_scratch_dir }}
 
 # make masks for the high-res images, length = nbands
 mask_high.control.type                          =   pythonplugin
@@ -172,7 +172,7 @@ wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   0.00208
 wsclean_high2.argument.mem                      =   {{ max_percent_memory }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
-wsclean_high2.argument.tempdir                  =   {{ local_dir }}
+wsclean_high2.argument.tempdir                  =   {{ local_scratch_dir }}
 
 # convert high-res images to casa images, length = nbands
 fits_to_image_high.control.type                 =   pythonplugin
@@ -270,7 +270,7 @@ wsclean_low1.argument.maxuv-l                   =   2000
 wsclean_low1.argument.scale                     =   0.00694
 wsclean_low1.argument.mem                       =   {{ max_percent_memory }}
 wsclean_low1.argument.j                         =   {{ max_cpus_per_img }}
-wsclean_low1.argument.tempdir                   =   {{ local_dir }}
+wsclean_low1.argument.tempdir                   =   {{ local_scratch_dir }}
 
 # make masks for the low-res images, length = nbands
 mask_low.control.type                           =   pythonplugin
@@ -310,7 +310,7 @@ wsclean_low2.argument.maxuv-l                   =   2000
 wsclean_low2.argument.scale                     =   0.00694
 wsclean_low2.argument.mem                       =   {{ max_percent_memory }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
-wsclean_low2.argument.tempdir                   =   {{ local_dir }}
+wsclean_low2.argument.tempdir                   =   {{ local_scratch_dir }}
 
 # convert low-res images to casa images, length = nbands
 fits_to_image_low.control.type                  =   pythonplugin
