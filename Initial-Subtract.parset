@@ -46,10 +46,10 @@
 ! maxlambda_lowres     = 2000
 
 ##### performance parameters
-! max_imagers_per_node =  3
-! max_percent_memory   =  0.8
-! max_cpus_per_img     =  10
-! local_scratch_dir    =  /path/to/local/scratch/dir
+! max_imagers_per_node      =  3
+! max_percent_mem_per_img   =  0.3
+! max_cpus_per_img          =  10
+! local_scratch_dir         =  /path/to/local/scratch/dir
 
 ##### pathes to the scripts etc.
 ! wsclean_executable     = /WTF???
@@ -115,6 +115,7 @@ wsclean_high1.control.kind                      =   recipe
 wsclean_high1.control.type                      =   executable_args
 wsclean_high1.control.executable                =   {{ wsclean_executable }}
 wsclean_high1.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_high1.control.outputkey                 =   name
 wsclean_high1.control.args_format               =   wsclean
 wsclean_high1.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.high_size_map]
@@ -129,7 +130,7 @@ wsclean_high1.argument.mgain                    =   0.65
 wsclean_high1.argument.minuv-l                  =   80
 wsclean_high1.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1.argument.scale                    =   0.00208
-wsclean_high1.argument.mem                      =   {{ max_percent_memory }}
+wsclean_high1.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high1.argument.j                        =   {{ max_cpus_per_img }}
 wsclean_high1.argument.tempdir                  =   {{ local_scratch_dir }}
 
@@ -155,6 +156,7 @@ wsclean_high2.control.kind                      =   recipe
 wsclean_high2.control.type                      =   executable_args
 wsclean_high2.control.executable                =   {{ wsclean_executable }}
 wsclean_high2.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_high2.control.outputkey                 =   name
 wsclean_high2.control.args_format               =   wsclean
 wsclean_high2.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask_high.output.mapfile,do_magic_maps.output.high_size_map]
@@ -170,7 +172,7 @@ wsclean_high2.argument.mgain                    =   0.65
 wsclean_high2.argument.minuv-l                  =   80
 wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   0.00208
-wsclean_high2.argument.mem                      =   {{ max_percent_memory }}
+wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
 wsclean_high2.argument.tempdir                  =   {{ local_scratch_dir }}
 
@@ -254,6 +256,7 @@ wsclean_low1.control.kind                       =   recipe
 wsclean_low1.control.type                       =   executable_args
 wsclean_low1.control.executable                 =   {{ wsclean_executable }}
 wsclean_low1.control.outputsuffixes             =   [-image.fits,-model.fits]
+wsclean_low1.control.outputkey                  =   name
 wsclean_low1.control.args_format                =   wsclean
 wsclean_low1.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low1.control.mapfiles_in                =   [regroup_map.output.mapfile,do_magic_maps.output.low_size_map]
@@ -268,7 +271,7 @@ wsclean_low1.argument.mgain                     =   0.65
 wsclean_low1.argument.minuv-l                   =   80
 wsclean_low1.argument.maxuv-l                   =   2000
 wsclean_low1.argument.scale                     =   0.00694
-wsclean_low1.argument.mem                       =   {{ max_percent_memory }}
+wsclean_low1.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low1.argument.j                         =   {{ max_cpus_per_img }}
 wsclean_low1.argument.tempdir                   =   {{ local_scratch_dir }}
 
@@ -293,6 +296,7 @@ wsclean_low2.control.kind                       =   recipe
 wsclean_low2.control.type                       =   executable_args
 wsclean_low2.control.executable                 =   {{ wsclean_executable }}
 wsclean_low2.control.outputsuffixes             =   [-image.fits,-model.fits]
+wsclean_low1.control.outputkey                  =   name
 wsclean_low2.control.args_format                =   wsclean
 wsclean_low2.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low2.control.mapfiles_in                =   [regroup_map.output.mapfile,mask_low.output.mapfile,do_magic_maps.output.low_size_map]
@@ -308,7 +312,7 @@ wsclean_low2.argument.mgain                     =   0.65
 wsclean_low2.argument.minuv-l                   =   80
 wsclean_low2.argument.maxuv-l                   =   2000
 wsclean_low2.argument.scale                     =   0.00694
-wsclean_low2.argument.mem                       =   {{ max_percent_memory }}
+wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
 wsclean_low2.argument.tempdir                   =   {{ local_scratch_dir }}
 
