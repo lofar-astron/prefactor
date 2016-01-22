@@ -52,6 +52,9 @@ pipeline.steps=[createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixi
 ! plotphases_script    = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/plot_solutions_all_stations.py
 ! flagging_strategy    = /homea/htb00/htb003/lofar_jureca_2-12/share/rfistrategies/HBAdefault
 
+# set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance           =  False
+
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
@@ -85,17 +88,19 @@ demix-parmdbs_cal.control.mapfile_dir        =  input.output.mapfile_dir
 demix-parmdbs_cal.control.filename           =  demix-parmdbs_cal.mapfile
 
 # Get the sources to be demixed for each epoch
-dumb_smart_demixing_cal.control.type         =  pythonplugin
-dumb_smart_demixing_cal.control.executable   =  {{ dumb_smart_script }}
-dumb_smart_demixing_cal.argument.flags       =  sortmap_cal.output.mapfile
-dumb_smart_demixing_cal.argument.sourcelist  =  "CasA CygA VirA TauA"
-dumb_smart_demixing_cal.argument.elevlimit   =  0deg
+dumb_smart_demixing_cal.control.type            =  pythonplugin
+dumb_smart_demixing_cal.control.executable      =  {{ dumb_smart_script }}
+dumb_smart_demixing_cal.control.error_tolerance =  {{ error_tolerance }}
+dumb_smart_demixing_cal.argument.flags          =  sortmap_cal.output.mapfile
+dumb_smart_demixing_cal.argument.sourcelist     =  "CasA CygA VirA TauA"
+dumb_smart_demixing_cal.argument.elevlimit      =  0deg
 
 # run NDPPP on the calibrator data
 # My data is raw, non pre-processed data, so the parset looks different!
 ndppp_prep_cal.control.type                    = dppp
 ndppp_prep_cal.control.max_per_node            = 8                     # \ feel free to adjust these two values to match your system
 ndppp_prep_cal.control.environment             = {OMP_NUM_THREADS: 5}  # / they should be reasonable for JURECA
+ndppp_prep_cal.control.error_tolerance         = {{ error_tolerance }}
 ndppp_prep_cal.control.mapfile_out             = sortmap_cal.output.groupmap  # specify the output filenames
 ndppp_prep_cal.control.mapfiles_in             = [sortmap_cal.output.mapfile, demix-parmdbs_cal.output.mapfile, dumb_smart_demixing_cal.output.demixsources.mapfile, sortmap_cal.output.flagmap]
 ndppp_prep_cal.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
@@ -135,6 +140,7 @@ ndppp_prep_cal.argument.flagamp.amplmin        = 1e-30
 #now run BBS on the NDPPP-ed calibrator data.
 calib_cal.control.type                                   =  python-calibrate-stand-alone  
 calib_cal.control.max_per_node                           =  12
+calib_cal.control.error_tolerance                        =  {{ error_tolerance }}
 calib_cal.argument.force                                 =  True 
 calib_cal.argument.observation                           =  ndppp_prep_cal.output.mapfile
 calib_cal.argument.parset                                =  {{ calib_cal_parset }}  
@@ -228,17 +234,19 @@ demix-parmdbs_target.control.mapfile_dir        =  input.output.mapfile_dir
 demix-parmdbs_target.control.filename           =  demix-parmdbs_target.mapfile
 
 # Get the sources to be demixed for each epoch
-dumb_smart_demixing_target.control.type         =  pythonplugin
-dumb_smart_demixing_target.control.executable   =  {{ dumb_smart_script }}
-dumb_smart_demixing_target.argument.flags       =  sortmap_target.output.mapfile
-dumb_smart_demixing_target.argument.sourcelist  =  "CasA CygA VirA TauA"
-dumb_smart_demixing_target.argument.elevlimit   =  0deg
+dumb_smart_demixing_target.control.type            =  pythonplugin
+dumb_smart_demixing_target.control.executable      =  {{ dumb_smart_script }}
+dumb_smart_demixing_target.control.error_tolerance = {{ error_tolerance }}
+dumb_smart_demixing_target.argument.flags          =  sortmap_target.output.mapfile
+dumb_smart_demixing_target.argument.sourcelist     =  "CasA CygA VirA TauA"
+dumb_smart_demixing_target.argument.elevlimit      =  0deg
 
 # run NDPPP on the calibrator data
 # My data is raw, non pre-processed data, so the parset looks different!
 ndppp_prep_target.control.type                    = dppp
 ndppp_prep_target.control.max_per_node            = 2                      # \ feel free to adjust these two values to match your system
 ndppp_prep_target.control.environment             = {OMP_NUM_THREADS: 12}  # / they should be reasonable for JURECA
+ndppp_prep_target.control.error_tolerance         = {{ error_tolerance }}
 ndppp_prep_target.control.mapfile_out             = sortmap_target.output.groupmap  # specify the output filenames
 ndppp_prep_target.control.mapfiles_in             = [sortmap_target.output.mapfile, demix-parmdbs_target.output.mapfile, dumb_smart_demixing_target.output.demixsources.mapfile, sortmap_target.output.flagmap]
 ndppp_prep_target.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
@@ -278,12 +286,14 @@ ndppp_prep_target.argument.flagamp.amplmin        = 1e-30
 # generate parmDB with the interpolated calibrator data to apply to the traget
 trans.control.type            = pythonplugin
 trans.control.executable      = {{ transfer_script }}
+trans.control.error_tolerance = {{ error_tolerance }}
 # order for flags is: [<input-filenames>,<output-filename-base>,<extension_for_new_parmDBs>]
 trans.argument.flags          = [ndppp_prep_target.output.mapfile,caldata_transfer,/instrument_amp_clock_offset]
 
 # run BBS to apply the calibrator values to the target data
 calibtarget.control.type             =  python-calibrate-stand-alone  
 calibtarget.control.max_per_node     =  12                                 # feel free to adjust this value to match your system  
+calibtarget.control.error_tolerance  = {{ error_tolerance }}
 # specify the observation and the input-parmDB name via "mapfiles_in" and "inputkeys"
 calibtarget.control.mapfiles_in      =  [ndppp_prep_target.output.mapfile, trans.output.transfer_parmDB.mapfile]
 calibtarget.control.inputkeys        =  [observation,parmdb]
@@ -294,6 +304,7 @@ calibtarget.argument.replace-parmdb  =  True
 dpppaverage.control.type                 = dppp
 dpppaverage.control.max_per_node         = 8                    # \ feel free to adjust these two values to match your system
 dpppaverage.control.environment          = {OMP_NUM_THREADS: 5} # / they should be reasonable for CEP3
+dpppaverage.control.error_tolerance      = {{ error_tolerance }}
 dpppaverage.argument.msin                = ndppp_prep_target.output.mapfile  # The input data.
 dpppaverage.argument.msin.datacolumn     = CORRECTED_DATA
 dpppaverage.argument.msout.datacolumn    = DATA
@@ -309,6 +320,7 @@ dpppaverage.argument.avg.timestep        = {{ avg_timestep_2nd }}     # average 
 # phase calibration on the gsm skymodel
 gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
 gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system  
+gsmcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
 gsmcalibtarget.argument.force                          =  True 
 gsmcalibtarget.argument.observation                    =  dpppaverage.output.mapfile
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
