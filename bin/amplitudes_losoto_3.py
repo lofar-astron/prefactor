@@ -359,14 +359,16 @@ for antenna_id in range(0,len(amptab.ant[:])):
     amp_yy = np.copy(amps_array_flagged[antenna_id,:,:,1])
 
     if show_plot:
-        matplotlib.pyplot.plot(np.median(amp_xx, axis=0))
+        matplotlib.pyplot.plot(np.median(amp_xx, axis=0),'b+')
+        matplotlib.pyplot.grid(b=True,which='major',axis='x')
         matplotlib.pyplot.xlabel('Subband')
         matplotlib.pyplot.ylabel('ampl')
         matplotlib.pyplot.savefig('%s_flaggedXX.pdf'%(amptab.ant[antenna_id]))
         matplotlib.pyplot.close()
         matplotlib.pyplot.cla()
         
-        matplotlib.pyplot.plot(np.median(amp_yy, axis=0))
+        matplotlib.pyplot.plot(np.median(amp_yy, axis=0),'b+')
+        matplotlib.pyplot.grid(b=True,which='major',axis='x')
         matplotlib.pyplot.xlabel('Subband')
         matplotlib.pyplot.ylabel('ampl')
         matplotlib.pyplot.savefig('%s_flaggedYY.pdf'%(amptab.ant[antenna_id]))
