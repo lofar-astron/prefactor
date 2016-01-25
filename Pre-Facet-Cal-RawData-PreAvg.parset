@@ -133,7 +133,8 @@ ndppp_prep_cal.argument.demix.skymodel         = {{ demixing_sourceDB }}
 #ndppp_prep_cal.argument.demix.instrumentmodel = # see ndppp_prep_cal.control.inputkeys
 #ndppp_prep_cal.argument.demix.subtractsources = # see ndppp_prep_cal.control.inputkeys
 ndppp_prep_cal.argument.avg.type               = average
-ndppp_prep_cal.argument.avg.timestep           = {{ avg_timestep_pre }}         # first averaging step
+ndppp_prep_cal.argument.avg.timestep           = {{ avg_timestep_pre }}         # first averaging step 
+ndppp_prep_cal.argument.avg.freqstep           = {{ avg_freqstep_2nd }}         # second averaging step in frequency
 ndppp_prep_cal.argument.flagamp.type           = preflagger
 ndppp_prep_cal.argument.flagamp.amplmin        = 1e-30
 
