@@ -202,8 +202,8 @@ dpppaverage.argument.flag.keepstatistics = false
 dpppaverage.argument.flag.memoryperc     = 10
 dpppaverage.argument.flag.strategy       = {{ flagging_strategy }}
 dpppaverage.argument.avg.type            = average
-dpppaverage.argument.avg.freqstep        = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
-dpppaverage.argument.avg.timestep        = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+dpppaverage.argument.avg.timestep        = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
+dpppaverage.argument.avg.freqstep        = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
 
 # run BBS to predict the A-Team contribution
 ateamtarget.control.type          =  python-calibrate-stand-alone
