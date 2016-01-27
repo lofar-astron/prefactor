@@ -204,6 +204,8 @@ casa_to_bbs_high.control.outputkey              =   outfile
 casa_to_bbs_high.control.arguments              =   [-n,inputmodel,outfile]
 
 # make sourcedbs from the high-res skymodels, length = nbands
+# can use outtype=blob because we'll use NDPPP
+# also NDPPP doesn't wait for exclusive lock on blob-type sourceDBs
 make_sourcedb_high.control.kind                 =   recipe
 make_sourcedb_high.control.type                 =   executable_args
 make_sourcedb_high.control.executable           =   {{ makesourcedb }}
@@ -213,6 +215,7 @@ make_sourcedb_high.control.outputkey            =   out
 make_sourcedb_high.control.mapfile_in           =   casa_to_bbs_high.output.mapfile
 make_sourcedb_high.control.inputkey             =   in
 make_sourcedb_high.argument.format              =   <
+make_sourcedb_high.argument.outtype             =   blob
 
 # expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
 expand_sourcedb_high.control.kind               =   plugin
@@ -354,6 +357,7 @@ casa_to_bbs_low.control.outputkey               =   outfile
 casa_to_bbs_low.control.arguments               =   [-n,inputmodel,outfile]
 
 # make sourcedbs from the low-res skymodels, length = nbands
+# outtype = blob for the same reasons as for sourcedb_high 
 make_sourcedb_low.control.kind                  =   recipe
 make_sourcedb_low.control.type                  =   executable_args
 make_sourcedb_low.control.executable            =   {{ makesourcedb }}
@@ -363,6 +367,7 @@ make_sourcedb_low.control.outputkey             =   out
 make_sourcedb_low.control.mapfile_in            =   casa_to_bbs_low.output.mapfile
 make_sourcedb_low.control.inputkey              =   in
 make_sourcedb_low.argument.format               =   <
+make_sourcedb_low.argument.outtype              =   blob
 
 # expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
 expand_sourcedb_low.control.kind                =   plugin
