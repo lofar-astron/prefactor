@@ -8,8 +8,29 @@ import numpy as np
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
 
+def _calc_edge_chans(inmap, numch, edgeFactor=32):
+    """
+    Generates a map with strings that can be used as input for NDPPP to flag the edges 
+    of the input MSs during (or after) concatenation.
+    
+    inmap      - MultiDataMap (not mapfilename!) with the files to be concatenated.
+    numch      - Number of channels per input file (All files are assumed to have the same number 
+                 of channels.)
+    edgeFactor - Divisor to compute how many channels are to be flagged at beginning and end. 
+                 (numch=64 and edgeFactor=32 means "flag two channels at beginning and two at end")
+    """
+    outmap = DataMap([])
+    for group in inmap:
+        flaglist = []
+        for i in xrange(len(group.file)):
+            flaglist.extend(range(i*numch,i*numch+numch/edgeFactor))
+            flaglist.extend(range((i+1)*numch-numch/edgeFactor,(i+1)*numch))
+        outmap.append(DataProduct(group.host,str(flaglist).replace(' ',''),group.skip))
+        print str(flaglist).replace(' ','')
+    return outmap
 
-def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True):
+def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
+         mergeLastGroup=False, truncateLastSBs=True):
     """
     Check a list of MS files for missing frequencies
 
@@ -31,6 +52,23 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         Add dummy file-names for missing frequencies, so that NDPPP can
         fill the data with flagged dummy data.
         default = True
+    target_path : str, optional
+        Change the path of the "groups" files to this. (I.e. write output files 
+        into this directory with the subsequent NDPPP call.)
+        default = keep path of input files
+    stepname : str, optional
+        Add this step-name into the file-names of the output files.
+    mergeLastGroup, truncateLastSBs : bool, optional
+        mergeLastGroup = True, truncateLastSBs = True:
+          not allowed
+        mergeLastGroup = True, truncateLastSBs = False:
+          put the files from the last group that doesn't have SBperGroup subbands 
+          into the second last group (which will then have more than SBperGroup entries). 
+        mergeLastGroup = False, truncateLastSBs = True:
+          ignore last files, that don't make for a full group (not all files are used).
+        mergeLastGroup = False, truncateLastSBs = False:
+          keep inclomplete last group, or - with NDPPPfill=True - fill
+          last group with dummies.      
 
     Returns
     -------
@@ -40,6 +78,10 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     """
     if not filename or not mapfile_dir:
         raise ValueError('sort_times_into_freqGroups: filename and mapfile_dir are needed!')
+    if mergeLastGroup and truncateLastSBs:
+        raise ValueError('sort_times_into_freqGroups: Can either merge the last partial group or truncate at last full group, not both!')
+    if mergeLastGroup:
+        raise ValueError('sort_times_into_freqGroups: mergeLastGroup is not (yet) implemented!')
     if type(ms_input) is str:
         if ms_input.startswith('[') and ms_input.endswith(']'):
             ms_list = [f.strip(' \'\"') for f in ms_input.strip('[]').split(',')]
@@ -63,34 +105,45 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     if not hosts:
         hosts = ['localhost']
     numhosts = len(hosts)
+    print "sort_times_into_freqGroups: Working on",len(ms_list),"files"
 
     time_groups = {}
     # sort by time
     for i, ms in enumerate(ms_list):
-        obstable = pt.table(ms+'::OBSERVATION', ack=False)
-        timestamp = int(round(obstable.col('TIME_RANGE')[0][0]))
+        # use the slower but more reliable way:
+        obstable = pt.table(ms, ack=False)
+        timestamp = int(round(np.min(obstable.getcol('TIME'))))
+        #obstable = pt.table(ms+'::OBSERVATION', ack=False)
+        #timestamp = int(round(obstable.col('TIME_RANGE')[0][0]))
+        obstable.close()
         if timestamp in time_groups:
             time_groups[timestamp]['files'].append(ms)
         else:
             time_groups[timestamp] = {'files': [ ms ], 'basename' : os.path.splitext(ms)[0] }
-        
+    print "sort_times_into_freqGroups: found",len(time_groups),"time-groups"
+
     # sort time-groups by frequency
     timestamps = time_groups.keys()
     timestamps.sort()   # not needed now, but later
     first = True
+    nchans = 0
     for time in timestamps:
         freqs = []
         for ms in time_groups[time]['files']:
             # Get the frequency info
             sw = pt.table(ms+'::SPECTRAL_WINDOW', ack=False)
-            freq = sw.col('REF_FREQUENCY')[0]
+            freq = sw.col('REF_FREQUENCY')[0]            
             if first:
                 freq_width = sw.col('TOTAL_BANDWIDTH')[0]
+                nchans = sw.col('CHAN_WIDTH')[0].shape[0]
+                chwidth = sw.col('CHAN_WIDTH')[0][0]
                 maxfreq = freq
                 minfreq = freq
                 first = False
             else:
                 assert freq_width == sw.col('TOTAL_BANDWIDTH')[0]
+                assert nchans == sw.col('CHAN_WIDTH')[0].shape[0]
+                assert chwidth == sw.col('CHAN_WIDTH')[0][0]
                 maxfreq = max(maxfreq,freq)
                 minfreq = min(minfreq,freq)
             freqs.append(freq)
@@ -99,6 +152,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         time_groups[time]['freq_names'].sort(key=lambda pair: pair[0])
         #time_groups[time]['files'] = [name for (freq,name) in freq_names]
         #time_groups[time]['freqs'] = [freq for (freq,name) in freq_names]
+    print "sort_times_into_freqGroups: Collected the frequencies for the time-groups"
 
     #the new output map
     filemap = MultiDataMap()
@@ -107,7 +161,10 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     minfreq = minfreq-freq_width/2.
     numFiles = round((maxfreq-minfreq)/freq_width)
     if numSB > 0:
-        ngroups = int(np.ceil(numFiles/numSB))
+        if truncateLastSBs:
+            ngroups = int(np.floor(numFiles/numSB))
+        else:
+            ngroups = int(np.ceil(numFiles/numSB))
     else:
         ngroups = 1
         numSB = int(numFiles)
@@ -119,7 +176,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
             skip_this = True
             for fIdx in range(numSB):
                 if freq > (fIdx+fgroup*numSB+1)*freq_width+minfreq:
-                    files.append('dummy.ms')
+                    if NDPPPfill:
+                        files.append('dummy.ms')
                 else:
                     files.append(fname)
                     if len(time_groups[time]['freq_names'])>0:
@@ -129,6 +187,10 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                     skip_this = False
             filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
             groupname = time_groups[time]['basename']+'_%Xt_%dg.ms'%(time,fgroup)
+            if type(stepname) is str:
+                groupname += stepname
+            if type(target_path) is str:
+                groupname = os.path.join(target_path,os.path.basename(groupname))
             groupmap.append(DataProduct(hosts[hostID%numhosts],groupname, skip_this))
         assert freq==1e12
 
@@ -136,9 +198,12 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     filemap.save(filemapname)
     groupmapname = os.path.join(mapfile_dir, filename+'_groups')
     groupmap.save(groupmapname)
-    result = {'mapfile': filemapname, 'groupmapfile': groupmapname}
+    # genertate map with edge-channels to flag
+    flagmap = _calc_edge_chans(filemapname, nchans)
+    flagmapname = os.path.join(mapfile_dir, filename+'_flags')
+    flagmap.save(flagmapname)
+    result = {'mapfile': filemapname, 'groupmapfile': groupmapname, 'flagmapfile': flagmapname}
     return result
-
 
 class MultiDataProduct(DataProduct):
     """
@@ -237,7 +302,7 @@ if __name__ == '__main__':
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
     opt.add_option('-r', '--randomize', help='Randomize order of the input files. (default=False)', action='store_true', default=False)
     opt.add_option('-d', '--decimate', help='Remove every 10th file (after randomization if that is done). (default=False)', action='store_true', default=False)
-    opt.add_option('-n', '--numbands', help='Numboer of how many files should be grouped togetherin frequency. (default=all files in one group)', type='int', default=-1)
+    opt.add_option('-n', '--numbands', help='Number of how many files should be grouped together in frequency. (default=all files in one group)', type='int', default=-1)
     opt.add_option('-f', '--filename', help='Name for the mapfiles to write. (default=\"test.mapfile\")', type='string', default='test.mapfile')
 
     (options, args) = opt.parse_args()
