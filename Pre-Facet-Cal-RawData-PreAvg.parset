@@ -2,7 +2,7 @@
 #
 # Pre-Facet Calibration Pipeline: 
 # - first NDPPP run tailored to processing raw data
-# - averages data in first NDPPP run (to save on number of files on shared filesystems)
+# - concatenates data in first NDPPP run (to save on number of files on shared filesystems)
 # - does "dumb-smart-demixing": all A-team sources that are above a certain elevation get demixed
 # - consecutive subband-numbers in the data need to be consecutive subband-frequencies
 # - expects shared filesystem, that all nodes can reach all files!
@@ -327,7 +327,7 @@ gsmcalibtarget.argument.observation                    =  dpppaverage.output.map
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
 gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
 gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 0  # default: solution-cell spans all frequency channels
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 4  # default: solution-cell spans one subband
 gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time = 1  # default: one solution per time-step
 
 # generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step

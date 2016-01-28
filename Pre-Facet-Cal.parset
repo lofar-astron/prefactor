@@ -268,8 +268,8 @@ gsmcalibtarget.argument.observation                    =  dpppconcat.output.mapf
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
 gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
 gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 0  # default: solution-cell spans all frequency channels
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time = 1  # default: one solution per time-step
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  4  # default: solution-cell spans one subband
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
 
 # generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
 gsmcal_parmmap.control.kind               =  plugin
