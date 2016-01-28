@@ -230,8 +230,8 @@ expand_sourcedb_high.control.filename           =   expand_sourcedb_high.datamap
 parmdbs_to_realimag.control.type                 =   pythonplugin
 parmdbs_to_realimag.control.executable           =   {{ realimag_script }}
 parmdbs_to_realimag.control.error_tolerance      =   {{ error_tolerance }}
-parmdbs_to_realimag.control.mapfile_in           =   create_parmdb_map.output.mapfile
-parmdbs_to_realimag.control.inputkey             =   pdb_in
+parmdbs_to_realimag.control.mapfiles_in          =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
+parmdbs_to_realimag.control.inputkeys            =   [dummy, pdb_in]
 parmdbs_to_realimag.control.outputkey            =   pdb_out
 parmdbs_to_realimag.argument.flags               =   [pdb_in, pdb_out]
 
