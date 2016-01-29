@@ -38,47 +38,45 @@ def main(parmdb_in, parmdb_out ,debug=False):
 
     pdb_in =  pdb.parmdb(parmdb_in,create=False)
     pdb_out = make_empty_parmdb(parmdb_out)
-    names_in = pdb_in.getNames()
+    inparms = pdb_in.getValuesGrid('*')
+    names_in = inparms.keys()
     for parmname in names_in:
         nameparts = parmname.split(':')
         if (len(nameparts) == 5 
             and (nameparts[0] == 'Gain' or nameparts[0] == 'DirectionalGain')): 
             if nameparts[3] == 'Phase' :
                 amplname = nameparts[0]+':'+nameparts[1]+':'+nameparts[2]+':Ampl:'+nameparts[4]
-                parms = pdb_in.getValuesGrid(parmname)
                 if amplname in names_in:
-                    ampparm = pdb_in.getValuesGrid(amplname)
-                    amps = ampparm[amplname]['values']
+                    amps = inparms[amplname]['values']
                 else:
-                    amps = np.ones_like(parms[parmname]['values'])
+                    amps = np.ones_like(inparms[parmname]['values'])
                 realname = nameparts[0]+':'+nameparts[1]+':'+nameparts[2]+':Real:'+nameparts[4]
                 imagname = nameparts[0]+':'+nameparts[1]+':'+nameparts[2]+':Imag:'+nameparts[4]
-                realvals = amps * np.cos(parms[parmname]['values'])
-                imagvals = amps * np.sin(parms[parmname]['values'])
+                realvals = amps * np.cos(inparms[parmname]['values'])
+                imagvals = amps * np.sin(inparms[parmname]['values'])
                 if debug: print 'Adding parameters:',realname,imagname
                 ValueHolder = pdb_out.makeValue(values=realvals,
-                                                sfreq=parms[parmname]['freqs'],
-                                                efreq=parms[parmname]['freqwidths'],
-                                                stime=parms[parmname]['times'],
-                                                etime=parms[parmname]['timewidths'],
+                                                sfreq=inparms[parmname]['freqs'],
+                                                efreq=inparms[parmname]['freqwidths'],
+                                                stime=inparms[parmname]['times'],
+                                                etime=inparms[parmname]['timewidths'],
                                                 asStartEnd=False)
                 pdb_out.addValues(realname,ValueHolder)  
                 ValueHolder = pdb_out.makeValue(values=imagvals,
-                                                sfreq=parms[parmname]['freqs'],
-                                                efreq=parms[parmname]['freqwidths'],
-                                                stime=parms[parmname]['times'],
-                                                etime=parms[parmname]['timewidths'],
+                                                sfreq=inparms[parmname]['freqs'],
+                                                efreq=inparms[parmname]['freqwidths'],
+                                                stime=inparms[parmname]['times'],
+                                                etime=inparms[parmname]['timewidths'],
                                                 asStartEnd=False)
                 pdb_out.addValues(imagname,ValueHolder)  
             elif nameparts[3] == 'Real' or nameparts[3] == 'Imag' :
                 print 'Gain value:',parmname,'not in polar coordinates!'
         else:
-            parms = pdb_in.getValuesGrid(parmname)
-            ValueHolder = pdb_out.makeValue(values=parms[parmname]['values'],
-                                            sfreq=parms[parmname]['freqs'],
-                                            efreq=parms[parmname]['freqwidths'],
-                                            stime=parms[parmname]['times'],
-                                            etime=parms[parmname]['timewidths'],
+            ValueHolder = pdb_out.makeValue(values=inparms[parmname]['values'],
+                                            sfreq=inparms[parmname]['freqs'],
+                                            efreq=inparms[parmname]['freqwidths'],
+                                            stime=inparms[parmname]['times'],
+                                            etime=inparms[parmname]['timewidths'],
                                             asStartEnd=False)
             pdb_out.addValues(parmname,ValueHolder)  
 
