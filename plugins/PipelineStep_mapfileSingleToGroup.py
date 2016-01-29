@@ -124,7 +124,6 @@ class MultiDataMap(DataMap):
         elif not data:
             pass
         else:
-            print 'HELP: ', data
             self._set_data(data, dtype=MultiDataProduct)
 
     def split_list(self, number):
