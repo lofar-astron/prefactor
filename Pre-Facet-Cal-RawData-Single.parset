@@ -2,59 +2,54 @@
 #
 # Pre-Facet Calibration Pipeline: 
 # - first NDPPP run tailored to processing raw data
-# - concatenates data in first NDPPP run (to save on number of files on shared filesystems)
 # - does "dumb-smart-demixing": all A-team sources that are above a certain elevation get demixed
-# - consecutive subband-numbers in the data need to be consecutive subband-frequencies
+# - figures out frequencies from SPECTRAL_WINDOW table in MSs
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
-
 
 ### First run this and check the generated plots! Modify and re-run if neccessary.
 pipeline.steps=[createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, combine_target_map, sortmap_target, do_sortmap_maps, dpppcombine, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_resluts_mapfile, move_results]
+# pipeline.steps=[createmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, combine_target_map, sortmap_target, do_sortmap_maps, dpppcombine, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 
 # parameters you will need to adjust.
 ! avg_timestep_pre     = 2   # averaging in 1st NDPPP run  \  these two together should average
 ! avg_timestep_2nd     = 2   # averaging in 2nd NDPPP run  /  the data to 4 seconds time resolution
-! avg_freqstep_pre     = 8   # averaging in 1st NDPPP run  \  these two together should average
+! avg_freqstep_pre     = 4   # averaging in 1st NDPPP run  \  these two together should average
 ! avg_freqstep_2nd     = 2   # averaging in 2nd NDPPP run  /  the data to 4 ch/SB frequency resolution
 ! num_ch_per_SB        = 64  # how many channels are there in one SB (A bit redundant, but I cannot do math here!)
-! cal_input_path       = /work/htb00/htb001/NGC891/Cal-new-raw
-! cal_input_pattern    = L11551*SB0*MS
+! cal_input_path       = /work/htb00/htb001/M31-HBAlow-prefacet/calibrator/raw
+! cal_input_pattern    = L*MS
 ! calibrator_skymodel  = /homea/htb00/htb001/Pre-Facet-Pipeline/skymodels/3c48-SH.skymodel
-! target_input_path    = /data/scratch/username/PathToYourTargetData/
+! target_input_path    = /work/htb00/htb001/M31-HBAlow-prefacet/SB000-059
 ! target_input_pattern = L*.MS
-! target_skymodel      = /cep3home/username/Pre-Facet-Cal/skymodels/PleaseProvideTarget.skymodel
+! target_skymodel      = /homea/htb00/htb001/M31-processing/gsm-M31-10deg-1Jy-20arcsec.skymodel
 ! num_SBs_per_group    = 12   # make concatenated measurement-sets with that many subbands
-! results_directory    = /work/htb00/htb001/Pre-Facet-Pipeline/Outdata
+! results_directory    = /work/htb00/htb001/M31-HBAlow-prefacet/Outdata
 
 # pathes to the scripts etc.
 # #### ToDo: get the scripts onto CEP3 and adjust the pathes here!
-! calib_cal_parset     = /homea/htb00/htb001/Pre-Facet-Pipeline/parsets/calibcal.parset
-! cal_transfer_parset  = /homea/htb00/htb001/Pre-Facet-Pipeline/parsets/applyparmdb.parset
-! ATeam_predict_parset = /homea/htb00/htb001/Pre-Facet-Pipeline/parsets/ateamclip.parset
-! ATeam_skymodel       = /homea/htb00/htb001/Pre-Facet-Pipeline/skymodels/Ateam_LBA_CC.skymodel
+! calib_cal_parset     = /homea/htb00/htb001/prefactor/parsets/calibcal.parset
+! cal_transfer_parset  = /homea/htb00/htb001/prefactor/parsets/applyparmdb.parset
 ! demixing_sourceDB    = /homea/htb00/htb001/MSSS-processing/skymodels/Ateamhighresdemix.sourcedb
-! gsm_cal_parset       = /homea/htb00/htb001/Pre-Facet-Pipeline/parsets/gsmcal.parset
-! losoto_importer      = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/losotoImporter.py
-! dumb_smart_script    = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/gen_demixing_sources.py
-! fitclock_script      = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/fit_clocktec_initialguess_losoto.py
-! fitamps_script       = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/amplitudes_losoto_3.py
-! plotsols_script      = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/examine_npys.py
-! fit_XYoffset_script  = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/find_cal_global_phaseoffset_losoto.py
-! transfer_script      = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/transfer_amplitudes+clock+offset_toMS.py
-! plotphases_script    = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/plot_solutions_all_stations.py
+! gsm_cal_parset       = /homea/htb00/htb001/prefactor/parsets/gsmcal.parset
+! losoto_importer      = /homea/htb00/htb001/prefactor/bin/losotoImporter.py
+! dumb_smart_script    = /homea/htb00/htb001/prefactor/bin/gen_demixing_sources.py
+! fitclock_script      = /homea/htb00/htb001/prefactor/bin/fit_clocktec_initialguess_losoto.py
+! fitamps_script       = /homea/htb00/htb001/prefactor/bin/amplitudes_losoto_3.py
+! plotsols_script      = /homea/htb00/htb001/prefactor/bin/examine_npys.py
+! fit_XYoffset_script  = /homea/htb00/htb001/prefactor/bin/find_cal_global_phaseoffset_losoto.py
+! transfer_script      = /homea/htb00/htb001/prefactor/bin/transfer_amplitudes+clock+offset_toMS.py
+! sortmap_script       = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/sort_times_into_freqGroups.py
+! plotphases_script    = /homea/htb00/htb001/prefactor/bin/plot_solutions_all_stations.py
 ! flagging_strategy    = /homea/htb00/htb003/lofar_jureca_2-12/share/rfistrategies/HBAdefault
 
 # set this to True if you want the pipeline run to continue if single bands fail
 ! error_tolerance           =  False
-
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
@@ -65,24 +60,11 @@ createmap_cal.control.filename        =   createmap_cal.mapfile
 createmap_cal.control.folder          =   {{ cal_input_path }}
 createmap_cal.control.pattern         =   {{ cal_input_pattern }}
 
-# sort the calibrator data into groups so that NDPPP can concatenate them
-sortmap_cal.control.kind            =   plugin
-sortmap_cal.control.type            =   groupMapfileObsSB
-sortmap_cal.control.mapfile_dir     =   input.output.mapfile_dir
-sortmap_cal.control.filename        =   sortmap_cal.mapfile
-sortmap_cal.control.mapfile_in      =   createmap_cal.output.mapfile
-sortmap_cal.control.target_path     =   input.output.working_directory/input.output.job_name
-sortmap_cal.control.target_ext      =   .cal_concat     
-sortmap_cal.control.numSB           =   {{ num_SBs_per_group }}
-sortmap_cal.control.numCh_per_SB    =   {{ num_ch_per_SB }}
-sortmap_cal.control.NDPPPfill       =   True
-sortmap_cal.control.truncateLastSBs =   True  # This means that a excess subbands that don't make a full group get discarded
-
 # I want to run demixing, for that I need a MS with names for the instrument tables
 demix-parmdbs_cal.control.kind               =  plugin
 demix-parmdbs_cal.control.type               =  createMapfile
 demix-parmdbs_cal.control.method             =  add_suffix_to_file
-demix-parmdbs_cal.control.mapfile_in         =  sortmap_cal.output.groupmap
+demix-parmdbs_cal.control.mapfile_in         =  createmap_cal.output.groupmap
 demix-parmdbs_cal.control.add_suffix_to_file =  -demix-inst
 demix-parmdbs_cal.control.mapfile_dir        =  input.output.mapfile_dir  
 demix-parmdbs_cal.control.filename           =  demix-parmdbs_cal.mapfile
@@ -91,7 +73,7 @@ demix-parmdbs_cal.control.filename           =  demix-parmdbs_cal.mapfile
 dumb_smart_demixing_cal.control.type            =  pythonplugin
 dumb_smart_demixing_cal.control.executable      =  {{ dumb_smart_script }}
 dumb_smart_demixing_cal.control.error_tolerance =  {{ error_tolerance }}
-dumb_smart_demixing_cal.argument.flags          =  sortmap_cal.output.mapfile
+dumb_smart_demixing_cal.argument.flags          =  createmap_cal.output.groupmap
 dumb_smart_demixing_cal.argument.sourcelist     =  "CasA CygA VirA TauA"
 dumb_smart_demixing_cal.argument.elevlimit      =  0deg
 
@@ -101,9 +83,8 @@ ndppp_prep_cal.control.type                    = dppp
 ndppp_prep_cal.control.max_per_node            = 8                     # \ feel free to adjust these two values to match your system
 ndppp_prep_cal.control.environment             = {OMP_NUM_THREADS: 5}  # / they should be reasonable for JURECA
 ndppp_prep_cal.control.error_tolerance         = {{ error_tolerance }}
-ndppp_prep_cal.control.mapfile_out             = sortmap_cal.output.groupmap  # specify the output filenames
-ndppp_prep_cal.control.mapfiles_in             = [sortmap_cal.output.mapfile, demix-parmdbs_cal.output.mapfile, dumb_smart_demixing_cal.output.demixsources.mapfile, sortmap_cal.output.flagmap]
-ndppp_prep_cal.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
+ndppp_prep_cal.control.mapfiles_in             = [createmap_cal.output.groupmap, demix-parmdbs_cal.output.mapfile, dumb_smart_demixing_cal.output.demixsources.mapfile]
+ndppp_prep_cal.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources]
 #ndppp_prep_cal.argument.msin                  = # see ndppp_prep_cal.control.inputkeys
 ndppp_prep_cal.argument.msin.datacolumn        = DATA
 ndppp_prep_cal.argument.msin.missingdata       = True   #\ these two lines will make NDPPP generate dummy data when 
@@ -115,7 +96,7 @@ ndppp_prep_cal.argument.steps                  = [autoflag,flagedge,flag,filter,
 ndppp_prep_cal.argument.autoflag.type          = preflagger
 ndppp_prep_cal.argument.autoflag.corrtype      = auto
 ndppp_prep_cal.argument.flagedge.type          = preflagger
-#ndppp_prep_cal.argument.flagedge.chan         = # see ndppp_prep_cal.control.inputkeys
+ndppp_prep_cal.argument.flagedge.chan          = [0..nchan/32-1, 31*nchan/32..nchan]
 ndppp_prep_cal.argument.flag.type              = preflagger
 ndppp_prep_cal.argument.flag.baseline          = [ DE* , FR* ,  UK* , SE*,  CS013HBA*]
 ndppp_prep_cal.argument.filter.type            = filter
@@ -212,24 +193,11 @@ createmap_target.control.filename        =   createmap_target.mapfile
 createmap_target.control.folder          =   {{ target_input_path }}
 createmap_target.control.pattern         =   {{ target_input_pattern }}
 
-# sort the calibrator data into groups so that NDPPP can concatenate them
-sortmap_target.control.kind            =   plugin
-sortmap_target.control.type            =   groupMapfileObsSB
-sortmap_target.control.mapfile_dir     =   input.output.mapfile_dir
-sortmap_target.control.filename        =   sortmap_target.mapfile
-sortmap_target.control.mapfile_in      =   createmap_target.output.mapfile
-sortmap_target.control.target_path     =   input.output.working_directory/input.output.job_name
-sortmap_target.control.target_ext      =   .tar_concat     
-sortmap_target.control.numSB           =   {{ num_SBs_per_group }}
-sortmap_target.control.numCh_per_SB    =   {{ num_ch_per_SB }}
-sortmap_target.control.NDPPPfill       =   True
-sortmap_target.control.truncateLastSBs =   True  # This means that a excess subbands that don't make a full group get discarded
-
 # I want to run demixing, for that I need a MS with names for the instrument tables
 demix-parmdbs_target.control.kind               =  plugin
 demix-parmdbs_target.control.type               =  createMapfile
 demix-parmdbs_target.control.method             =  add_suffix_to_file
-demix-parmdbs_target.control.mapfile_in         =  sortmap_target.output.groupmap
+demix-parmdbs_target.control.mapfile_in         =  createmap_target.output.mapfile
 demix-parmdbs_target.control.add_suffix_to_file =  -demix-inst
 demix-parmdbs_target.control.mapfile_dir        =  input.output.mapfile_dir  
 demix-parmdbs_target.control.filename           =  demix-parmdbs_target.mapfile
@@ -237,8 +205,8 @@ demix-parmdbs_target.control.filename           =  demix-parmdbs_target.mapfile
 # Get the sources to be demixed for each epoch
 dumb_smart_demixing_target.control.type            =  pythonplugin
 dumb_smart_demixing_target.control.executable      =  {{ dumb_smart_script }}
-dumb_smart_demixing_target.control.error_tolerance = {{ error_tolerance }}
-dumb_smart_demixing_target.argument.flags          =  sortmap_target.output.mapfile
+dumb_smart_demixing_target.control.error_tolerance =  {{ error_tolerance }}
+dumb_smart_demixing_target.argument.flags          =  createmap_target.output.mapfile
 dumb_smart_demixing_target.argument.sourcelist     =  "CasA CygA VirA TauA"
 dumb_smart_demixing_target.argument.elevlimit      =  0deg
 
@@ -246,11 +214,10 @@ dumb_smart_demixing_target.argument.elevlimit      =  0deg
 # My data is raw, non pre-processed data, so the parset looks different!
 ndppp_prep_target.control.type                    = dppp
 ndppp_prep_target.control.max_per_node            = 2                      # \ feel free to adjust these two values to match your system
-ndppp_prep_target.control.environment             = {OMP_NUM_THREADS: 12}  # / they should be reasonable for JURECA
+ndppp_prep_target.control.environment             = {OMP_NUM_THREADS: 12}  # / these should be reasonable for JURECA
 ndppp_prep_target.control.error_tolerance         = {{ error_tolerance }}
-ndppp_prep_target.control.mapfile_out             = sortmap_target.output.groupmap  # specify the output filenames
-ndppp_prep_target.control.mapfiles_in             = [sortmap_target.output.mapfile, demix-parmdbs_target.output.mapfile, dumb_smart_demixing_target.output.demixsources.mapfile, sortmap_target.output.flagmap]
-ndppp_prep_target.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
+ndppp_prep_target.control.mapfiles_in             = [createmap_target.output.mapfile, demix-parmdbs_target.output.mapfile, dumb_smart_demixing_target.output.demixsources.mapfile]
+ndppp_prep_target.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources]
 #ndppp_prep_target.argument.msin                  = # see ndppp_prep_target.control.inputkeys
 ndppp_prep_target.argument.msin.datacolumn        = DATA
 ndppp_prep_target.argument.msin.missingdata       = True   #\ these two lines will make NDPPP generate dummy data when 
@@ -262,7 +229,7 @@ ndppp_prep_target.argument.steps                  = [autoflag,flagedge,flag,filt
 ndppp_prep_target.argument.autoflag.type          = preflagger
 ndppp_prep_target.argument.autoflag.corrtype      = auto
 ndppp_prep_target.argument.flagedge.type          = preflagger
-#ndppp_prep_target.argument.flagedge.chan         = # see ndppp_prep_target.control.inputkeys
+ndppp_prep_target.argument.flagedge.chan         = [0..nchan/32-1, 31*nchan/32..nchan]
 ndppp_prep_target.argument.flag.type              = preflagger
 ndppp_prep_target.argument.flag.baseline          = [ DE* , FR* ,  UK* , SE*,  CS013HBA*]
 ndppp_prep_target.argument.filter.type            = filter
@@ -301,40 +268,67 @@ calibtarget.control.inputkeys        =  [observation,parmdb]
 calibtarget.argument.parset          =  {{ cal_transfer_parset }}  
 calibtarget.argument.replace-parmdb  =  True
 
+# combine all entries into one mapfile, for the sortmap script
+combine_target_map.control.kind            =   plugin
+combine_target_map.control.type            =   createMapfile
+combine_target_map.control.method          =   mapfile_all_to_one
+combine_target_map.control.mapfile_dir     =   input.output.mapfile_dir
+combine_target_map.control.filename        =   combine_tar_map.mapfile
+combine_target_map.control.mapfile_in      =   ndppp_prep_target.output.mapfile
+
+# sort the calibrator data into groups so that NDPPP can concatenate them
+sortmap_target.control.type               =  pythonplugin  
+sortmap_target.control.executable         =  {{ sortmap_script }}
+sortmap_target.argument.flags             =  [combine_target_map.output.mapfile]
+sortmap_target.argument.filename          =  sortmap_target
+sortmap_target.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
+sortmap_target.argument.NDPPPfill         =  True
+sortmap_target.argument.stepname          =  dpppcombine
+sortmap_target.argument.truncateLastSBs   =  True
+
+# convert the output of sortmap_target into usable mapfiles
+do_sortmap_maps.control.kind                      =  plugin
+do_sortmap_maps.control.type                      =  mapfilenamesFromMapfiles
+do_sortmap_maps.control.mapfile_groupmap          =  sortmap_target.output.groupmapfile.mapfile
+do_sortmap_maps.control.mapfile_datamap           =  sortmap_target.output.mapfile.mapfile
+
 # run NDPPP again to flag and average some more.
-dpppaverage.control.type                 = dppp
-dpppaverage.control.max_per_node         = 8                    # \ feel free to adjust these two values to match your system
-dpppaverage.control.environment          = {OMP_NUM_THREADS: 5} # / they should be reasonable for CEP3
-dpppaverage.control.error_tolerance      = {{ error_tolerance }}
-dpppaverage.argument.msin                = ndppp_prep_target.output.mapfile  # The input data.
-dpppaverage.argument.msin.datacolumn     = CORRECTED_DATA
-dpppaverage.argument.msout.datacolumn    = DATA
-dpppaverage.argument.steps               = [count,flag,count,avg]
-dpppaverage.argument.flag.type           = aoflagger
-dpppaverage.argument.flag.keepstatistics = false
-dpppaverage.argument.flag.memoryperc     = 10
-dpppaverage.argument.flag.strategy       = {{ flagging_strategy }}
-dpppaverage.argument.avg.type            = average
-dpppaverage.argument.avg.freqstep        = {{ avg_freqstep_2nd }}     # average to 4 ch/SB      
-dpppaverage.argument.avg.timestep        = {{ avg_timestep_2nd }}     # average to 4 second intervals 
+dpppcombine.control.type                 = dppp
+dpppcombine.control.max_per_node         = 8                    # \ feel free to adjust these two values to match your system
+dpppcombine.control.environment          = {OMP_NUM_THREADS: 5} # / these should be reasonable for CEP3
+dpppcombine.control.error_tolerance      = {{ error_tolerance }}
+dpppcombine.control.mapfile_out          = do_sortmap_maps.output.groupmap   # Mapfile with the output names
+dpppcombine.control.mapfiles_in          = do_sortmap_maps.output.datamap    # The input data
+dpppcombine.control.inputkey             = msin
+dpppcombine.argument.msin.datacolumn     = CORRECTED_DATA
+dpppcombine.argument.msout.datacolumn    = DATA
+dpppcombine.argument.steps               = [count,flag,count,avg]
+dpppcombine.argument.flag.type           = aoflagger
+dpppcombine.argument.flag.keepstatistics = false
+dpppcombine.argument.flag.memoryperc     = 10
+dpppcombine.argument.flag.strategy       = {{ flagging_strategy }}
+dpppcombine.argument.avg.type            = average
+dpppcombine.argument.avg.freqstep        = {{ avg_freqstep_2nd }}     # average to 4 ch/SB      
+dpppcombine.argument.avg.timestep        = {{ avg_timestep_2nd }}     # average to 4 second intervals 
 
 # phase calibration on the gsm skymodel
 gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
 gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system  
 gsmcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
 gsmcalibtarget.argument.force                          =  True 
-gsmcalibtarget.argument.observation                    =  dpppaverage.output.mapfile
+gsmcalibtarget.argument.observation                    =  dpppcombine.output.mapfile
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
 gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
 gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 4  # default: solution-cell spans one subband
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time = 1  # default: one solution per time-step
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  4  # default: solution-cell spans one subband
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
 
 # generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
 gsmcal_parmmap.control.kind               =  plugin
 gsmcal_parmmap.control.type               =  createMapfile
 gsmcal_parmmap.control.method             =  add_suffix_to_file
-gsmcal_parmmap.control.mapfile_in         =  dpppaverage.output.mapfile
+gsmcal_parmmap.control.mapfile_in         =  dpppcombine.output.mapfile
 gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
 gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir  
 gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
@@ -344,7 +338,7 @@ plot_gsm_phases.control.kind               =  recipe
 plot_gsm_phases.control.type               =  executable_args
 plot_gsm_phases.control.executable         =  {{ plotphases_script }}
 plot_gsm_phases.control.max_per_node       =  12
-plot_gsm_phases.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,dpppaverage.output.mapfile]
+plot_gsm_phases.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,dpppcombine.output.mapfile]
 plot_gsm_phases.control.inputkeys          =  [infile,outbase]
 plot_gsm_phases.control.arguments          =  [-p,infile,outbase]
 
@@ -353,7 +347,7 @@ make_resluts_mapfile.control.kind            =  plugin
 make_resluts_mapfile.control.type            =  makeResultsMapfile
 make_resluts_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
 make_resluts_mapfile.control.filename        =  make_resluts_mapfile.mapfile
-make_resluts_mapfile.control.mapfile_in      =  dpppaverage.output.mapfile
+make_resluts_mapfile.control.mapfile_in      =  dpppcombine.output.mapfile
 make_resluts_mapfile.control.target_dir      =  {{ results_directory }}
 make_resluts_mapfile.control.make_target_dir =  True
 make_resluts_mapfile.control.new_suffix      =  .pre-cal.ms
@@ -362,7 +356,7 @@ make_resluts_mapfile.control.new_suffix      =  .pre-cal.ms
 move_results.control.kind               =  recipe
 move_results.control.type               =  executable_args
 move_results.control.executable         =  /bin/mv
-move_results.control.mapfiles_in        =  [dpppaverage.output.mapfile, make_resluts_mapfile.output.mapfile]
+move_results.control.mapfiles_in        =  [dpppcombine.output.mapfile, make_resluts_mapfile.output.mapfile]
 move_results.control.inputkeys          =  [source,destination]
 move_results.control.arguments          =  [source,destination]
 

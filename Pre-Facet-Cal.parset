@@ -4,6 +4,8 @@
 # - no demixing but A-team flagging,
 # - only averaging target data after calibration transfer
 # - consecutive subband-numbers in the data need to be consecutive subband-frequencies
+# - the new "error_tolerance" option requires LOFAR software version >= 2.15
+#   (Comment out all lines with "error_tolerance" if you want to use an older version.)
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
@@ -46,6 +48,9 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! plotphases_script    = /cep3home/horneffer/Pre-Facet-Cal/bin/plot_solutions_all_stations.py
 ! flagging_strategy    = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_12_0/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
 
+# set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance           =  False
+
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
 createmap_cal.control.type            =   createMapfile
@@ -59,6 +64,7 @@ createmap_cal.control.pattern         =   {{ cal_input_pattern }}
 ndppp_prep_cal.control.type              = dppp
 ndppp_prep_cal.control.max_per_node      = 10                   # \ feel free to adjust these two values to match your system
 ndppp_prep_cal.control.environment       = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+ndppp_prep_cal.control.error_tolerance   = {{ error_tolerance }}
 ndppp_prep_cal.argument.msin             = createmap_cal.output.mapfile    # The input data.
 ndppp_prep_cal.argument.msin.datacolumn  = DATA
 ndppp_prep_cal.argument.msin.baseline    = CS*&; RS*&; CS*&RS*
@@ -76,12 +82,13 @@ ndppp_prep_cal.argument.flagamp.type     = preflagger
 ndppp_prep_cal.argument.flagamp.amplmin  = 1e-30
 
 #now run BBS on the NDPPP-ed calibrator data.
-calib_cal.control.type          =  python-calibrate-stand-alone
-calib_cal.control.max_per_node  =  24                             # feel free to adjust this value to match your system
-calib_cal.argument.force        =  True
-calib_cal.argument.observation  =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
-calib_cal.argument.parset       =  {{ calib_cal_parset }}
-calib_cal.argument.catalog      =  {{ calibrator_skymodel }}
+calib_cal.control.type             =  python-calibrate-stand-alone  
+calib_cal.control.max_per_node     =  24                         # feel free to adjust this value to match your system  
+calib_cal.control.error_tolerance  =  {{ error_tolerance }}
+calib_cal.argument.force           =  True 
+calib_cal.argument.observation     =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
+calib_cal.argument.parset          =  {{ calib_cal_parset }}  
+calib_cal.argument.catalog         =  {{ calibrator_skymodel }}     
 
 # generate a mapfile with all files in a single entry
 h5_imp_map.control.kind               =  plugin
@@ -152,6 +159,7 @@ createmap_target.control.pattern         =   {{ target_input_pattern }}
 ndppp_prep_target.control.type              = dppp
 ndppp_prep_target.control.max_per_node      = 10                   # \ feel free to adjust these two values to match your system
 ndppp_prep_target.control.environment       = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+ndppp_prep_target.control.error_tolerance   = {{ error_tolerance }}
 ndppp_prep_target.argument.msin             = createmap_target.output.mapfile    # The input data.
 ndppp_prep_target.argument.msin.datacolumn  = DATA
 ndppp_prep_target.argument.msin.baseline    = CS*&; RS*&; CS*&RS*
@@ -169,6 +177,7 @@ ndppp_prep_target.argument.flagamp.amplmin  = 1e-30
 trans.control.type            = pythonplugin
 trans.control.executable      = {{ transfer_script }}
 trans.control.max_per_node    =  20                                 # feel free to adjust this value to match your system
+trans.control.error_tolerance = {{ error_tolerance }}
 # order for flags is: [<input-filenames>,<output-filename-base>,<extension_for_new_parmDBs>]
 trans.argument.flags          = [ndppp_prep_target.output.mapfile,caldata_transfer,/instrument_amp_clock_offset]
 
@@ -182,8 +191,9 @@ parmmap.control.mapfile_dir        =  input.output.mapfile_dir
 parmmap.control.filename           =  targetparmdb.mapfile
 
 # run BBS to apply the calibrator values to the target data
-calibtarget.control.type             =  python-calibrate-stand-alone
-calibtarget.control.max_per_node     =  24                                 # feel free to adjust this value to match your system
+calibtarget.control.type             =  python-calibrate-stand-alone  
+calibtarget.control.max_per_node     =  24                                 # feel free to adjust this value to match your system  
+calibtarget.control.error_tolerance  = {{ error_tolerance }}
 calibtarget.argument.observation     =  ndppp_prep_target.output.mapfile   # mapfile for the NDPPP-ed target data
 calibtarget.argument.parset          =  {{ cal_transfer_parset }}
 calibtarget.argument.parmdb          =  parmmap.output.mapfile
@@ -193,6 +203,7 @@ calibtarget.argument.replace-parmdb  =  True
 dpppaverage.control.type                 = dppp
 dpppaverage.control.max_per_node         = 12                   # \ feel free to adjust these two values to match your system
 dpppaverage.control.environment          = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+dpppaverage.control.error_tolerance      = {{ error_tolerance }}
 dpppaverage.argument.msin                = ndppp_prep_target.output.mapfile  # The input data.
 dpppaverage.argument.msin.datacolumn     = CORRECTED_DATA
 dpppaverage.argument.msout.datacolumn    = DATA
@@ -206,12 +217,13 @@ dpppaverage.argument.avg.timestep        = {{ avg_timestep }}       # average to
 dpppaverage.argument.avg.freqstep        = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
 
 # run BBS to predict the A-Team contribution
-ateamtarget.control.type          =  python-calibrate-stand-alone
-ateamtarget.control.max_per_node  =  20                                 # feel free to adjust this value to match your system
-ateamtarget.argument.force        =  True
-ateamtarget.argument.observation  =  dpppaverage.output.mapfile
-ateamtarget.argument.parset       =  {{ ATeam_predict_parset }}
-ateamtarget.argument.catalog      =  {{ ATeam_skymodel }}
+ateamtarget.control.type             =  python-calibrate-stand-alone  
+ateamtarget.control.max_per_node     =  20                          # feel free to adjust this value to match your system  
+ateamtarget.control.error_tolerance  =  {{ error_tolerance }}
+ateamtarget.argument.force           =  True 
+ateamtarget.argument.observation     =  dpppaverage.output.mapfile
+ateamtarget.argument.parset          =  {{ ATeam_predict_parset }}  
+ateamtarget.argument.catalog         =  {{ ATeam_skymodel }}     
 
 # run the a-team clipper to flag data affected by the a-team
 ateamcliptar.control.kind               =  recipe
@@ -219,6 +231,7 @@ ateamcliptar.control.type               =  executable_args
 ateamcliptar.control.max_per_node       =  24
 ateamcliptar.control.mapfile_in         =  dpppaverage.output.mapfile
 ateamcliptar.control.executable         =  {{ ATeam_Clipper }}
+ateamcliptar.control.error_tolerance    =  {{ error_tolerance }}
 ateamcliptar.control.arguments          =  [allms]
 ateamcliptar.control.inputkey           =  allms
 
@@ -235,6 +248,7 @@ sortmap_tar.control.truncateLastSBs =   True   # This means that a excess subban
 # run NDPPP to concatenate the target
 dpppconcat.control.type                 =  dppp
 dpppconcat.control.max_per_node         =  12
+dpppconcat.control.error_tolerance      =  {{ error_tolerance }}
 dpppconcat.control.mapfile_out          =  sortmap_tar.output.groupmap # tell the pipeline to give the output useful names
 dpppconcat.control.mapfiles_in          =  [sortmap_tar.output.mapfile]
 dpppconcat.control.inputkey             =  msin
@@ -249,15 +263,16 @@ dpppconcat.argument.flag.memoryperc     =  10
 dpppconcat.argument.flag.strategy       =  {{ flagging_strategy }}
 
 # phase calibration on the gsm skymodel
-gsmcalibtarget.control.type                            =  python-calibrate-stand-alone
-gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system
-gsmcalibtarget.argument.force                          =  True
+gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
+gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system  
+gsmcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
+gsmcalibtarget.argument.force                          =  True 
 gsmcalibtarget.argument.observation                    =  dpppconcat.output.mapfile
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
-gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}
-gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq = 0  # default: solution-cell spans all frequency channels
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time = 1  # default: one solution per time-step
+gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
+gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
+gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
 
 # generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
 gsmcal_parmmap.control.kind               =  plugin

@@ -233,11 +233,8 @@ SBfreqs = rebin(np.copy(amptab.freq[:]),( len(amptab.freq[:])/n_chan ,))
 
 
 
-goodfreq_el = range(len(SBfreqs))
-# remove the badd subbands given by the user
-for bad in bad_sblist:
-    print 'removing subband: ',  bad
-    goodfreq_el.remove(bad)
+
+
 
   
 freqidx = np.arange(n_chan/2,nfreqs,n_chan)
@@ -245,12 +242,18 @@ freqs = amptab.freq[freqidx]
 timeidx = np.arange(ntimes)
 freqgrid = np.arange(nfreqs)
 SBgrid = np.floor(freqgrid/n_chan)
+SBvals = freqgrid/n_chan
 
 freqs_new  = np.arange(np.min(freqs)+1e3,np.max(freqs)-1e3, 195.3125e3)
 amps_array_flagged = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 amps_array = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 minscale = np.zeros( nants )
 maxscale = np.zeros( nants )
+
+# remove the badd subbands given by the user
+print "Have",max(SBgrid),"subbands."
+for bad in bad_sblist:
+    print 'removing subband: ',  bad
 
 try:
     os.remove('freqs_for_amplitude_array.npy')
@@ -355,10 +358,29 @@ for antenna_id in range(0,len(amptab.ant[:])):
     amp_xx = np.copy(amps_array_flagged[antenna_id,:,:,0])
     amp_yy = np.copy(amps_array_flagged[antenna_id,:,:,1])
 
+    if show_plot:
+        matplotlib.pyplot.plot(np.median(amp_xx, axis=0),'b+')
+        matplotlib.pyplot.grid(b=True,which='major',axis='x')
+        matplotlib.pyplot.xlabel('Subband')
+        matplotlib.pyplot.ylabel('ampl')
+        matplotlib.pyplot.savefig('%s_flaggedXX.pdf'%(amptab.ant[antenna_id]))
+        matplotlib.pyplot.close()
+        matplotlib.pyplot.cla()
+        
+        matplotlib.pyplot.plot(np.median(amp_yy, axis=0),'b+')
+        matplotlib.pyplot.grid(b=True,which='major',axis='x')
+        matplotlib.pyplot.xlabel('Subband')
+        matplotlib.pyplot.ylabel('ampl')
+        matplotlib.pyplot.savefig('%s_flaggedYY.pdf'%(amptab.ant[antenna_id]))
+        matplotlib.pyplot.close()
+        matplotlib.pyplot.cla()
+
     amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (3,3))
     amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (7,1))
     amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (3,3))
     amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (7,1))
+
+
 
     for time in range(0,len(amptab.time[:])):
         amps_array[antenna_id,time,:,0] = np.copy(savitzky_golay(amp_xx[time,:], 17, 2))
