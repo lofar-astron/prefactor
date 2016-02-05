@@ -18,7 +18,7 @@ There are several pipeline parsets in this repository:
 * Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration, this could also be done as the first step of Factor.)
 
 Software requirements:
-* the full "offline" LOFAR software installation version >= 2.15 (With small modifications the Pre-Facet-Cal pipelines can be run with older versions, but that is not supported anymore.)
+* the full "offline" LOFAR software installation version >= 2.15 (With small modifications the Pre-Facet-Cal pipelines can be run with older versions, but that is not supported by the authors anymore.)
 * LoSoTo 
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * Python matplotlib
