@@ -160,6 +160,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     maxfreq = maxfreq+freq_width/2.
     minfreq = minfreq-freq_width/2.
     numFiles = round((maxfreq-minfreq)/freq_width)
+    numSB = int(numSB)
     if numSB > 0:
         if truncateLastSBs:
             ngroups = int(np.floor(numFiles/numSB))
@@ -199,7 +200,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     groupmapname = os.path.join(mapfile_dir, filename+'_groups')
     groupmap.save(groupmapname)
     # genertate map with edge-channels to flag
-    flagmap = _calc_edge_chans(filemapname, nchans)
+    flagmap = _calc_edge_chans(filemap, nchans)
     flagmapname = os.path.join(mapfile_dir, filename+'_flags')
     flagmap.save(flagmapname)
     result = {'mapfile': filemapname, 'groupmapfile': groupmapname, 'flagmapfile': flagmapname}
