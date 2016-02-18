@@ -26,7 +26,7 @@ def _calc_edge_chans(inmap, numch, edgeFactor=32):
             flaglist.extend(range(i*numch,i*numch+numch/edgeFactor))
             flaglist.extend(range((i+1)*numch-numch/edgeFactor,(i+1)*numch))
         outmap.append(DataProduct(group.host,str(flaglist).replace(' ',''),group.skip))
-        print str(flaglist).replace(' ','')
+        print '_calc_edge_chans: flaglist:', str(flaglist).replace(' ','')
     return outmap
 
 def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
@@ -170,6 +170,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         ngroups = 1
         numSB = int(numFiles)
     hostID = 0
+    print "sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each."
     for time in timestamps:
         (freq,fname) = time_groups[time]['freq_names'].pop(0)
         for fgroup in range(ngroups):
@@ -180,6 +181,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                     if NDPPPfill:
                         files.append('dummy.ms')
                 else:
+                    assert freq!=1e12
                     files.append(fname)
                     if len(time_groups[time]['freq_names'])>0:
                         (freq,fname) = time_groups[time]['freq_names'].pop(0)
@@ -187,13 +189,13 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                         (freq,fname) = (1e12,'This_shouldn\'t_show_up')
                     skip_this = False
             filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
-            groupname = time_groups[time]['basename']+'_%Xt_%dg.ms'%(time,fgroup)
+            freqID = int(((numSB/2.+fgroup*numSB+1)*freq_width+minfreq)/1e6)
+            groupname = time_groups[time]['basename']+'_%Xt_%dg.ms'%(time,freqID)
             if type(stepname) is str:
                 groupname += stepname
             if type(target_path) is str:
                 groupname = os.path.join(target_path,os.path.basename(groupname))
             groupmap.append(DataProduct(hosts[hostID%numhosts],groupname, skip_this))
-        assert freq==1e12
 
     filemapname = os.path.join(mapfile_dir, filename)
     filemap.save(filemapname)
