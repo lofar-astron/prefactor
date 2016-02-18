@@ -14,9 +14,9 @@
 pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 
 
 # parameters you will need to adjust.
@@ -45,6 +45,7 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! fit_XYoffset_script  = /cep3home/horneffer/Pre-Facet-Cal/bin/find_cal_global_phaseoffset_losoto.py
 ! transfer_script      = /cep3home/horneffer/Pre-Facet-Cal/bin/transfer_amplitudes+clock+offset_toMS.py
 ! ATeam_Clipper        = /cep3home/horneffer/Pre-Facet-Cal/bin/Ateamclipper.py
+! sortmap_script       = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/sort_times_into_freqGroups.py
 ! plotphases_script    = /cep3home/horneffer/Pre-Facet-Cal/bin/plot_solutions_all_stations.py
 ! flagging_strategy    = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_12_0/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
 
@@ -235,22 +236,37 @@ ateamcliptar.control.error_tolerance    =  {{ error_tolerance }}
 ateamcliptar.control.arguments          =  [allms]
 ateamcliptar.control.inputkey           =  allms
 
-# sort the target data into groups so that NDPPP can concatenate them
-sortmap_tar.control.kind            =   plugin
-sortmap_tar.control.type            =   groupMapfileObsSB
-sortmap_tar.control.mapfile_dir     =   input.output.mapfile_dir
-sortmap_tar.control.filename        =   sortmap_tar.mapfile
-sortmap_tar.control.mapfile_in      =   dpppaverage.output.mapfile
-sortmap_tar.control.numSB           =   {{ num_SBs_per_group }}
-sortmap_tar.control.NDPPPfill       =   True
-sortmap_tar.control.truncateLastSBs =   True   # This means that a excess subbands that don't make a full group get discarded
+# combine all entries into one mapfile, for the sortmap script
+combine_target_map.control.kind            =   plugin
+combine_target_map.control.type            =   createMapfile
+combine_target_map.control.method          =   mapfile_all_to_one
+combine_target_map.control.mapfile_dir     =   input.output.mapfile_dir
+combine_target_map.control.filename        =   combine_tar_map.mapfile
+combine_target_map.control.mapfile_in      =   dpppaverage.output.mapfile
+
+# sort the target data by frequency into groups so that NDPPP can concatenate them
+sortmap_target.control.type               =  pythonplugin  
+sortmap_target.control.executable         =  {{ sortmap_script }}
+sortmap_target.argument.flags             =  [combine_target_map.output.mapfile]
+sortmap_target.argument.filename          =  sortmap_target
+sortmap_target.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
+sortmap_target.argument.NDPPPfill         =  True
+sortmap_target.argument.stepname          =  dpppconcat
+sortmap_target.argument.truncateLastSBs   =  True
+
+# convert the output of sortmap_target into usable mapfiles
+do_sortmap_maps.control.kind                      =  plugin
+do_sortmap_maps.control.type                      =  mapfilenamesFromMapfiles
+do_sortmap_maps.control.mapfile_groupmap          =  sortmap_target.output.groupmapfile.mapfile
+do_sortmap_maps.control.mapfile_datamap           =  sortmap_target.output.mapfile.mapfile
 
 # run NDPPP to concatenate the target
 dpppconcat.control.type                 =  dppp
 dpppconcat.control.max_per_node         =  12
 dpppconcat.control.error_tolerance      =  {{ error_tolerance }}
-dpppconcat.control.mapfile_out          =  sortmap_tar.output.groupmap # tell the pipeline to give the output useful names
-dpppconcat.control.mapfiles_in          =  [sortmap_tar.output.mapfile]
+dpppconcat.control.mapfile_out          =  do_sortmap_maps.output.groupmap # tell the pipeline to give the output useful names
+dpppconcat.control.mapfiles_in          =  [do_sortmap_maps.output.datamap]
 dpppconcat.control.inputkey             =  msin
 dpppconcat.argument.msin.datacolumn     =  DATA
 dpppconcat.argument.msin.missingdata    =  True    #\ these two lines will make NDPPP generate dummy data when
