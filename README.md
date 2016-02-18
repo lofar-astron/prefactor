@@ -10,6 +10,13 @@ It includes:
 * some flagging and averaging of amplitude solutions
 * diagnostic plots
 * at least some documentation
+Version 1.0 does not include:
+* grouping of subbands by actual frequency instead of file number (see branch sort-by-freq for this feature)
+* speed and disk usage improvements by optimized usage of NDPPP (see branch dppp-gaincal for this feature)
+* applying Ionospheric RM corrections
+(Stay tuned for version 2.)
+
+There is a wiki page with more or less useful hints: http://www.lofar.org/wiki/doku.php?id=public:user_software:prefactor
 
 There are several pipeline parsets in this repository:
 * Pre-Facet-Cal.parset : The "standard" pre-facet calibration pipeline, works on pre-NDPPP'ed data
