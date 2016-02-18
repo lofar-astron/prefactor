@@ -243,6 +243,7 @@ sortmap_tar.control.filename        =   sortmap_tar.mapfile
 sortmap_tar.control.mapfile_in      =   dpppaverage.output.mapfile
 sortmap_tar.control.numSB           =   {{ num_SBs_per_group }}
 sortmap_tar.control.NDPPPfill       =   True
+sortmap_tar.control.startFromZero   =   True   # This means that groups (and group-names) are done with SB000 as a reference
 sortmap_tar.control.truncateLastSBs =   True   # This means that a excess subbands that don't make a full group get discarded
 
 # run NDPPP to concatenate the target
