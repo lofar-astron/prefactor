@@ -32,32 +32,32 @@ def normalize(phase):
 
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
-    
+
     This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
+    The signal is prepared by introducing reflected copies of the signal
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
-    
+
     input:
-        x: the input signal 
+        x: the input signal
         window_len: the dimension of the smoothing window; should be an odd integer
         window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
             flat window will produce a moving average smoothing.
 
     output:
         the smoothed signal
-        
+
     example:
 
     t=linspace(-2,2,0.1)
     x=sin(t)+randn(len(t))*0.1
     y=smooth(x)
-    
-    see also: 
-    
+
+    see also:
+
     numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
     scipy.signal.lfilter
- 
+
     TODO: the window parameter could be the window itself if an array instead of a string
     NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
     """
@@ -86,7 +86,7 @@ def smooth(x,window_len=11,window='hanning'):
     return y
 
 
-def smooth_array(x, axis=0,window_len=11,window='hanning'):    
+def smooth_array(x, axis=0,window_len=11,window='hanning'):
     nx, ny = x.shape
     y = np.zeros((nx,ny))
     d = window_len/2
@@ -134,6 +134,7 @@ def main(losotoname, store_basename, refstationID=2, sourceID=0):
 
     np.save('freqs_for_phase_array.npy', freq_per_sb)
     np.save(store_basename.strip() + '_phase_array.npy', global_stat_offsets_smoothed)
+    np.save(store_basename.strip() + '_station_names.npy', stationsnames)
 
     # do the plotting!
     Nr = int(np.sqrt(nstations))
@@ -150,6 +151,6 @@ def main(losotoname, store_basename, refstationID=2, sourceID=0):
         ax[istat][0].plot(subbands, global_stat_offsets_smoothed[:,istat],'g')
         ax[istat][0].set_ylim(-3.2,3.2)
         ax[istat][0].set_xlim(np.min(subbands), np.max(subbands))
-        
+
     f.savefig('phase_xx_yy_offset.png')
 
