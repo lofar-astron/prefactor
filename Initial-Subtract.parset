@@ -47,7 +47,7 @@
 
 ##### performance parameters
 ! max_imagers_per_node      =  3
-! max_percent_mem_per_img   =  0.3
+! max_percent_mem_per_img   =  30
 ! max_cpus_per_img          =  10
 ! max_dppp_per_node         =  6
 ! max_dppp_threads          =  8
