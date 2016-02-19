@@ -14,9 +14,9 @@
 pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 
 
 # parameters you will need to adjust.
@@ -36,7 +36,6 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! calib_cal_parset     = /cep3home/horneffer/Pre-Facet-Cal/parsets/calibcal.parset
 ! cal_transfer_parset  = /cep3home/horneffer/Pre-Facet-Cal/parsets/applyparmdb.parset
 ! ATeam_predict_parset = /cep3home/horneffer/Pre-Facet-Cal/parsets/ateamclip.parset
-! gsm_cal_parset       = /cep3home/horneffer/Pre-Facet-Cal/parsets/gsmcal.parset
 ! ATeam_skymodel       = /cep3home/horneffer/Pre-Facet-Cal/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer      = /cep3home/horneffer/Pre-Facet-Cal/bin/losotoImporter.py
 ! fitclock_script      = /cep3home/horneffer/Pre-Facet-Cal/bin/fit_clocktec_initialguess_losoto.py
@@ -82,13 +81,13 @@ ndppp_prep_cal.argument.flagamp.type     = preflagger
 ndppp_prep_cal.argument.flagamp.amplmin  = 1e-30
 
 #now run BBS on the NDPPP-ed calibrator data.
-calib_cal.control.type             =  python-calibrate-stand-alone  
-calib_cal.control.max_per_node     =  24                         # feel free to adjust this value to match your system  
+calib_cal.control.type             =  python-calibrate-stand-alone
+calib_cal.control.max_per_node     =  24                         # feel free to adjust this value to match your system
 calib_cal.control.error_tolerance  =  {{ error_tolerance }}
-calib_cal.argument.force           =  True 
+calib_cal.argument.force           =  True
 calib_cal.argument.observation     =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
-calib_cal.argument.parset          =  {{ calib_cal_parset }}  
-calib_cal.argument.catalog         =  {{ calibrator_skymodel }}     
+calib_cal.argument.parset          =  {{ calib_cal_parset }}
+calib_cal.argument.catalog         =  {{ calibrator_skymodel }}
 
 # generate a mapfile with all files in a single entry
 h5_imp_map.control.kind               =  plugin
@@ -155,81 +154,70 @@ createmap_target.control.filename        =   createmap_target.mapfile
 createmap_target.control.folder          =   {{ target_input_path }}
 createmap_target.control.pattern         =   {{ target_input_pattern }}
 
-# run NDPPP on the target data
-ndppp_prep_target.control.type              = dppp
-ndppp_prep_target.control.max_per_node      = 10                   # \ feel free to adjust these two values to match your system
-ndppp_prep_target.control.environment       = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
-ndppp_prep_target.control.error_tolerance   = {{ error_tolerance }}
-ndppp_prep_target.argument.msin             = createmap_target.output.mapfile    # The input data.
-ndppp_prep_target.argument.msin.datacolumn  = DATA
-ndppp_prep_target.argument.msin.baseline    = CS*&; RS*&; CS*&RS*
-ndppp_prep_target.argument.msout.datacolumn = DATA
-ndppp_prep_target.argument.steps            = [flag,filter,flagamp]
-ndppp_prep_target.argument.flag.type        = preflagger
-ndppp_prep_target.argument.flag.baseline    = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
-ndppp_prep_target.argument.filter.type      = filter
-ndppp_prep_target.argument.filter.baseline  = CS*, RS*&&
-ndppp_prep_target.argument.filter.remove    = true                     # fully kick out the international stations.
-ndppp_prep_target.argument.flagamp.type     = preflagger
-ndppp_prep_target.argument.flagamp.amplmin  = 1e-30
-
 # generate parmDB with the interpolated calibrator data to apply to the traget
 trans.control.type            = pythonplugin
 trans.control.executable      = {{ transfer_script }}
 trans.control.max_per_node    =  20                                 # feel free to adjust this value to match your system
 trans.control.error_tolerance = {{ error_tolerance }}
 # order for flags is: [<input-filenames>,<output-filename-base>,<extension_for_new_parmDBs>]
-trans.argument.flags          = [ndppp_prep_target.output.mapfile,caldata_transfer,/instrument_amp_clock_offset]
+trans.argument.flags          = [createmap_target.output.mapfile,caldata_transfer,/instrument_amp_clock_offset]
 
 # generate mapfile with the parmDBs to be applied to the target data
 parmmap.control.kind               =  plugin
 parmmap.control.type               =  createMapfile
 parmmap.control.method             =  add_suffix_to_file
-parmmap.control.mapfile_in         =  ndppp_prep_target.output.mapfile
+parmmap.control.mapfile_in         =  createmap_target.output.mapfile
 parmmap.control.add_suffix_to_file =  /instrument_amp_clock_offset
 parmmap.control.mapfile_dir        =  input.output.mapfile_dir
 parmmap.control.filename           =  targetparmdb.mapfile
 
-# run BBS to apply the calibrator values to the target data
-calibtarget.control.type             =  python-calibrate-stand-alone  
-calibtarget.control.max_per_node     =  24                                 # feel free to adjust this value to match your system  
-calibtarget.control.error_tolerance  = {{ error_tolerance }}
-calibtarget.argument.observation     =  ndppp_prep_target.output.mapfile   # mapfile for the NDPPP-ed target data
-calibtarget.argument.parset          =  {{ cal_transfer_parset }}
-calibtarget.argument.parmdb          =  parmmap.output.mapfile
-calibtarget.argument.replace-parmdb  =  True
-
-# run NDPPP again to flag and average some more.
-dpppaverage.control.type                 = dppp
-dpppaverage.control.max_per_node         = 12                   # \ feel free to adjust these two values to match your system
-dpppaverage.control.environment          = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
-dpppaverage.control.error_tolerance      = {{ error_tolerance }}
-dpppaverage.argument.msin                = ndppp_prep_target.output.mapfile  # The input data.
-dpppaverage.argument.msin.datacolumn     = CORRECTED_DATA
-dpppaverage.argument.msout.datacolumn    = DATA
-dpppaverage.argument.steps               = [count,flag,count,avg]
-dpppaverage.argument.flag.type           = aoflagger
-dpppaverage.argument.flag.keepstatistics = false
-dpppaverage.argument.flag.memoryperc     = 10
-dpppaverage.argument.flag.strategy       = {{ flagging_strategy }}
-dpppaverage.argument.avg.type            = average
-dpppaverage.argument.avg.timestep        = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
-dpppaverage.argument.avg.freqstep        = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+# run NDPPP on the target data to flag, transfer calibrator values, and average
+ndppp_prep_target.control.type                      = dppp
+ndppp_prep_target.control.max_per_node              = 10                   # \ feel free to adjust these two values to match your system
+ndppp_prep_target.control.environment               = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+ndppp_prep_target.control.error_tolerance           = {{ error_tolerance }}
+ndppp_prep_target.argument.msin                     = createmap_target.output.mapfile    # The input data.
+ndppp_prep_target.argument.msin.datacolumn          = DATA
+ndppp_prep_target.argument.msin.baseline            = CS*&; RS*&; CS*&RS*
+ndppp_prep_target.argument.msout.datacolumn         = DATA
+ndppp_prep_target.argument.steps                    = [flag1,filter,flagamp,applyclock,applygain,applybeam,count,flag2,count,avg]
+ndppp_prep_target.argument.flag1.type               = preflagger
+ndppp_prep_target.argument.flag1.baseline           = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
+ndppp_prep_target.argument.filter.type              = filter
+ndppp_prep_target.argument.filter.baseline          = CS*, RS*&&
+ndppp_prep_target.argument.filter.remove            = true                     # fully kick out the international stations.
+ndppp_prep_target.argument.flagamp.type             = preflagger
+ndppp_prep_target.argument.flagamp.amplmin          = 1e-30
+ndppp_prep_target.argument.applyclock.type          = applycal
+ndppp_prep_target.argument.applyclock.parmdb        = parmmap.output.mapfile
+ndppp_prep_target.argument.applyclock.correction    = clock
+ndppp_prep_target.argument.applygain.type           = applycal
+ndppp_prep_target.argument.applygain.parmdb         = parmmap.output.mapfile
+ndppp_prep_target.argument.applygain.correction     = gain
+ndppp_prep_target.argument.applybeam.type           = applybeam
+ndppp_prep_target.argument.applybeam.usechannelfreq = True
+ndppp_prep_target.argument.flag2.type               = aoflagger
+ndppp_prep_target.argument.flag2.keepstatistics     = false
+ndppp_prep_target.argument.flag2.memoryperc         = 10
+ndppp_prep_target.argument.flag2.strategy           = {{ flagging_strategy }}
+ndppp_prep_target.argument.avg.type                 = average
+ndppp_prep_target.argument.avg.timestep             = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
+ndppp_prep_target.argument.avg.freqstep             = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
 
 # run BBS to predict the A-Team contribution
-ateamtarget.control.type             =  python-calibrate-stand-alone  
-ateamtarget.control.max_per_node     =  20                          # feel free to adjust this value to match your system  
+ateamtarget.control.type             =  python-calibrate-stand-alone
+ateamtarget.control.max_per_node     =  20                          # feel free to adjust this value to match your system
 ateamtarget.control.error_tolerance  =  {{ error_tolerance }}
-ateamtarget.argument.force           =  True 
-ateamtarget.argument.observation     =  dpppaverage.output.mapfile
-ateamtarget.argument.parset          =  {{ ATeam_predict_parset }}  
-ateamtarget.argument.catalog         =  {{ ATeam_skymodel }}     
+ateamtarget.argument.force           =  True
+ateamtarget.argument.observation     =  ndppp_prep_target.output.mapfile
+ateamtarget.argument.parset          =  {{ ATeam_predict_parset }}
+ateamtarget.argument.catalog         =  {{ ATeam_skymodel }}
 
 # run the a-team clipper to flag data affected by the a-team
 ateamcliptar.control.kind               =  recipe
 ateamcliptar.control.type               =  executable_args
 ateamcliptar.control.max_per_node       =  24
-ateamcliptar.control.mapfile_in         =  dpppaverage.output.mapfile
+ateamcliptar.control.mapfile_in         =  ndppp_prep_target.output.mapfile
 ateamcliptar.control.executable         =  {{ ATeam_Clipper }}
 ateamcliptar.control.error_tolerance    =  {{ error_tolerance }}
 ateamcliptar.control.arguments          =  [allms]
@@ -240,37 +228,37 @@ sortmap_tar.control.kind            =   plugin
 sortmap_tar.control.type            =   groupMapfileObsSB
 sortmap_tar.control.mapfile_dir     =   input.output.mapfile_dir
 sortmap_tar.control.filename        =   sortmap_tar.mapfile
-sortmap_tar.control.mapfile_in      =   dpppaverage.output.mapfile
+sortmap_tar.control.mapfile_in      =   ndppp_prep_target.output.mapfile
 sortmap_tar.control.numSB           =   {{ num_SBs_per_group }}
 sortmap_tar.control.NDPPPfill       =   True
 sortmap_tar.control.truncateLastSBs =   True   # This means that a excess subbands that don't make a full group get discarded
 
 # run NDPPP to concatenate the target
-dpppconcat.control.type                 =  dppp
-dpppconcat.control.max_per_node         =  12
-dpppconcat.control.error_tolerance      =  {{ error_tolerance }}
-dpppconcat.control.mapfile_out          =  sortmap_tar.output.groupmap # tell the pipeline to give the output useful names
-dpppconcat.control.mapfiles_in          =  [sortmap_tar.output.mapfile]
-dpppconcat.control.inputkey             =  msin
-dpppconcat.argument.msin.datacolumn     =  DATA
-dpppconcat.argument.msin.missingdata    =  True    #\ these two lines will make NDPPP generate dummy data when
-dpppconcat.argument.msin.orderms        =  False   #/ concatenating data
-dpppconcat.argument.msout.datacolumn    =  DATA
-dpppconcat.argument.steps               =  [flag]      # run the aoflagger (this used to be an extra step)
-dpppconcat.argument.flag.type           =  aoflagger
-dpppconcat.argument.flag.keepstatistics =  false
-dpppconcat.argument.flag.memoryperc     =  10
-dpppconcat.argument.flag.strategy       =  {{ flagging_strategy }}
+dpppconcat.control.type                      =  dppp
+dpppconcat.control.max_per_node              =  10                   # \ feel free to adjust these two values to match your system
+dpppconcat.control.environment               =  {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+dpppconcat.control.error_tolerance           =  {{ error_tolerance }}
+dpppconcat.control.mapfiles_in               =  sortmap_tar.output.mapfile
+dpppconcat.control.mapfile_out               =  sortmap_tar.output.groupmap   # Mapfile with the output names
+dpppconcat.control.inputkey                  =  msin
+dpppconcat.argument.msin.datacolumn          =  DATA
+dpppconcat.argument.msin.missingdata         =  True    #\ these two lines will make NDPPP generate dummy data when
+dpppconcat.argument.msin.orderms             =  False   #/ concatenating data
+dpppconcat.argument.steps                    =  [flag]
+dpppconcat.argument.flag.type                =  aoflagger
+dpppconcat.argument.flag.keepstatistics      =  false
+dpppconcat.argument.flag.memoryperc          =  10
+dpppconcat.argument.flag.strategy            =  {{ flagging_strategy }}
 
 # phase calibration on the gsm skymodel
-gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
-gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system  
+gsmcalibtarget.control.type                            =  python-calibrate-stand-alone
+gsmcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system
 gsmcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
-gsmcalibtarget.argument.force                          =  True 
+gsmcalibtarget.argument.force                          =  True
 gsmcalibtarget.argument.observation                    =  dpppconcat.output.mapfile
 gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
-gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}  
-gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}     
+gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}
+gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}
 gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
 gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
 
@@ -284,30 +272,30 @@ gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
 gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
 
 # plot the phase solutions from the phase-only calibration of the target
-plot_gsm_phases.control.kind               =  recipe
-plot_gsm_phases.control.type               =  executable_args
-plot_gsm_phases.control.executable         =  {{ plotphases_script }}
-plot_gsm_phases.control.max_per_node       =  24
-plot_gsm_phases.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,dpppconcat.output.mapfile]
-plot_gsm_phases.control.inputkeys          =  [infile,outbase]
-plot_gsm_phases.control.arguments          =  [-p,infile,outbase]
+plot_target_phases.control.kind         =  recipe
+plot_target_phases.control.type         =  executable_args
+plot_target_phases.control.executable   =  {{ plotphases_script }}
+plot_target_phases.control.max_per_node =  24
+plot_target_phases.control.mapfiles_in  =  [directionindependent_parmmap.output.mapfile,dpppconcat.output.mapfile]
+plot_target_phases.control.inputkeys    =  [infile,outbase]
+plot_target_phases.control.arguments    =  [-p,infile,outbase]
 
 # make mapfile with the filenames of the results that we want
-make_resluts_mapfile.control.kind            =  plugin
-make_resluts_mapfile.control.type            =  makeResultsMapfile
-make_resluts_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
-make_resluts_mapfile.control.filename        =  make_resluts_mapfile.mapfile
-make_resluts_mapfile.control.mapfile_in      =  dpppconcat.output.mapfile
-make_resluts_mapfile.control.target_dir      =  {{ results_directory }}
-make_resluts_mapfile.control.make_target_dir =  True
-make_resluts_mapfile.control.new_suffix      =  .pre-cal.ms
+make_results_mapfile.control.kind            =  plugin
+make_results_mapfile.control.type            =  makeResultsMapfile
+make_results_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
+make_results_mapfile.control.filename        =  make_results_mapfile.mapfile
+make_results_mapfile.control.mapfile_in      =  dpppconcat.output.mapfile
+make_results_mapfile.control.target_dir      =  {{ results_directory }}
+make_results_mapfile.control.make_target_dir =  True
+make_results_mapfile.control.new_suffix      =  .pre-cal.ms
 
 # move the results to where we want them
 move_results.control.kind               =  recipe
 move_results.control.type               =  executable_args
 move_results.control.executable         =  /bin/mv
 move_results.control.max_per_node       =  20                                 # feel free to adjust this value to match your system
-move_results.control.mapfiles_in        =  [dpppconcat.output.mapfile, make_resluts_mapfile.output.mapfile]
+move_results.control.mapfiles_in        =  [dpppconcat.output.mapfile,make_results_mapfile.output.mapfile]
 move_results.control.inputkeys          =  [source,destination]
 move_results.control.arguments          =  [source,destination]
 
