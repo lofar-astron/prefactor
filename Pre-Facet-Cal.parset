@@ -37,6 +37,7 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! calib_cal_parset     = /cep3home/horneffer/Pre-Facet-Cal/parsets/calibcal.parset
 ! cal_transfer_parset  = /cep3home/horneffer/Pre-Facet-Cal/parsets/applyparmdb.parset
 ! ATeam_predict_parset = /cep3home/horneffer/Pre-Facet-Cal/parsets/ateamclip.parset
+! gsm_cal_parset       = /cep3home/horneffer/Pre-Facet-Cal/parsets/gsmcal.parset
 ! ATeam_skymodel       = /cep3home/horneffer/Pre-Facet-Cal/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer      = /cep3home/horneffer/Pre-Facet-Cal/bin/losotoImporter.py
 ! fitclock_script      = /cep3home/horneffer/Pre-Facet-Cal/bin/fit_clocktec_initialguess_losoto.py
@@ -289,13 +290,13 @@ gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
 gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
 
 # plot the phase solutions from the phase-only calibration of the target
-plot_target_phases.control.kind         =  recipe
-plot_target_phases.control.type         =  executable_args
-plot_target_phases.control.executable   =  {{ plotphases_script }}
-plot_target_phases.control.max_per_node =  24
-plot_target_phases.control.mapfiles_in  =  [directionindependent_parmmap.output.mapfile,dpppconcat.output.mapfile]
-plot_target_phases.control.inputkeys    =  [infile,outbase]
-plot_target_phases.control.arguments    =  [-p,infile,outbase]
+plot_gsm_phases.control.kind         =  recipe
+plot_gsm_phases.control.type         =  executable_args
+plot_gsm_phases.control.executable   =  {{ plotphases_script }}
+plot_gsm_phases.control.max_per_node =  24
+plot_gsm_phases.control.mapfiles_in  =  [gsmcal_parmmap.output.mapfile,dpppconcat.output.mapfile]
+plot_gsm_phases.control.inputkeys    =  [infile,outbase]
+plot_gsm_phases.control.arguments    =  [-p,infile,outbase]
 
 # make mapfile with the filenames of the results that we want
 make_results_mapfile.control.kind            =  plugin
