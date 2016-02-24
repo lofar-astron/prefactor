@@ -27,6 +27,7 @@ There are several pipeline parsets in this repository:
 Software requirements:
 * the full "offline" LOFAR software installation version >= 2.15 (With small modifications the Pre-Facet-Cal pipelines can be run with older versions, but that is not supported by the authors anymore.)
 * LoSoTo 
+* LSMTool (see https://github.com/darafferty/LSMTool)
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * Python matplotlib
 * WSClean (for Initial-Subtract, version >=1.9)
