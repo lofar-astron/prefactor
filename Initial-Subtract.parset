@@ -34,6 +34,7 @@
 # name of the direction independent parmDBs inside the measurement sets
 # needs to include the leading "/" to indicate that the parmDB is a subdirectory of the MS
 ! direction_indep_parmDBs = /instrument_directionindependent
+! inspection_directory = /media/scratch/test/username/WhereYouWantImagesAndInspectionPlots/
 
 ##### imaging parameters (Feel free to leave them untouched.)
 #### specify  the image parameters here
@@ -68,7 +69,7 @@
 ! makesourcedb           = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, wsclean_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, copy_mask, wsclean_high2, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -159,6 +160,15 @@ mask_high.argument.img_format                   =   fits
 mask_high.argument.atrous_jmax                  =   3
 mask_high.argument.trim_by                      =   0.1
 
+# copy the mask images to where we want them
+copy_mask.control.kind               =  recipe
+copy_mask.control.type               =  executable_args
+copy_mask.control.executable         =  /bin/cp
+copy_mask.control.max_per_node       =  10      #not much use to have too many of those
+copy_mask.control.mapfile_in         =  mask_high.output.mapfile
+copy_mask.control.inputkey           =  source
+copy_mask.control.arguments          =  [source,{{ inspection_directory }}]
+
 # second high-res imaging, length = nbands
 wsclean_high2.control.kind                      =   recipe
 wsclean_high2.control.type                      =   executable_args
@@ -183,6 +193,15 @@ wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
+
+# move the high2 images to where we want them
+move_high2.control.kind               =  recipe
+move_high2.control.type               =  executable_args
+move_high2.control.executable         =  /bin/mv
+move_high2.control.max_per_node       =  10      #not much use to have too many of those
+move_high2.control.mapfile_in         =  wsclean_high2.output.wsclean_high2-image.fits.mapfile
+move_high2.control.inputkey           =  source
+move_high2.control.arguments          =  [source,{{ inspection_directory }}]
 
 # convert high-res images to casa images, length = nbands
 fits_to_image_high.control.type                 =   pythonplugin
@@ -343,6 +362,15 @@ wsclean_low2.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low2.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
+
+# move the low2 images to where we want them
+move_low2.control.kind               =  recipe
+move_low2.control.type               =  executable_args
+move_low2.control.executable         =  /bin/mv
+move_low2.control.max_per_node       =  10      #not much use to have too many of those
+move_low2.control.mapfile_in         =  wsclean_low2.output.wsclean_low2-image.fits.mapfile
+move_low2.control.inputkey           =  source
+move_low2.control.arguments          =  [source,{{ inspection_directory }}]
 
 # convert low-res images to casa images, length = nbands
 fits_to_image_low.control.type                  =   pythonplugin

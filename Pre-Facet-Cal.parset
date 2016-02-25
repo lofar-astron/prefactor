@@ -11,10 +11,10 @@
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
 
 ### First run this and check the generated plots! Modify and re-run if neccessary.
-pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,copy_h5imp_cal,  fitclock, ampl, plots, phase, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, copy_h5imp_cal, fitclock, ampl, plots, phase, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
 # pipeline.steps=[createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
 
@@ -31,6 +31,7 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! target_skymodel      = /cep3home/username/Pre-Facet-Cal/skymodels/PleaseProvideTarget.skymodel
 ! num_SBs_per_group    = 12   # make concatenated measurement-sets with that many subbands
 ! results_directory    = /media/scratch/test/username/WhereYouWantYourProcessedData/
+! inspection_directory = /media/scratch/test/username/WhereYouWantInspectionPlotsEtc/
 
 # pathes to the scripts etc.
 # #### ToDo: get the scripts onto CEP3 and adjust the pathes here!
@@ -108,6 +109,14 @@ h5imp_cal.argument.instrument     =  /instrument
 h5imp_cal.argument.solsetName     =  sol000
 h5imp_cal.argument.compression    =  7
 
+# copy the diagnostic pdfs to the results_directory
+copy_h5imp_cal.control.kind               =  recipe
+copy_h5imp_cal.control.type               =  executable_args
+copy_h5imp_cal.control.executable         =  /bin/cp
+copy_h5imp_cal.control.mapfile_in         =  h5imp_cal.output.h5parm.mapfile
+copy_h5imp_cal.control.inputkey           =  source
+copy_h5imp_cal.control.arguments          =  [source,{{ inspection_directory }}]
+
 # now run the script that does the clock-TEC fitting
 fitclock.control.kind             = recipe
 fitclock.control.type             = executable_args
@@ -142,6 +151,41 @@ phase.control.executable      = {{ fit_XYoffset_script }}
 # order for flags is: [<input-filename>,<output-filename-base>]
 phase.argument.flags          = [h5imp_cal.output.h5parm.mapfile,caldata_transfer]
 
+# generate a mapfile of all the diagnostic pngs
+createmap_cal_pngs.control.kind            =   plugin
+createmap_cal_pngs.control.type            =   createMapfile
+createmap_cal_pngs.control.method          =   mapfile_from_folder
+createmap_cal_pngs.control.mapfile_dir     =   input.output.mapfile_dir
+createmap_cal_pngs.control.filename        =   diagnostic_pngs.mapfile
+createmap_cal_pngs.control.folder          =   input.output.working_directory/input.output.job_name
+createmap_cal_pngs.control.pattern         =   *.png
+
+# copy the diagnostic pngs to the results_directory
+copy_cal_pngs.control.kind               =  recipe
+copy_cal_pngs.control.type               =  executable_args
+copy_cal_pngs.control.executable         =  /bin/cp
+copy_cal_pngs.control.max_per_node       =  10      #not much use to have too many of those
+copy_cal_pngs.control.mapfile_in         =  createmap_cal_pngs.output.mapfile
+copy_cal_pngs.control.inputkey           =  source
+copy_cal_pngs.control.arguments          =  [source,{{ inspection_directory }}]
+
+# generate a mapfile of all the diagnostic pdfs
+createmap_cal_pdfs.control.kind            =   plugin
+createmap_cal_pdfs.control.type            =   createMapfile
+createmap_cal_pdfs.control.method          =   mapfile_from_folder
+createmap_cal_pdfs.control.mapfile_dir     =   input.output.mapfile_dir
+createmap_cal_pdfs.control.filename        =   diagnostic_pdfs.mapfile
+createmap_cal_pdfs.control.folder          =   input.output.working_directory/input.output.job_name
+createmap_cal_pdfs.control.pattern         =   *.pdf
+
+# copy the diagnostic pdfs to the results_directory
+copy_cal_pdfs.control.kind               =  recipe
+copy_cal_pdfs.control.type               =  executable_args
+copy_cal_pdfs.control.executable         =  /bin/cp
+copy_cal_pdfs.control.max_per_node       =  10      #not much use to have too many of those
+copy_cal_pdfs.control.mapfile_in         =  createmap_cal_pdfs.output.mapfile
+copy_cal_pdfs.control.inputkey           =  source
+copy_cal_pdfs.control.arguments          =  [source,{{ inspection_directory }}]
 
 # ############################################################################################################
 # # Stop processing here and check the plots generated by the previous steps! Only then continue processing. #
@@ -330,7 +374,7 @@ createmap_plots.control.pattern         =   *.png
 copy_plots.control.kind               =  recipe
 copy_plots.control.type               =  executable_args
 copy_plots.control.executable         =  /bin/cp
-copy_plots.control.max_per_node       =  20                                 # feel free to adjust this value to match your system
+copy_plots.control.max_per_node       =  10      #not much use to have too many of those
 copy_plots.control.mapfile_in         =  createmap_plots.output.mapfile
 copy_plots.control.inputkey           =  source
-copy_plots.control.arguments          =  [source,{{ results_directory }}]
+copy_plots.control.arguments          =  [source,{{ inspection_directory }}]
