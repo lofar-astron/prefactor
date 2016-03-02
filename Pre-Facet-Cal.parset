@@ -29,7 +29,7 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! target_input_path    = /data/scratch/username/PathToYourTargetData/
 ! target_input_pattern = L*.MS
 ! target_skymodel      = /cep3home/username/Pre-Facet-Cal/skymodels/PleaseProvideTarget.skymodel
-! num_SBs_per_group    = 12   # make concatenated measurement-sets with that many subbands
+! num_SBs_per_group    = 10 # make concatenated measurement-sets with that many subbands
 ! results_directory    = /media/scratch/test/username/WhereYouWantYourProcessedData/
 ! inspection_directory = /media/scratch/test/username/WhereYouWantInspectionPlotsEtc/
 
