@@ -14,10 +14,10 @@
 pipeline.steps=[createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_resluts_mapfile, move_results]
+# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results]
 
 # parameters you will need to adjust.
 ! avg_timestep_pre     = 2   # averaging in 1st NDPPP run  \  these two together should average
@@ -349,20 +349,20 @@ plot_gsm_phases.control.inputkeys          =  [infile,outbase]
 plot_gsm_phases.control.arguments          =  [-p,infile,outbase]
 
 # make mapfile with the filenames of the results that we want
-make_resluts_mapfile.control.kind            =  plugin
-make_resluts_mapfile.control.type            =  makeResultsMapfile
-make_resluts_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
-make_resluts_mapfile.control.filename        =  make_resluts_mapfile.mapfile
-make_resluts_mapfile.control.mapfile_in      =  dpppaverage.output.mapfile
-make_resluts_mapfile.control.target_dir      =  {{ results_directory }}
-make_resluts_mapfile.control.make_target_dir =  True
-make_resluts_mapfile.control.new_suffix      =  .pre-cal.ms
+make_results_mapfile.control.kind            =  plugin
+make_results_mapfile.control.type            =  makeResultsMapfile
+make_results_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
+make_results_mapfile.control.filename        =  make_results_mapfile.mapfile
+make_results_mapfile.control.mapfile_in      =  dpppaverage.output.mapfile
+make_results_mapfile.control.target_dir      =  {{ results_directory }}
+make_results_mapfile.control.make_target_dir =  True
+make_results_mapfile.control.new_suffix      =  .pre-cal.ms
 
 # move the results to where we want them
 move_results.control.kind               =  recipe
 move_results.control.type               =  executable_args
 move_results.control.executable         =  /bin/mv
-move_results.control.mapfiles_in        =  [dpppaverage.output.mapfile, make_resluts_mapfile.output.mapfile]
+move_results.control.mapfiles_in        =  [dpppaverage.output.mapfile, make_results_mapfile.output.mapfile]
 move_results.control.inputkeys          =  [source,destination]
 move_results.control.arguments          =  [source,destination]
 
