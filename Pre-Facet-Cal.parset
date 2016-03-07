@@ -14,9 +14,9 @@
 pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,copy_h5imp_cal,  fitclock, ampl, plots, phase, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, copy_h5imp_cal, fitclock, ampl, plots, phase, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, copy_h5imp_cal, fitclock, ampl, plots, phase, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_resluts_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 
 
 
