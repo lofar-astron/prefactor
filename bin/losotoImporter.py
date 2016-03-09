@@ -349,7 +349,7 @@ def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile,compressio
 
     solsetname = solset._v_name
     # close the hdf5-file
-    del h5parmDB
+    h5parmDB.close()
     return solsetname
 
 
