@@ -1,0 +1,8 @@
+# (Name, Type, Patch, Ra, Dec, I, Q, U, V, ReferenceFrequency='74e6', SpectralIndex='[]', MajorAxis, MinorAxis, Orientation) = format
+
+# The above line defines the field order and is required.
+
+# Scaife and Heald Calibrator model.
+, , 3c147, 05:42:36.1, 49.51.07
+3c147_1, POINT, 3c147, 05:42:36.1, 49.51.07, 66.738, 0.0, 0.0, 0.0, 150.e6, [-0.022, -1.012, 0.549]
+
