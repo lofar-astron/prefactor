@@ -1,0 +1,202 @@
+# Simple Selfcal Pipeline
+#
+# Pipeline to do the initial subtraction of all sources 
+# - does a simple selfcal: image with wsclean, phase calibrate on results
+# - will replace the instrument_directionindependent inside the MSs
+# - in addition to the standard LOFAR software it requires wsclean
+# - expects shared filesystem, that all nodes can reach all files!
+#   (E.g. a single workstation or compute cluster with shared filesystem
+#   doesn't work on multiple nodes on CEP-2 or CEP3.)
+
+##### parameters you will need to adjust.
+! data_input_path         = /data/scratch/username/PathToYourTargetData/
+! data_input_pattern      = L*.pre-cal.ms
+! inspection_directory    = /media/scratch/test/username/WhereYouWantImagesForInspection/
+
+##### imaging parameters (Feel free to leave them untouched.)
+#### specify  the image parameters here
+# cellsize in degrees, 0.00208 deg is about 7.5 arcsec
+! cellsize_deg = 0.0014  
+# maximum uv-distance in lambda that will be used for imaging
+# 7 klambda is machted to 7.5 arcsec cellsize
+! maxlambda    = 10000 
+# size of the image is this value times the FWHM of the station beam
+! fieldsize       = 1.2
+# use enough w-layers in predict for a field this value times the FWHM of the station beam
+! wlayer_for_size = 2.5
+
+##### performance parameters
+! max_imagers_per_node      =  3
+! max_percent_mem_per_img   =  30
+! max_cpus_per_img          =  10
+! max_dppp_per_node         =  6
+! max_dppp_threads          =  8
+# set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance           =  False
+
+##### pathes to the scripts etc.
+! wsclean_executable     = /homea/htb00/htb003/local_jureca/bin/wsclean
+! do_magic_script        = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
+! make_clean_mask_script = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
+! gsm_cal_parset         = /cep3home/horneffer/Pre-Facet-Cal/parsets/gsmcal.parset
+! dummy_skymodel         = /cep3home/username/Pre-Facet-Cal/skymodels/PleaseProvideTarget.skymodel
+
+
+# the Steps in this pipeline
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, wsclean_imag1, mask, copy_mask, wsclean_imag2, move_imag, create_model_map, wsclean_ft, phase_cal]
+
+
+# create a mapfile with all MSs, length = nfiles
+create_ms_map.control.kind                      =   plugin
+create_ms_map.control.type                      =   createMapfile
+create_ms_map.control.method                    =   mapfile_from_folder
+create_ms_map.control.mapfile_dir               =   input.output.mapfile_dir
+create_ms_map.control.filename                  =   create_ms_map.mapfile
+create_ms_map.control.folder                    =   {{ data_input_path }}
+create_ms_map.control.pattern                   =   {{ data_input_pattern }}
+
+# generate a mapfile with all files in a single entry, length = 1
+combine_mapfile.control.kind                    =  plugin
+combine_mapfile.control.type                    =  createMapfile
+combine_mapfile.control.method                  =  mapfile_all_to_one
+combine_mapfile.control.mapfile_in              =  create_ms_map.output.mapfile
+combine_mapfile.control.mapfile_dir             =  input.output.mapfile_dir  
+combine_mapfile.control.filename                =  combine_mapfile.mapfile
+
+# compute frequency groupings, image sizes, averaging values, etc., len = different
+do_magic.control.type                           =  pythonplugin                
+do_magic.control.executable                     =  {{ do_magic_script }}
+do_magic.argument.flags                         =  [combine_mapfile.output.mapfile]
+do_magic.argument.outmapname                    =  do_magic.datamap
+do_magic.argument.mapfile_dir                   =  input.output.mapfile_dir
+do_magic.argument.cellsize_highres_deg          =  {{ cellsize_deg }} 
+do_magic.argument.fieldsize_highres             =  {{ fieldsize }}
+do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_deg }} 
+do_magic.argument.fieldsize_lowres              =  {{ wlayer_for_size }}
+
+# convert the output of do_magic into usable mapfiles,len = 1 / different 
+do_magic_maps.control.kind                      =  plugin
+do_magic_maps.control.type                      =  mapfilenamesFromMapfiles
+do_magic_maps.control.mapfile_groupmap          =  do_magic.output.groupmap.mapfile
+do_magic_maps.control.mapfile_single_map        =  do_magic.output.single_mapfile.mapfile
+do_magic_maps.control.mapfile_size_map          =  do_magic.output.high_size_mapfile.mapfile
+do_magic_maps.control.mapfile_wlayersize_map    =  do_magic.output.low_size_mapfile.mapfile
+
+# first high-res imaging, length = nbands
+wsclean_imag1.control.kind                      =   recipe
+wsclean_imag1.control.type                      =   executable_args
+wsclean_imag1.control.executable                =   {{ wsclean_executable }}
+wsclean_imag1.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_imag1.control.outputkey                 =   name
+wsclean_imag1.control.args_format               =   wsclean
+wsclean_imag1.control.max_per_node              =   {{ max_imagers_per_node }}
+wsclean_imag1.control.error_tolerance           =   {{ error_tolerance }}
+wsclean_imag1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.size_map]
+wsclean_imag1.control.inputkeys                 =   [msfile,imsize]
+wsclean_imag1.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_imag1.argument.size                     =   imsize
+wsclean_imag1.argument.niter                    =   20000
+wsclean_imag1.argument.threshold                =   0.0
+wsclean_imag1.argument.pol                      =   I
+wsclean_imag1.argument.weight                   =   briggs 0.0
+wsclean_imag1.argument.mgain                    =   0.65
+wsclean_imag1.argument.minuv-l                  =   80
+wsclean_imag1.argument.maxuv-l                  =   {{ maxlambda }}
+wsclean_imag1.argument.scale                    =   {{ cellsize_deg }}
+wsclean_imag1.argument.mem                      =   {{ max_percent_mem_per_img }}
+wsclean_imag1.argument.j                        =   {{ max_cpus_per_img }}
+
+# make masks for the high-res images, length = nbands
+mask.control.type                          =   pythonplugin
+mask.control.executable                    =   {{ make_clean_mask_script }}
+mask.control.max_per_node                  =   {{ max_imagers_per_node }}
+mask.control.error_tolerance               =   {{ error_tolerance }}
+mask.control.mapfile_in                    =   wsclean_imag1.output.wsclean_imag1-image.fits.mapfile
+mask.control.inputkey                      =   imagefile
+mask.control.outputkey                     =   maskfile
+mask.argument.flags                        =   [imagefile,maskfile]
+mask.argument.threshisl                    =   3.0
+mask.argument.threshpix                    =   5.0
+mask.argument.atrous_do                    =   True
+mask.argument.rmsbox                       =   (60,20)
+mask.argument.adaptive_rmsbox              =   True
+mask.argument.img_format                   =   fits
+mask.argument.atrous_jmax                  =   3
+mask.argument.trim_by                      =   0.1
+
+# copy the mask images to where we want them
+copy_mask.control.kind               =  recipe
+copy_mask.control.type               =  executable_args
+copy_mask.control.executable         =  /bin/cp
+copy_mask.control.max_per_node       =  10      #not much use to have too many of those
+copy_mask.control.mapfile_in         =  mask.output.mapfile
+copy_mask.control.inputkey           =  source
+copy_mask.control.arguments          =  [source,{{ inspection_directory }}]
+
+# second high-res imaging, length = nbands
+wsclean_imag2.control.kind                      =   recipe
+wsclean_imag2.control.type                      =   executable_args
+wsclean_imag2.control.executable                =   {{ wsclean_executable }}
+wsclean_imag2.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_imag2.control.outputkey                 =   name
+wsclean_imag2.control.args_format               =   wsclean
+wsclean_imag2.control.max_per_node              =   {{ max_imagers_per_node }}
+wsclean_imag2.control.error_tolerance           =   {{ error_tolerance }}
+wsclean_imag2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask.output.mapfile,do_magic_maps.output.size_map]
+wsclean_imag2.control.inputkeys                 =   [msfile,fitsmask,imsize]
+wsclean_imag2.argument.flags                    =   [-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_imag2.argument.fitsmask                 =   fitsmask
+wsclean_imag2.argument.size                     =   imsize
+wsclean_imag2.argument.niter                    =   80000
+wsclean_imag2.argument.threshold                =   mask.output.threshold_5sig.mapfile
+wsclean_imag2.argument.pol                      =   I
+wsclean_imag2.argument.weight                   =   briggs 0.0
+wsclean_imag2.argument.mgain                    =   0.65
+wsclean_imag2.argument.minuv-l                  =   80
+wsclean_imag2.argument.maxuv-l                  =   {{ maxlambda }}
+wsclean_imag2.argument.scale                    =   {{ cellsize_deg }}
+wsclean_imag2.argument.mem                      =   {{ max_percent_mem_per_img }}
+wsclean_imag2.argument.j                        =   {{ max_cpus_per_img }}
+
+# move the images to where we want them, length = nbands
+move_imag.control.kind               =  recipe
+move_imag.control.type               =  executable_args
+move_imag.control.executable         =  /bin/mv
+move_imag.control.max_per_node       =  10      #not much use to have too many of those
+move_imag.control.mapfile_in         =  wsclean_imag2.output.wsclean_imag2-image.fits.mapfile
+move_imag.control.inputkey           =  source
+move_imag.control.arguments          =  [source,{{ inspection_directory }}]
+
+# make a mapfile with the root-name of the final WSClean images, length = nbands
+create_model_map.control.kind                             =   plugin
+create_model_map.control.type                             =   trimMapfile
+create_model_map.control.mapfile_in                       =   wsclean_imag2.output.wsclean_imag2-model.fits.mapfile
+create_model_map.control.trim                             =   -
+create_model_map.control.mapfile_dir                      =   input.output.mapfile_dir
+create_model_map.control.filename                         =   model_rootnames.mapfile
+
+# make model visibilities, length = nbands
+# For WSClean predict, we need to increase the number of wplanes so that the
+# effective model image size is larger than the FOV (to prevent aliasing issues)
+wsclean_ft.control.type                =   wsclean_ft
+wsclean_ft.control.mapfiles_in         =   [do_magic_maps.output.groupmap,create_model_map.output.mapfile,do_magic_maps.output.size_map,do_magic_maps.output.wlayersize_map]
+wsclean_ft.control.inputkeys           =   [msfile,name,imsize,wlayersize]
+wsclean_ft.argument.flags              =   [-predict,msfile]
+wsclean_ft.argument.size               =   imsize
+wsclean_ft.argument.scale              =   {{ cellsize_deg }}
+wsclean_ft.argument.mem                =   {{ max_percent_mem_per_img }}
+wsclean_ft.argument.j                  =   {{ max_cpus_per_img }}
+wsclean_ft.argument.nwlayers-for-size  =   wlayersize
+
+# phase calibration on the gsm skymodel, length = nfiles
+phase_cal.control.type                            =  python-calibrate-stand-alone
+phase_cal.control.max_per_node                    =  12  # feel free to adjust this to match your system
+phase_cal.control.error_tolerance                 =  {{ error_tolerance }}
+phase_cal.argument.force                          =  True
+phase_cal.argument.observation                    =  create_ms_map.output.mapfile
+phase_cal.argument.parmdb-name                    =  instrument_directionindependent
+phase_cal.argument.parset                         =  {{ gsm_cal_parset }}
+phase_cal.argument.catalog                        =  {{ dummy_skymodel }}
+phase_cal.argument.Step.solve.Model.Sources       =  [@MODEL_DATA]
+phase_cal.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
+phase_cal.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
