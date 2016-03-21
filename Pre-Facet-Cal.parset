@@ -61,25 +61,26 @@ createmap_cal.control.folder          =   {{ cal_input_path }}
 createmap_cal.control.pattern         =   {{ cal_input_pattern }}
 
 # run NDPPP on the calibrator data
-ndppp_prep_cal.control.type              = dppp
-ndppp_prep_cal.control.max_per_node      = 10                   # \ feel free to adjust these two values to match your system
-ndppp_prep_cal.control.environment       = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
-ndppp_prep_cal.control.error_tolerance   = {{ error_tolerance }}
-ndppp_prep_cal.argument.msin             = createmap_cal.output.mapfile    # The input data.
-ndppp_prep_cal.argument.msin.datacolumn  = DATA
-ndppp_prep_cal.argument.msin.baseline    = CS*&; RS*&; CS*&RS*
-ndppp_prep_cal.argument.msout.datacolumn = DATA
-ndppp_prep_cal.argument.steps            = [flag,filter,avg,flagamp]
-ndppp_prep_cal.argument.flag.type        = preflagger
-ndppp_prep_cal.argument.flag.baseline    = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
-ndppp_prep_cal.argument.filter.type      = filter
-ndppp_prep_cal.argument.filter.baseline  = CS*, RS*&&
-ndppp_prep_cal.argument.filter.remove    = true                     # fully kick out the international stations.
-ndppp_prep_cal.argument.avg.type         = average
-ndppp_prep_cal.argument.avg.timestep     = {{ avg_timestep }}       # average to 4 second intervals , PLEASE ADJUST!
-ndppp_prep_cal.argument.avg.freqstep     = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
-ndppp_prep_cal.argument.flagamp.type     = preflagger
-ndppp_prep_cal.argument.flagamp.amplmin  = 1e-30
+ndppp_prep_cal.control.type                    = dppp
+ndppp_prep_cal.control.max_per_node            = 10                   # \ feel free to adjust these two values to match your system
+ndppp_prep_cal.control.environment             = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+ndppp_prep_cal.control.error_tolerance         = {{ error_tolerance }}
+ndppp_prep_cal.argument.msin                   = createmap_cal.output.mapfile    # The input data.
+ndppp_prep_cal.argument.msin.datacolumn        = DATA
+ndppp_prep_cal.argument.msin.baseline          = CS*&; RS*&; CS*&RS*
+ndppp_prep_cal.argument.msout.datacolumn       = DATA
+ndppp_prep_cal.argument.msout.writefullresflag = False
+ndppp_prep_cal.argument.steps                  = [flag,filter,avg,flagamp]
+ndppp_prep_cal.argument.flag.type              = preflagger
+ndppp_prep_cal.argument.flag.baseline          = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
+ndppp_prep_cal.argument.filter.type            = filter
+ndppp_prep_cal.argument.filter.baseline        = CS*, RS*&&
+ndppp_prep_cal.argument.filter.remove          = true                     # fully kick out the international stations.
+ndppp_prep_cal.argument.avg.type               = average
+ndppp_prep_cal.argument.avg.timestep           = {{ avg_timestep }}       # average to 4 second intervals , PLEASE ADJUST!
+ndppp_prep_cal.argument.avg.freqstep           = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+ndppp_prep_cal.argument.flagamp.type           = preflagger
+ndppp_prep_cal.argument.flagamp.amplmin        = 1e-30
 
 #now run BBS on the NDPPP-ed calibrator data.
 calib_cal.control.type             =  python-calibrate-stand-alone  
@@ -156,22 +157,23 @@ createmap_target.control.folder          =   {{ target_input_path }}
 createmap_target.control.pattern         =   {{ target_input_pattern }}
 
 # run NDPPP on the target data
-ndppp_prep_target.control.type              = dppp
-ndppp_prep_target.control.max_per_node      = 10                   # \ feel free to adjust these two values to match your system
-ndppp_prep_target.control.environment       = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
-ndppp_prep_target.control.error_tolerance   = {{ error_tolerance }}
-ndppp_prep_target.argument.msin             = createmap_target.output.mapfile    # The input data.
-ndppp_prep_target.argument.msin.datacolumn  = DATA
-ndppp_prep_target.argument.msin.baseline    = CS*&; RS*&; CS*&RS*
-ndppp_prep_target.argument.msout.datacolumn = DATA
-ndppp_prep_target.argument.steps            = [flag,filter,flagamp]
-ndppp_prep_target.argument.flag.type        = preflagger
-ndppp_prep_target.argument.flag.baseline    = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
-ndppp_prep_target.argument.filter.type      = filter
-ndppp_prep_target.argument.filter.baseline  = CS*, RS*&&
-ndppp_prep_target.argument.filter.remove    = true                     # fully kick out the international stations.
-ndppp_prep_target.argument.flagamp.type     = preflagger
-ndppp_prep_target.argument.flagamp.amplmin  = 1e-30
+ndppp_prep_target.control.type                    = dppp
+ndppp_prep_target.control.max_per_node            = 10                   # \ feel free to adjust these two values to match your system
+ndppp_prep_target.control.environment             = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+ndppp_prep_target.control.error_tolerance         = {{ error_tolerance }}
+ndppp_prep_target.argument.msin                   = createmap_target.output.mapfile    # The input data.
+ndppp_prep_target.argument.msin.datacolumn        = DATA
+ndppp_prep_target.argument.msin.baseline          = CS*&; RS*&; CS*&RS*
+ndppp_prep_target.argument.msout.datacolumn       = DATA
+ndppp_prep_target.argument.msout.writefullresflag = False
+ndppp_prep_target.argument.steps                  = [flag,filter,flagamp]
+ndppp_prep_target.argument.flag.type              = preflagger
+ndppp_prep_target.argument.flag.baseline          = [ CS013HBA* ]            # feel free to change that, but CS013 is usually bad.
+ndppp_prep_target.argument.filter.type            = filter
+ndppp_prep_target.argument.filter.baseline        = CS*, RS*&&
+ndppp_prep_target.argument.filter.remove          = true                     # fully kick out the international stations.
+ndppp_prep_target.argument.flagamp.type           = preflagger
+ndppp_prep_target.argument.flagamp.amplmin        = 1e-30
 
 # generate parmDB with the interpolated calibrator data to apply to the traget
 trans.control.type            = pythonplugin
@@ -200,21 +202,22 @@ calibtarget.argument.parmdb          =  parmmap.output.mapfile
 calibtarget.argument.replace-parmdb  =  True
 
 # run NDPPP again to flag and average some more.
-dpppaverage.control.type                 = dppp
-dpppaverage.control.max_per_node         = 12                   # \ feel free to adjust these two values to match your system
-dpppaverage.control.environment          = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
-dpppaverage.control.error_tolerance      = {{ error_tolerance }}
-dpppaverage.argument.msin                = ndppp_prep_target.output.mapfile  # The input data.
-dpppaverage.argument.msin.datacolumn     = CORRECTED_DATA
-dpppaverage.argument.msout.datacolumn    = DATA
-dpppaverage.argument.steps               = [count,flag,count,avg]
-dpppaverage.argument.flag.type           = aoflagger
-dpppaverage.argument.flag.keepstatistics = false
-dpppaverage.argument.flag.memoryperc     = 10
-dpppaverage.argument.flag.strategy       = {{ flagging_strategy }}
-dpppaverage.argument.avg.type            = average
-dpppaverage.argument.avg.timestep        = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
-dpppaverage.argument.avg.freqstep        = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+dpppaverage.control.type                    = dppp
+dpppaverage.control.max_per_node            = 12                   # \ feel free to adjust these two values to match your system
+dpppaverage.control.environment             = {OMP_NUM_THREADS: 4} # / they should be reasonable for CEP3
+dpppaverage.control.error_tolerance         = {{ error_tolerance }}
+dpppaverage.argument.msin                   = ndppp_prep_target.output.mapfile  # The input data.
+dpppaverage.argument.msin.datacolumn        = CORRECTED_DATA
+dpppaverage.argument.msout.datacolumn       = DATA
+dpppaverage.argument.msout.writefullresflag = False
+dpppaverage.argument.steps                  = [count,flag,count,avg]
+dpppaverage.argument.flag.type              = aoflagger
+dpppaverage.argument.flag.keepstatistics    = false
+dpppaverage.argument.flag.memoryperc        = 10
+dpppaverage.argument.flag.strategy          = {{ flagging_strategy }}
+dpppaverage.argument.avg.type               = average
+dpppaverage.argument.avg.timestep           = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
+dpppaverage.argument.avg.freqstep           = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
 
 # run BBS to predict the A-Team contribution
 ateamtarget.control.type             =  python-calibrate-stand-alone  
@@ -247,21 +250,22 @@ sortmap_tar.control.startFromZero   =   True   # This means that groups (and gro
 sortmap_tar.control.truncateLastSBs =   True   # This means that a excess subbands that don't make a full group get discarded
 
 # run NDPPP to concatenate the target
-dpppconcat.control.type                 =  dppp
-dpppconcat.control.max_per_node         =  12
-dpppconcat.control.error_tolerance      =  {{ error_tolerance }}
-dpppconcat.control.mapfile_out          =  sortmap_tar.output.groupmap # tell the pipeline to give the output useful names
-dpppconcat.control.mapfiles_in          =  [sortmap_tar.output.mapfile]
-dpppconcat.control.inputkey             =  msin
-dpppconcat.argument.msin.datacolumn     =  DATA
-dpppconcat.argument.msin.missingdata    =  True    #\ these two lines will make NDPPP generate dummy data when
-dpppconcat.argument.msin.orderms        =  False   #/ concatenating data
-dpppconcat.argument.msout.datacolumn    =  DATA
-dpppconcat.argument.steps               =  [flag]      # run the aoflagger (this used to be an extra step)
-dpppconcat.argument.flag.type           =  aoflagger
-dpppconcat.argument.flag.keepstatistics =  false
-dpppconcat.argument.flag.memoryperc     =  10
-dpppconcat.argument.flag.strategy       =  {{ flagging_strategy }}
+dpppconcat.control.type                    =  dppp
+dpppconcat.control.max_per_node            =  12
+dpppconcat.control.error_tolerance         =  {{ error_tolerance }}
+dpppconcat.control.mapfile_out             =  sortmap_tar.output.groupmap # tell the pipeline to give the output useful names
+dpppconcat.control.mapfiles_in             =  [sortmap_tar.output.mapfile]
+dpppconcat.control.inputkey                =  msin
+dpppconcat.argument.msin.datacolumn        =  DATA
+dpppconcat.argument.msin.missingdata       =  True    #\ these two lines will make NDPPP generate dummy data when
+dpppconcat.argument.msin.orderms           =  False   #/ concatenating data
+dpppconcat.argument.msout.datacolumn       =  DATA
+dpppconcat.argument.msout.writefullresflag =  False
+dpppconcat.argument.steps                  =  [flag]      # run the aoflagger (this used to be an extra step)
+dpppconcat.argument.flag.type              =  aoflagger
+dpppconcat.argument.flag.keepstatistics    =  false
+dpppconcat.argument.flag.memoryperc        =  10
+dpppconcat.argument.flag.strategy          =  {{ flagging_strategy }}
 
 # phase calibration on the gsm skymodel
 gsmcalibtarget.control.type                            =  python-calibrate-stand-alone  
