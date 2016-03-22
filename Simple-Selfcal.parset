@@ -15,13 +15,13 @@
 
 ##### imaging parameters (Feel free to leave them untouched.)
 #### specify  the image parameters here
-# cellsize in degrees, 0.00056 is about 2 arcsec
-! cellsize_deg = 0.00056
+# cellsize in degrees, 0.00084 is about 3 arcsec
+! cellsize_deg = 0.00084
 # maximum uv-distance in lambda that will be used for imaging
 # 30 klambda corresponds to about 7 arcsec (with uniform weighting)
 ! maxlambda    = 30000 
 # size of the image is this value times the FWHM of the station beam
-! fieldsize       = 1.2
+! fieldsize       = 1.6
 
 ##### performance parameters
 ! max_imagers_per_node      =  3
@@ -119,7 +119,7 @@ mask.argument.flags                        =   [imagefile,maskfile]
 mask.argument.threshisl                    =   3.0
 mask.argument.threshpix                    =   5.0
 mask.argument.atrous_do                    =   True
-mask.argument.rmsbox                       =   (60,20)
+mask.argument.rmsbox                       =   (150,50)
 mask.argument.adaptive_rmsbox              =   True
 mask.argument.img_format                   =   fits
 mask.argument.atrous_jmax                  =   3
