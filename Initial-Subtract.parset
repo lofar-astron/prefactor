@@ -314,6 +314,7 @@ mask_low.control.outputkey                      =   maskfile
 mask_low.argument.flags                         =   [imagefile,maskfile]
 mask_low.argument.threshisl                     =   4
 mask_low.argument.threshpix                     =   5
+mask_low.argument.atrous_do                     =   True
 mask_low.argument.rmsbox                        =   (60,20)
 mask_low.argument.adaptive_rmsbox               =   True
 mask_low.argument.img_format                    =   fits
