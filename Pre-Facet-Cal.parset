@@ -6,19 +6,19 @@
 # - checks frequncies in MSs to group files
 # - the new "error_tolerance" option requires LOFAR software version >= 2.15
 #   (Comment out all lines with "error_tolerance" if you want to use an older version.)
+# - using LoSoTo from the pipeline requires latest executable_args node-script
+#   (available in the current LFOARa trunk, revision 33969 and later)
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
 
 ### First run this and check the generated plots! Modify and re-run if neccessary.
-pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,copy_h5imp_cal,  fitclock, ampl, plots, phase, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, copy_h5imp_cal, fitclock, ampl, plots, phase, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
-
-
+# pipeline.steps=[mk_inspect_dir, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
 
 # parameters you will need to adjust.
 ! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
@@ -48,8 +48,8 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! transfer_script      = /cep3home/horneffer/Pre-Facet-Cal/bin/transfer_amplitudes+clock+offset_toMS.py
 ! ATeam_Clipper        = /cep3home/horneffer/Pre-Facet-Cal/bin/Ateamclipper.py
 ! sortmap_script       = /homea/htb00/htb001/Pre-Facet-Pipeline/bin/sort_times_into_freqGroups.py
-! plotphases_script    = /cep3home/horneffer/Pre-Facet-Cal/bin/plot_solutions_all_stations.py
-! flagging_strategy    = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_12_0/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
+! losoto_executable    = /opt/cep/losoto/current/bin/losoto
+! flagging_strategy    = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_15_2/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
 
 # set this to True if you want the pipeline run to continue if single bands fail
 ! error_tolerance           =  False
@@ -95,22 +95,27 @@ calib_cal.argument.parset          =  {{ calib_cal_parset }}
 calib_cal.argument.catalog         =  {{ calibrator_skymodel }}
 
 # generate a mapfile with all files in a single entry
-h5_imp_map.control.kind               =  plugin
-h5_imp_map.control.type               =  createMapfile
-h5_imp_map.control.method             =  mapfile_all_to_one
-h5_imp_map.control.mapfile_in         =  ndppp_prep_cal.output.mapfile
-h5_imp_map.control.mapfile_dir        =  input.output.mapfile_dir
-h5_imp_map.control.filename           =  h5_imp_map.mapfile
+h5_imp_cal_map.control.kind               =  plugin
+h5_imp_cal_map.control.type               =  createMapfile
+h5_imp_cal_map.control.method             =  mapfile_all_to_one
+h5_imp_cal_map.control.mapfile_in         =  ndppp_prep_cal.output.mapfile
+h5_imp_cal_map.control.mapfile_dir        =  input.output.mapfile_dir
+h5_imp_cal_map.control.filename           =  h5_imp_cal_map.mapfile
 
 # import all instrument tables into one LoSoTo file
 h5imp_cal.control.type            =  pythonplugin
 h5imp_cal.control.executable      =  {{ losoto_importer }}
-h5imp_cal.argument.flags          =  [h5_imp_map.output.mapfile,h5imp_cal_losoto.h5]
+h5imp_cal.argument.flags          =  [h5_imp_cal_map.output.mapfile,h5imp_cal_losoto.h5]
 h5imp_cal.argument.instrument     =  /instrument
 h5imp_cal.argument.solsetName     =  sol000
 h5imp_cal.argument.compression    =  7
 
-# copy the diagnostic pdfs to the results_directory
+# create the inspection_directory if needed
+mk_inspect_dir.control.kind               =  plugin
+mk_inspect_dir.control.type               =  makeDirectory
+mk_inspect_dir.control.directory          =  {{ inspection_directory }}
+
+# copy the LoSoTo file to the inspection_directory
 copy_h5imp_cal.control.kind               =  recipe
 copy_h5imp_cal.control.type               =  executable_args
 copy_h5imp_cal.control.executable         =  /bin/cp
@@ -152,6 +157,32 @@ phase.control.executable      = {{ fit_XYoffset_script }}
 # order for flags is: [<input-filename>,<output-filename-base>]
 phase.argument.flags          = [h5imp_cal.output.h5parm.mapfile,caldata_transfer]
 
+# plot the phase solutions from the phase-only calibration of the target
+plot_cal_phases.control.kind                          =  recipe
+plot_cal_phases.control.type                          =  executable_args
+plot_cal_phases.control.executable                    =  {{ losoto_executable }}
+plot_cal_phases.control.max_per_node                  =  24
+plot_cal_phases.control.parsetasfile                  =  True
+plot_cal_phases.control.args_format                   =  losoto
+plot_cal_phases.control.mapfiles_in                   =  [createmap.output.mapfile]
+plot_cal_phases.control.inputkeys                     =  [hdf5file]
+plot_cal_phases.argument.flags                        =  [hdf5file]
+plot_cal_phases.argument.LoSoTo.Steps                 =  [plot]
+plot_cal_phases.argument.LoSoTo.Solset                =  [sol000]
+plot_cal_phases.argument.LoSoTo.Soltab                =  [sol000/phase000]
+plot_cal_phases.argument.LoSoTo.SolType               =  [phase]
+plot_cal_phases.argument.LoSoTo.ant                   =  []
+plot_cal_phases.argument.LoSoTo.pol                   =  [XX,YY]
+plot_cal_phases.argument.LoSoTo.dir                   =  [pointing]
+plot_cal_phases.argument.LoSoTo.Steps.plot.Operation  =  PLOT
+plot_cal_phases.argument.LoSoTo.Steps.plot.PlotType   =  2D
+plot_cal_phases.argument.LoSoTo.Steps.plot.Axes       =  [time,freq]
+plot_cal_phases.argument.LoSoTo.Steps.plot.TableAxis  =  [ant]
+plot_cal_phases.argument.LoSoTo.Steps.plot.ColorAxis  =  [pol]
+plot_cal_phases.argument.LoSoTo.Steps.plot.Reference  =  {{ reference_station }}
+plot_cal_phases.argument.LoSoTo.Steps.plot.PlotFlag   =  False
+plot_cal_phases.argument.LoSoTo.Steps.plot.Prefix     =  {{ inspection_directory }}/cal_phases_
+
 # generate a mapfile of all the diagnostic pngs
 createmap_cal_pngs.control.kind            =   plugin
 createmap_cal_pngs.control.type            =   createMapfile
@@ -161,7 +192,7 @@ createmap_cal_pngs.control.filename        =   diagnostic_pngs.mapfile
 createmap_cal_pngs.control.folder          =   input.output.working_directory/input.output.job_name
 createmap_cal_pngs.control.pattern         =   *.png
 
-# copy the diagnostic pngs to the results_directory
+# copy the diagnostic pngs to the inspection directory
 copy_cal_pngs.control.kind               =  recipe
 copy_cal_pngs.control.type               =  executable_args
 copy_cal_pngs.control.executable         =  /bin/cp
@@ -179,7 +210,7 @@ createmap_cal_pdfs.control.filename        =   diagnostic_pdfs.mapfile
 createmap_cal_pdfs.control.folder          =   input.output.working_directory/input.output.job_name
 createmap_cal_pdfs.control.pattern         =   *.pdf
 
-# copy the diagnostic pdfs to the results_directory
+# copy the diagnostic pdfs to the inspection directory
 copy_cal_pdfs.control.kind               =  recipe
 copy_cal_pdfs.control.type               =  executable_args
 copy_cal_pdfs.control.executable         =  /bin/cp
@@ -327,23 +358,52 @@ gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}
 gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
 gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
 
-# generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
-gsmcal_parmmap.control.kind               =  plugin
-gsmcal_parmmap.control.type               =  createMapfile
-gsmcal_parmmap.control.method             =  add_suffix_to_file
-gsmcal_parmmap.control.mapfile_in         =  dpppconcat.output.mapfile
-gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
-gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
-gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
+# generate a mapfile with all files in a single entry
+h5_imp_gsmsol_map.control.kind               =  plugin
+h5_imp_gsmsol_map.control.type               =  createMapfile
+h5_imp_gsmsol_map.control.method             =  mapfile_all_to_one
+h5_imp_gsmsol_map.control.mapfile_in         =  dpppconcat.output.mapfile
+h5_imp_gsmsol_map.control.mapfile_dir        =  input.output.mapfile_dir
+h5_imp_gsmsol_map.control.filename           =  h5_imp_gsmsol_map.mapfile
+
+# import all instrument tables into one LoSoTo file
+h5imp_gsmsol.control.type            =  pythonplugin
+h5imp_gsmsol.control.executable      =  {{ losoto_importer }}
+h5imp_gsmsol.argument.flags          =  [h5_imp_gsmsol_map.output.mapfile,h5imp_gsmsol_losoto.h5]
+h5imp_gsmsol.argument.instrument     =  /instrument_directionindependent
+h5imp_gsmsol.argument.solsetName     =  sol000
+h5imp_gsmsol.argument.compression    =  7
 
 # plot the phase solutions from the phase-only calibration of the target
-plot_gsm_phases.control.kind         =  recipe
-plot_gsm_phases.control.type         =  executable_args
-plot_gsm_phases.control.executable   =  {{ plotphases_script }}
-plot_gsm_phases.control.max_per_node =  24
-plot_gsm_phases.control.mapfiles_in  =  [gsmcal_parmmap.output.mapfile,dpppconcat.output.mapfile]
-plot_gsm_phases.control.inputkeys    =  [infile,outbase]
-plot_gsm_phases.control.arguments    =  [-p,infile,outbase]
+plot_gsm_phases.control.kind                          =  recipe
+plot_gsm_phases.control.type                          =  executable_args
+plot_gsm_phases.control.executable                    =  {{ losoto_executable }}
+plot_gsm_phases.control.max_per_node                  =  24
+plot_gsm_phases.control.parsetasfile                  =  True
+plot_gsm_phases.control.args_format                   =  losoto
+plot_gsm_phases.control.mapfiles_in                   =  [createmap.output.mapfile]
+plot_gsm_phases.control.inputkeys                     =  [hdf5file]
+plot_gsm_phases.argument.flags                        =  [hdf5file]
+plot_gsm_phases.argument.LoSoTo.Steps                 =  [plot]
+plot_gsm_phases.argument.LoSoTo.Solset                =  [sol000]
+plot_gsm_phases.argument.LoSoTo.Soltab                =  [sol000/phase000]
+plot_gsm_phases.argument.LoSoTo.SolType               =  [phase]
+plot_gsm_phases.argument.LoSoTo.ant                   =  []
+plot_gsm_phases.argument.LoSoTo.pol                   =  [XX,YY]
+plot_gsm_phases.argument.LoSoTo.dir                   =  [pointing]
+plot_gsm_phases.argument.LoSoTo.Steps.plot.Operation  =  PLOT
+plot_gsm_phases.argument.LoSoTo.Steps.plot.PlotType   =  2D
+plot_gsm_phases.argument.LoSoTo.Steps.plot.Axes       =  [time,freq]
+plot_gsm_phases.argument.LoSoTo.Steps.plot.TableAxis  =  [ant]
+plot_gsm_phases.argument.LoSoTo.Steps.plot.ColorAxis  =  [pol]
+plot_gsm_phases.argument.LoSoTo.Steps.plot.Reference  =  {{ reference_station }}
+plot_gsm_phases.argument.LoSoTo.Steps.plot.PlotFlag   =  False
+plot_gsm_phases.argument.LoSoTo.Steps.plot.Prefix     =  {{ inspection_directory }}/gsm_phases_
+
+# create the results directory if needed
+mk_results_dir.control.kind               =  plugin
+mk_results_dir.control.type               =  makeDirectory
+mk_results_dir.control.directory          =  {{ results_directory }}
 
 # make mapfile with the filenames of the results that we want
 make_results_mapfile.control.kind            =  plugin
@@ -364,20 +424,3 @@ move_results.control.mapfiles_in        =  [dpppconcat.output.mapfile,make_resul
 move_results.control.inputkeys          =  [source,destination]
 move_results.control.arguments          =  [source,destination]
 
-# generate a mapfile of all the diagnostic plots
-createmap_plots.control.kind            =   plugin
-createmap_plots.control.type            =   createMapfile
-createmap_plots.control.method          =   mapfile_from_folder
-createmap_plots.control.mapfile_dir     =   input.output.mapfile_dir
-createmap_plots.control.filename        =   diagnostic_plots.mapfile
-createmap_plots.control.folder          =   input.output.working_directory/input.output.job_name
-createmap_plots.control.pattern         =   *.png
-
-# copy the diagnostic plots to the results_directory
-copy_plots.control.kind               =  recipe
-copy_plots.control.type               =  executable_args
-copy_plots.control.executable         =  /bin/cp
-copy_plots.control.max_per_node       =  10      #not much use to have too many of those
-copy_plots.control.mapfile_in         =  createmap_plots.output.mapfile
-copy_plots.control.inputkey           =  source
-copy_plots.control.arguments          =  [source,{{ inspection_directory }}]
