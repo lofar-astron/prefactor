@@ -62,5 +62,6 @@ docs/*.out
 docs/*.aux
 docs/*.dvi
 
-# editor-Stiff
-# *~
+# editor-Stuff
+*~
+
