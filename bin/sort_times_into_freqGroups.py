@@ -105,21 +105,23 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     if not hosts:
         hosts = ['localhost']
     numhosts = len(hosts)
-    print "sort_times_into_freqGroups: Working on",len(ms_list),"files"
+    print "sort_times_into_freqGroups: Working on",len(ms_list),"files (including flagged files)."
 
     time_groups = {}
     # sort by time
     for i, ms in enumerate(ms_list):
-        # use the slower but more reliable way:
-        obstable = pt.table(ms, ack=False)
-        timestamp = int(round(np.min(obstable.getcol('TIME'))))
-        #obstable = pt.table(ms+'::OBSERVATION', ack=False)
-        #timestamp = int(round(obstable.col('TIME_RANGE')[0][0]))
-        obstable.close()
-        if timestamp in time_groups:
-            time_groups[timestamp]['files'].append(ms)
-        else:
-            time_groups[timestamp] = {'files': [ ms ], 'basename' : os.path.splitext(ms)[0] }
+        # work only on files selected by a previous step
+        if ms.lower() != 'none':
+            # use the slower but more reliable way:
+            obstable = pt.table(ms, ack=False)
+            timestamp = int(round(np.min(obstable.getcol('TIME'))))
+            #obstable = pt.table(ms+'::OBSERVATION', ack=False)
+            #timestamp = int(round(obstable.col('TIME_RANGE')[0][0]))
+            obstable.close()
+            if timestamp in time_groups:
+                time_groups[timestamp]['files'].append(ms)
+            else:
+                time_groups[timestamp] = {'files': [ ms ], 'basename' : os.path.splitext(ms)[0] }
     print "sort_times_into_freqGroups: found",len(time_groups),"time-groups"
 
     # sort time-groups by frequency
