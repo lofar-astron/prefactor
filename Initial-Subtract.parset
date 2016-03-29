@@ -8,7 +8,7 @@
 #   SUBTRACTED_DATA_ALL columns)
 # - copies merged skymodels into folder with input data: "data_input_path"
 # - requires combined predict-corrupt-subtract step in NDPPP 
-#   (currently in the LOFAR-trunk, will be included in LOFAR release 2.15)
+#   (included in LOFAR since release 2.15)
 # - in addition to the standard LOFAR software it requires wsclean
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
@@ -59,17 +59,18 @@
 ! error_tolerance           =  False
 
 ##### pathes to the scripts etc.
-! wsclean_executable     = /homea/htb00/htb003/local_jureca/bin/wsclean
-! do_magic_script        = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
-! merge_skymodels_script = /homea/htb00/htb001/prefactor/bin/merge_skymodels.py
-! make_clean_mask_script = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
-! fits_to_casa_script    = /homea/htb00/htb001/prefactor/bin/convert_fits_image_to_casa.py
-! realimag_script        = /homea/htb00/htb001/prefactor/bin/parmdb_gain_to_real-imag.py
-! casapy2bbs             = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
-! makesourcedb           = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
+! wsclean_executable          = /homea/htb00/htb003/local_jureca/bin/wsclean
+! do_magic_script             = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
+! merge_skymodels_script      = /homea/htb00/htb001/prefactor/bin/merge_skymodels.py
+! make_clean_mask_script      = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
+! fits_to_casa_script         = /homea/htb00/htb001/prefactor/bin/convert_fits_image_to_casa.py
+! realimag_script             = /homea/htb00/htb001/prefactor/bin/parmdb_gain_to_real-imag.py
+! plot_subtract_images_script = /homea/htb00/htb001/prefactor/bin/plot_subtract_images.py
+! casapy2bbs                  = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
+! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, plot_im_high, plot_im_low, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -452,3 +453,38 @@ copy_skymodels.control.executable               =  /bin/cp
 copy_skymodels.control.mapfile_in               =  merge.output.mapfile
 copy_skymodels.control.inputkey                 =  source
 copy_skymodels.control.arguments                =  [source,{{ data_input_path }}]
+
+# plot the high-res image and mask, length = nbands
+plot_im_high.control.type                       =   pythonplugin
+plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
+plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
+plot_im_high.control.mapfiles_in                =   [wsclean_high2.output.wsclean_high2-image.fits.mapfile,mask_high.output.mapfile]
+plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
+plot_im_high.control.outputkey                  =   imname
+plot_im_high.argument.flags                     =   [imhigh,maskhigh,imname]
+
+# plot the low-res image and mask, length = nbands
+plot_im_low.control.type                        =   pythonplugin
+plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
+plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
+plot_im_low.control.mapfiles_in                 =   [wsclean_low2.output.wsclean_low2-image.fits.mapfile,mask_low.output.mapfile]
+plot_im_low.control.inputkeys                   =   [imlow,masklow]
+plot_im_low.control.outputkey                   =   imname
+plot_im_low.argument.flags                      =   [imlow,masklow,imname]
+
+# create a map with the generated plots 
+createmap_plots.control.kind                    =   plugin
+createmap_plots.control.type                    =   createMapfile
+createmap_plots.control.method                  =   mapfile_from_folder
+createmap_plots.control.mapfile_dir             =   input.output.mapfile_dir
+createmap_plots.control.filename                =   diagnostic_plots.mapfile
+createmap_plots.control.folder                  =   input.output.working_directory/input.output.job_name
+createmap_plots.control.pattern                 =   *.png
+
+# move the plots to the directory with the input data, length = 2x nbands
+move_plots.control.kind                         =  recipe
+move_plots.control.type                         =  executable_args
+move_plots.control.executable                   =  /bin/mv
+move_plots.control.mapfile_in                   =  createmap_plots.output.mapfile
+move_plots.control.inputkey                     =  source
+move_plots.control.arguments                    =  [source,{{ inspection_directory }}]
