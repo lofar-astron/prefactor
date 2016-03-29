@@ -19,6 +19,9 @@
 #   - the average amplitude scale set
 #   - the average clock offsets removed
 #   - the LOFAR beam towards the phase center corrected
+# - in the CORRECTED_DATA column:
+#   - the DATA calibrated with the gains in supplied the 
+#     direction-indepndent parmDB
 # - inside the measurement sets there has to be a parmDB with the
 #   direction-indepndent, phase-only calibration values:
 #   "Gain:0:0:*","Gain:1:1:*"
