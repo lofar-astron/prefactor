@@ -25,7 +25,7 @@ def plugin_main(args, **kwargs):
             print "Plugin makeDirectory: Path {} exists, but is no directory!".format(dir_to_create)
             raise ValueError, "Path {} exists, but is no directory!".format(dir_to_create)
     else:
-        os.makedirs(dir_to_create,mode=755)
+        os.makedirs(dir_to_create,mode=0755)
 
     result = {}
     return result
