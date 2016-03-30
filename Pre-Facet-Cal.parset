@@ -7,7 +7,9 @@
 # - the new "error_tolerance" option requires LOFAR software version >= 2.15
 #   (Comment out all lines with "error_tolerance" if you want to use an older version.)
 # - using LoSoTo from the pipeline requires latest executable_args node-script
-#   (available in the current LFOARa trunk, revision 33969 and later)
+#   (available in the current LOFAR trunk, revision 33969 and later)
+#   (The diff, to do the patching by hand, can be found in the 6th comment at:
+#   https://github.com/lofar-astron/prefactor/issues/4  )
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
