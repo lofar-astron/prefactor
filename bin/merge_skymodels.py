@@ -50,5 +50,5 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--keep', help='', type=str, default='all')
 
     args = parser.parse_args()
-    main(args.inmodel1, args.inmodel2, args.outmodel, matchBy=args.match_by,
+    main(args.inmodel1, args.inmodel2, args.outmodel, match_by=args.match_by,
          radius=args.radius, keep=args.keep)
