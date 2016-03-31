@@ -162,18 +162,18 @@ mask_high.argument.atrous_jmax                  =   3
 mask_high.argument.trim_by                      =   0.1
 
 # create the inspection_directory if needed
-mk_inspect_dir.control.kind               =  plugin
-mk_inspect_dir.control.type               =  makeDirectory
-mk_inspect_dir.control.directory          =  {{ inspection_directory }}
+mk_inspect_dir.control.kind                     =  plugin
+mk_inspect_dir.control.type                     =  makeDirectory
+mk_inspect_dir.control.directory                =  {{ inspection_directory }}
 
 # copy the mask images to where we want them
-copy_mask.control.kind               =  recipe
-copy_mask.control.type               =  executable_args
-copy_mask.control.executable         =  /bin/cp
-copy_mask.control.max_per_node       =  10      #not much use to have too many of those
-copy_mask.control.mapfile_in         =  mask_high.output.mapfile
-copy_mask.control.inputkey           =  source
-copy_mask.control.arguments          =  [source,{{ inspection_directory }}]
+copy_mask.control.kind                          =  recipe
+copy_mask.control.type                          =  executable_args
+copy_mask.control.executable                    =  /bin/cp
+copy_mask.control.max_per_node                  =  10      #not much use to have too many of those
+copy_mask.control.mapfile_in                    =  mask_high.output.mapfile
+copy_mask.control.inputkey                      =  source
+copy_mask.control.arguments                     =  [source,{{ inspection_directory }}]
 
 # second high-res imaging, length = nbands
 wsclean_high2.control.kind                      =   recipe
@@ -201,13 +201,13 @@ wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
 
 # move the high2 images to where we want them
-move_high2.control.kind               =  recipe
-move_high2.control.type               =  executable_args
-move_high2.control.executable         =  /bin/mv
-move_high2.control.max_per_node       =  10      #not much use to have too many of those
-move_high2.control.mapfile_in         =  wsclean_high2.output.wsclean_high2-image.fits.mapfile
-move_high2.control.inputkey           =  source
-move_high2.control.arguments          =  [source,{{ inspection_directory }}]
+move_high2.control.kind                         =  recipe
+move_high2.control.type                         =  executable_args
+move_high2.control.executable                   =  /bin/mv
+move_high2.control.max_per_node                 =  10      #not much use to have too many of those
+move_high2.control.mapfile_in                   =  wsclean_high2.output.wsclean_high2-image.fits.mapfile
+move_high2.control.inputkey                     =  source
+move_high2.control.arguments                    =  [source,{{ inspection_directory }}]
 
 # convert high-res images to casa images, length = nbands
 fits_to_image_high.control.type                 =   pythonplugin
@@ -252,21 +252,21 @@ expand_sourcedb_high.control.mapfile_dir        =   input.output.mapfile_dir
 expand_sourcedb_high.control.filename           =   expand_sourcedb_high.datamap
 
 # convert the parmdbs to real/imag values, length = nfiles
-parmdbs_to_realimag.control.type                 =   pythonplugin
-parmdbs_to_realimag.control.executable           =   {{ realimag_script }}
-parmdbs_to_realimag.control.error_tolerance      =   {{ error_tolerance }}
-parmdbs_to_realimag.control.mapfiles_in          =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
-parmdbs_to_realimag.control.inputkeys            =   [dummy, pdb_in]
-parmdbs_to_realimag.control.outputkey            =   pdb_out
-parmdbs_to_realimag.argument.flags               =   [pdb_in, pdb_out]
+parmdbs_to_realimag.control.type                =   pythonplugin
+parmdbs_to_realimag.control.executable          =   {{ realimag_script }}
+parmdbs_to_realimag.control.error_tolerance     =   {{ error_tolerance }}
+parmdbs_to_realimag.control.mapfiles_in         =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
+parmdbs_to_realimag.control.inputkeys           =   [dummy, pdb_in]
+parmdbs_to_realimag.control.outputkey           =   pdb_out
+parmdbs_to_realimag.argument.flags              =   [pdb_in, pdb_out]
 
 # Predict, corrupt, and subtract the high-resolution model, length = nfiles
 # The low-resolution model will be subtracted from the 
 # output column (SUBTRACTED_DATA_HIGH) later
 subtract_high.control.type                      =   dppp
-subtract_high.control.opts.mapfiles_in          =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,parmdbs_to_realimag.output.mapfile]
-subtract_high.control.opts.inputkeys            =   [msin,sourcedb,parmdb]
-subtract_high.control.opts.inplace              =   True
+subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_high.control.inputkeys                 =   [msin,sourcedb,parmdb]
+subtract_high.control.inplace                   =   True
 subtract_high.control.max_per_node              =   {{ max_dppp_per_node }}
 subtract_high.argument.numthreads               =   {{ max_dppp_threads }}
 subtract_high.control.error_tolerance           =   {{ error_tolerance }}
@@ -371,13 +371,13 @@ wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
 
 # move the low2 images to where we want them
-move_low2.control.kind               =  recipe
-move_low2.control.type               =  executable_args
-move_low2.control.executable         =  /bin/mv
-move_low2.control.max_per_node       =  10      #not much use to have too many of those
-move_low2.control.mapfile_in         =  wsclean_low2.output.wsclean_low2-image.fits.mapfile
-move_low2.control.inputkey           =  source
-move_low2.control.arguments          =  [source,{{ inspection_directory }}]
+move_low2.control.kind                          =  recipe
+move_low2.control.type                          =  executable_args
+move_low2.control.executable                    =  /bin/mv
+move_low2.control.max_per_node                  =  10      #not much use to have too many of those
+move_low2.control.mapfile_in                    =  wsclean_low2.output.wsclean_low2-image.fits.mapfile
+move_low2.control.inputkey                      =  source
+move_low2.control.arguments                     =  [source,{{ inspection_directory }}]
 
 # convert low-res images to casa images, length = nbands
 fits_to_image_low.control.type                  =   pythonplugin
@@ -422,9 +422,9 @@ expand_sourcedb_low.control.filename            =   expand_sourcedb_low.datamap
 
 # Predict, corrupt, and subtract the low-resolution model, length = nfiles
 subtract_low.control.type                       =   dppp
-subtract_low.control.opts.mapfiles_in           =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,parmdbs_to_realimag.output.mapfile]
-subtract_low.control.opts.inputkeys             =   [msin,sourcedb,parmdb]
-subtract_low.control.opts.inplace               =   True
+subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_low.control.inputkeys                  =   [msin,sourcedb,parmdb]
+subtract_low.control.inplace                    =   True
 subtract_low.control.max_per_node               =   {{ max_dppp_per_node }}
 subtract_low.argument.numthreads                =   {{ max_dppp_threads }}
 subtract_low.control.error_tolerance            =   {{ error_tolerance }}
