@@ -51,7 +51,7 @@ def main(ms_file, min_fraction=0.01):
     min_fraction = float(min_fraction)
     unflagged_fraction = find_unflagged_fraction(ms_file)
     if unflagged_fraction < min_fraction:
-        print 'check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, '
+        print 'check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, ' \
               'removing file.'.format(os.path.basename(ms_file),str(unflagged_fraction))
         return { 'flagged' : 'None' }
     else:

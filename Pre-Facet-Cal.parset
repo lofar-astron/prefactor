@@ -18,9 +18,9 @@
 pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[mk_inspect_dir, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
+# pipeline.steps=[mk_inspect_dir, createmap_target, trans, parmmap, ndppp_prep_target, ateamtarget, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, mk_results_dir, make_results_mapfile, move_results]
 
 # parameters you will need to adjust.
 ! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
