@@ -15,6 +15,7 @@ Version 1.0 does not include:
 * grouping of subbands by actual frequency instead of file number
 * speed and disk usage improvements by optimized usage of NDPPP
 * applying Ionospheric RM corrections
+
 (Stay tuned for version 2. and / or check out the branch v2.0-devel)
 
 There is a wiki page with more or less useful hints: http://www.lofar.org/wiki/doku.php?id=public:user_software:prefactor
