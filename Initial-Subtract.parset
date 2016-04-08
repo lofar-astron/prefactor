@@ -142,6 +142,7 @@ wsclean_high1.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high1.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high1.argument.j                        =   {{ max_cpus_per_img }}
+wsclean_high1.argument.weighting-rank-filter    =   3
 
 # make masks for the high-res images, length = nbands
 mask_high.control.type                          =   pythonplugin
@@ -199,6 +200,7 @@ wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
+wsclean_high2.argument.weighting-rank-filter    =   3
 
 # move the high2 images to where we want them
 move_high2.control.kind                         =  recipe
@@ -326,6 +328,7 @@ wsclean_low1.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low1.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low1.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low1.argument.j                         =   {{ max_cpus_per_img }}
+wsclean_low1.argument.weighting-rank-filter     =   3
 
 # make masks for the low-res images, length = nbands
 mask_low.control.type                           =   pythonplugin
@@ -369,6 +372,7 @@ wsclean_low2.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low2.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
+wsclean_low2.argument.weighting-rank-filter     =   3
 
 # move the low2 images to where we want them
 move_low2.control.kind                          =  recipe
