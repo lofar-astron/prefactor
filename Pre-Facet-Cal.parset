@@ -113,6 +113,7 @@ h5_imp_cal_map.control.filename           =  h5_imp_cal_map.mapfile
 # import all instrument tables into one LoSoTo file
 h5imp_cal.control.type            =  pythonplugin
 h5imp_cal.control.executable      =  {{ losoto_importer }}
+h5imp_cal.control.error_tolerance =  {{ error_tolerance }}
 h5imp_cal.argument.flags          =  [h5_imp_cal_map.output.mapfile,h5imp_cal_losoto.h5]
 h5imp_cal.argument.instrument     =  /instrument
 h5imp_cal.argument.solsetName     =  sol000
@@ -393,6 +394,7 @@ h5_imp_gsmsol_map.control.filename           =  h5_imp_gsmsol_map.mapfile
 # import all instrument tables into one LoSoTo file
 h5imp_gsmsol.control.type            =  pythonplugin
 h5imp_gsmsol.control.executable      =  {{ losoto_importer }}
+h5imp_gsmsol.control.error_tolerance =  {{ error_tolerance }}
 h5imp_gsmsol.argument.flags          =  [h5_imp_gsmsol_map.output.mapfile,h5imp_gsmsol_losoto.h5]
 h5imp_gsmsol.argument.instrument     =  /instrument_directionindependent
 h5imp_gsmsol.argument.solsetName     =  sol000
