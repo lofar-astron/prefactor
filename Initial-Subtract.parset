@@ -48,11 +48,16 @@
 # 7 klambda is machted to 7.5 arcsec cellsize
 ! maxlambda_highres    = 7000 
 ! maxlambda_lowres     = 2000
+# How much padding shall we add during the imaging? 
+! image_padding        = 1.4
+# How much shall the y-axis be stretched or compressed?
+# Used to get rectangular images. Use at your own risk!
+! axis_stretch         = 1.
 
 ##### performance parameters
-! max_imagers_per_node      =  3
-! max_percent_mem_per_img   =  30
-! max_cpus_per_img          =  10
+! max_imagers_per_node      =  2
+! max_percent_mem_per_img   =  45
+! max_cpus_per_img          =  20
 ! max_dppp_per_node         =  6
 ! max_dppp_threads          =  8
 # set this to True if you want the pipeline run to continue if single bands fail
@@ -99,6 +104,8 @@ do_magic.argument.cellsize_highres_deg          =  {{ cellsize_highres_deg }}
 do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_lowres_deg }}
 do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
+do_magic.argument.image_padding                 =  {{ image_padding }}
+do_magic.argument.y_axis_stretch                =  {{ axis_stretch }}
 
 # convert the output of do_magic into usable mapfiles,len = 1 / different 
 do_magic_maps.control.kind                      =  plugin
@@ -109,6 +116,8 @@ do_magic_maps.control.mapfile_high_size_map     =  do_magic.output.high_size_map
 do_magic_maps.control.mapfile_low_size_map      =  do_magic.output.low_size_mapfile.mapfile
 do_magic_maps.control.mapfile_freqstep_map      =  do_magic.output.freqstep.mapfile
 do_magic_maps.control.mapfile_timestep_map      =  do_magic.output.timestep.mapfile
+do_magic_maps.control.mapfile_high_padsize_map  =  do_magic.output.high_padsize_mapfile.mapfile
+do_magic_maps.control.mapfile_low_padsize_map   =  do_magic.output.low_padsize_mapfile.mapfile
 
 # create a mapfile with the direction independent parmDBs, length = nfiles
 create_parmdb_map.control.kind                  =  plugin
@@ -128,8 +137,8 @@ wsclean_high1.control.outputkey                 =   name
 wsclean_high1.control.args_format               =   wsclean
 wsclean_high1.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high1.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.high_size_map]
-wsclean_high1.control.inputkeys                 =   [msfile,imsize]
+wsclean_high1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.high_padsize_map,do_magic_maps.output.high_size_map]
+wsclean_high1.control.inputkeys                 =   [msfile,imsize,trim]
 wsclean_high1.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_high1.argument.size                     =   imsize
 wsclean_high1.argument.niter                    =   40000
@@ -185,8 +194,8 @@ wsclean_high2.control.outputkey                 =   name
 wsclean_high2.control.args_format               =   wsclean
 wsclean_high2.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high2.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask_high.output.mapfile,do_magic_maps.output.high_size_map]
-wsclean_high2.control.inputkeys                 =   [msfile,fitsmask,imsize]
+wsclean_high2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask_high.output.mapfile,do_magic_maps.output.high_padsize_map,do_magic_maps.output.high_size_map]
+wsclean_high2.control.inputkeys                 =   [msfile,fitsmask,imsize,trim]
 wsclean_high2.argument.flags                    =   [-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_high2.argument.fitsmask                 =   fitsmask
 wsclean_high2.argument.size                     =   imsize
@@ -314,8 +323,8 @@ wsclean_low1.control.outputkey                  =   name
 wsclean_low1.control.args_format                =   wsclean
 wsclean_low1.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low1.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low1.control.mapfiles_in                =   [regroup_map.output.mapfile,do_magic_maps.output.low_size_map]
-wsclean_low1.control.inputkeys                  =   [msfile,imsize]
+wsclean_low1.control.mapfiles_in                =   [regroup_map.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map]
+wsclean_low1.control.inputkeys                  =   [msfile,imsize,trim]
 wsclean_low1.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_low1.argument.size                      =   imsize
 wsclean_low1.argument.niter                     =   20000
@@ -357,8 +366,8 @@ wsclean_low2.control.outputkey                  =   name
 wsclean_low2.control.args_format                =   wsclean
 wsclean_low2.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low2.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low2.control.mapfiles_in                =   [regroup_map.output.mapfile,mask_low.output.mapfile,do_magic_maps.output.low_size_map]
-wsclean_low2.control.inputkeys                  =   [msfile,fitsmask,imsize]
+wsclean_low2.control.mapfiles_in                =   [regroup_map.output.mapfile,mask_low.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map]
+wsclean_low2.control.inputkeys                  =   [msfile,fitsmask,imsize,trim]
 wsclean_low2.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_low2.argument.fitsmask                  =   fitsmask
 wsclean_low2.argument.size                      =   imsize
