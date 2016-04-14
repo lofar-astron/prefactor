@@ -236,7 +236,7 @@ SBfreqs = rebin(np.copy(amptab.freq[:]),( len(amptab.freq[:])/n_chan ,))
 
 
 
-  
+chanfreqs = amptab.freq[:]
 freqidx = np.arange(n_chan/2,nfreqs,n_chan)
 freqs = amptab.freq[freqidx]
 timeidx = np.arange(ntimes)
@@ -244,7 +244,8 @@ freqgrid = np.arange(nfreqs)
 SBgrid = np.floor(freqgrid/n_chan)
 SBvals = freqgrid/n_chan
 
-freqs_new  = np.arange(np.min(freqs)+1e3,np.max(freqs)-1e3, 195.3125e3)
+#freqs_new  = np.arange(np.min(freqs)+1e3,np.max(freqs)-1e3, 195.3125e3)
+freqs_new = np.mean(chanfreqs.reshape(-1, n_chan), axis=1)
 amps_array_flagged = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 amps_array = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 minscale = np.zeros( nants )
@@ -404,14 +405,14 @@ for antenna_id in range(0,len(amptab.ant[:])):
         matplotlib.pyplot.close()
         matplotlib.pyplot.cla()
 
-        matplotlib.pyplot.plot(freqs_new/1e6,np.median(amps_array[antenna_id,:,:,0], axis=0))
+        matplotlib.pyplot.plot(freqs_new/1e6,np.median(amps_array[antenna_id,:,:,0], axis=0),'.-')
         matplotlib.pyplot.xlabel('freq [MHz]')
         matplotlib.pyplot.ylabel('ampl')
         matplotlib.pyplot.savefig('%s_profileXX.pdf'%(amptab.ant[antenna_id]))
         matplotlib.pyplot.close()
         matplotlib.pyplot.cla()
 
-        matplotlib.pyplot.plot(freqs_new/1e6,np.median(amps_array[antenna_id,:,:,1], axis=0))
+        matplotlib.pyplot.plot(freqs_new/1e6,np.median(amps_array[antenna_id,:,:,1], axis=0),'.-')
         matplotlib.pyplot.xlabel('freq [MHz]')
         matplotlib.pyplot.ylabel('ampl')
         matplotlib.pyplot.savefig('%s_profileYY.pdf'%(amptab.ant[antenna_id]))
