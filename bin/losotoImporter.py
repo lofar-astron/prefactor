@@ -5,7 +5,7 @@
 # Francesco de Gasperin (H5parm_importer.py), 2014
 # Andreas Horneffer (PipelineStep_losotoImporter.py), 2015
 
-import os
+import os, sys
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
 
@@ -13,6 +13,8 @@ import numpy as np
 import pyrap.tables as pt
 import lofar.parmdb as pdb
 from losoto.h5parm import h5parm, solWriter
+
+import logging
 
 # mandatory arguments:
 # options: mapfile_in, mapfile-dir, filename 
