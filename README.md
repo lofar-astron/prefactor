@@ -31,7 +31,7 @@ Software requirements:
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * Python matplotlib
-* WSClean (for Initial-Subtract, version >=1.9)
+* WSClean (for Initial-Subtract, version >=1.9 -- see https://sourceforge.net/projects/wsclean/)
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Reinout van Weeren <rvanweeren somewhere cfa.harvard.edu>
