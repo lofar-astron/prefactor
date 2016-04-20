@@ -265,15 +265,15 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
             file_single_map.append(DataProduct('localhost', filename, False))
         (imsize_high_res, imsize_low_res) = band.get_image_sizes(cellsize_highres_deg, cellsize_lowres_deg,
                                                                  fieldsize_highres, fieldsize_lowres)
-        imsize_high_res_stretch = int(imsize_high_res*y_axis_stretch)
-        high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res), False))
-        imsize_low_res_stretch = int(imsize_low_res*y_axis_stretch)
-        low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res), False))
-        imsize_high_pad = int(imsize_high_res*image_padding)
-        imsize_high_pad_stretch = int(imsize_high_res*image_padding*y_axis_stretch)
+        imsize_high_res_stretch = band.get_optimum_size(int(imsize_high_res*y_axis_stretch))
+        high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res_stretch), False))
+        imsize_low_res_stretch = band.get_optimum_size(int(imsize_low_res*y_axis_stretch))
+        low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res_stretch), False))
+        imsize_high_pad = band.get_optimum_size(int(imsize_high_res*image_padding))
+        imsize_high_pad_stretch = band.get_optimum_size(int(imsize_high_res*image_padding*y_axis_stretch))
         high_paddedsize_map.append(DataProduct('localhost', str(imsize_high_pad)+" "+str(imsize_high_pad_stretch), False))
-        imsize_low_pad = int(imsize_low_res*image_padding)
-        imsize_low_pad_stretch = int(imsize_low_res*image_padding*y_axis_stretch)
+        imsize_low_pad = band.get_optimum_size(int(imsize_low_res*image_padding))
+        imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch))
         low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
 
     print "InitSubtract_sort_and_compute.py: Computing averaging steps."
