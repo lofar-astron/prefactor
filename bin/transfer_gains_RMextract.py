@@ -23,7 +23,7 @@ class ReadMs:
 	self.mstimevalues = t1.getcol('TIME')[::-1]
 	t1.close()
         ##########Getting Frequency Parameters###################
-	freq=pt.table(t.getkeyword("SPECTRAL_WINDOW"))
+	freq=pt.table(t.getkeyword("SPECTRAL_WINDOW"), readonly=True, ack=False)
 	self.fullband = freq.getcell('TOTAL_BANDWIDTH', 0)
 	self.freqpara['cent'] = freq.getcell('REF_FREQUENCY', 0)
 	self.freqpara['step'] = freq.getcell('CHAN_WIDTH', 0)[0]
@@ -32,7 +32,7 @@ class ReadMs:
 	self.freqpara['end'] = self.msfreqvalues[-1]+self.freqpara['step']/2.
 	freq.close()
         ##########Getting Station Names###################
-        antennas = pt.table(t.getkeyword("ANTENNA"))
+        antennas = pt.table(t.getkeyword("ANTENNA"), readonly=True, ack=False)
         self.stations = antennas.getcol('NAME')
         antennas.close()
 	t.close()
@@ -60,7 +60,40 @@ def make_empty_parmdb(outname):
     myParmdb.addDefValues("RotationMeasure",1e-6)
     return myParmdb
 
-def main(msname, store_basename, newparmdbext='-instrument_amp_clock_offset'):
+def add_COMMONROTATION_vals(outDB, MSinfo, server, prefix, ionexPath):
+    """
+    Call getRM() from RMextract to get the RM values for the opbservation,
+    convert this to rotation values and write COMMONROTATION to the parmdb
+
+    Parameters
+    ----------
+    outDB : parmDB object
+       the parmBD where the rotation values are to be written
+    MSinfo : ReadMs object
+       the ReadMs object for the MS for which we compute the rotation values
+    server : str or None
+       URL of the server where we can find the IONEX files, or None if no download is wanted
+    prefix : str
+       prefix of the IONEX files
+    path : str
+       path where we can find or store the IONEX files
+    """
+    c = 299792458.0
+    import RMextract.getRM
+    rmdict = RMextract.getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
+    lambdaSquared = (c/msinfo.msfreqvalues)**2
+    # get an array wwith the same size as rmdict['times'] but filled with rmdict['timestep']
+    timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
+    # same for frequencies
+    freqsteps = np.full_like(msinfo.msfreqvalues,msinfo.freqpara['step'])
+    for antenna in rmdict['station_names']:
+        rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
+        newValue = outDB.makeValue(values=rotation_angles, sfreq=msinfo.msfreqvalues, efreq=freqsteps,
+                                   stime=rmdict['times'], etime=timesteps, asStartEnd=False)
+        outDB.addValues('CommonRotationAngle:'+antenna,newValue)
+
+def main(msname, store_basename='caldata_transfer', newparmdbext='-instrument_amp_clock_offset', 
+         ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
 
     # name (path) for parmdb to be written
     newparmDB = msname+newparmdbext
@@ -141,5 +174,38 @@ def main(msname, store_basename, newparmdbext='-instrument_amp_clock_offset'):
                                       stime=starttime, etime=endtime, asStartEnd=True)
         outDB.addValues('Clock:'+antenna,ValueHolder)
 
+    if server.strip(' []\'\"').lower() == 'none':
+        server = None
+    add_COMMONROTATION_vals(outDB, msinfo, ionex_server, ionex_prefix, ionexPath)
+
     outDB = False
     return {'transfer_parmDB': newparmDB }
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Create a parmDB with values from the calibrator and rotaton values from RMextract.')
+
+    parser.add_argument('MSfile', type=str, nargs='+',
+                        help='One or more MSs for which the IONEX data should be downloaded.')
+    parser.add_argument('--server', type=str, default='None',               
+                        help='URL of the server to use. (default: None)')
+    parser.add_argument('--prefix', type=str, default='CODG', 
+                        help='Prefix of the IONEX files. (default: \"CODG\")')
+    parser.add_argument('--ionexpath', '--path', type=str, default='IONEXdata/',
+                        help='Directory where to store the IONEX files. (default: \"IONEXdata/\")')
+    parser.add_argument('--basename', type=str, default='caldata_transfer',
+                        help='Base-name of the numpy files with the calibrator values. (default: \"caldata_transfer\")')
+    parser.add_argument('--extension', type=str, default='-instrument_amp_clock_offset',
+                        help='Extension to the MS-name to get the name of the parmDB. (default: \"-instrument_amp_clock_offset\")')
+
+
+    args = parser.parse_args()
+
+    for MS in args.MSfile:
+        print "Working on:", MS
+        #main(MS, args.basename, args.extension, server=args.server, prefix=args.prefix, ionexPath=args.ionexpath)
+        msinfo = ReadMs(MS)
+        newparmDB = MS+args.extension
+        outDB = make_empty_parmdb(newparmDB)
+        add_COMMONROTATION_vals(outDB, msinfo, args.server, args.prefix, args.ionexpath)
