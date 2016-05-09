@@ -58,6 +58,10 @@ def download_IONEX(ms_input,server="ftp://ftp.unibe.ch/aiub/CODE/",prefix='CODG'
                 ionexf=ionex.getIONEXfile(time=date_parms,server=server,prefix=prefix,outpath=ionexPath)
                 dates_done.append(datestr)
 
+def main(msname, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
+    download_IONEX(msname,server=ionex_server,prefix=ionex_prefix,ionexPath=ionexPath)
+    
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Download IONEX files for given measurement sets.')
