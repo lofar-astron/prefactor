@@ -79,16 +79,16 @@ def add_COMMONROTATION_vals(outDB, MSinfo, server, prefix, ionexPath):
        path where we can find or store the IONEX files
     """
     c = 299792458.0
-    import RMextract.getRM
-    rmdict = RMextract.getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
-    lambdaSquared = (c/msinfo.msfreqvalues)**2
+    from RMextract import getRM
+    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
+    lambdaSquared = (c/MSinfo.msfreqvalues)**2
     # get an array wwith the same size as rmdict['times'] but filled with rmdict['timestep']
     timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
     # same for frequencies
-    freqsteps = np.full_like(msinfo.msfreqvalues,msinfo.freqpara['step'])
+    freqsteps = np.full_like(MSinfo.msfreqvalues,MSinfo.freqpara['step'])
     for antenna in rmdict['station_names']:
         rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
-        newValue = outDB.makeValue(values=rotation_angles, sfreq=msinfo.msfreqvalues, efreq=freqsteps,
+        newValue = outDB.makeValue(values=rotation_angles, sfreq=MSinfo.msfreqvalues, efreq=freqsteps,
                                    stime=rmdict['times'], etime=timesteps, asStartEnd=False)
         outDB.addValues('CommonRotationAngle:'+antenna,newValue)
 
@@ -174,8 +174,8 @@ def main(msname, store_basename='caldata_transfer', newparmdbext='-instrument_am
                                       stime=starttime, etime=endtime, asStartEnd=True)
         outDB.addValues('Clock:'+antenna,ValueHolder)
 
-    if server.strip(' []\'\"').lower() == 'none':
-        server = None
+    if ionex_server.strip(' []\'\"').lower() == 'none':
+        ionex_server = None
     add_COMMONROTATION_vals(outDB, msinfo, ionex_server, ionex_prefix, ionexPath)
 
     outDB = False
