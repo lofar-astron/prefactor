@@ -58,6 +58,7 @@
 ! gsm_cal_parset       = /homea/htb00/htb001/prefactor/parsets/gsmcal.parset
 ! ATeam_skymodel       = /homea/htb00/htb001/prefactor/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer      = /homea/htb00/htb001/prefactor/bin/losotoImporter.py
+! get_ion_script       = /homea/htb00/htb001/prefactor/bin/download_IONEX.py
 ! transfer_script      = /homea/htb00/htb001/prefactor/bin/transfer_gains_RMextract.py
 ! ATeam_Clipper        = /homea/htb00/htb001/prefactor/bin/Ateamclipper.py
 ! sortmap_script       = /homea/htb00/htb001/prefactor/bin/sort_times_into_freqGroups.py
@@ -103,7 +104,7 @@ createmap_cal_npys.control.pattern         =   *.npy
 copy_cal_npys.control.kind               =  recipe
 copy_cal_npys.control.type               =  executable_args
 copy_cal_npys.control.executable         =  /bin/cp
-copy_cal_npys.control.max_per_node       =   {{ num_cpu_per_node_limit }}        #not much use to have too many of those
+copy_cal_npys.control.max_per_node       =  {{ num_cpu_per_node_limit }}        #not much use to have too many of those
 copy_cal_npys.control.mapfile_in         =  createmap_cal_npys.output.mapfile
 copy_cal_npys.control.inputkey           =  source
 copy_cal_npys.control.arguments          =  [source,input.output.working_directory/input.output.job_name]
