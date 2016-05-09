@@ -130,16 +130,16 @@ get_ion_files.argument.ionex_prefix   = {{ ionex_prefix }}
 get_ion_files.argument.ionexPath      = {{ ionex_path }}
 
 # generate parmDB with the interpolated calibrator data to apply to the traget
-trans.control.type            = pythonplugin
-trans.control.executable      = {{ transfer_script }}
+trans.control.type            =  pythonplugin
+trans.control.executable      =  {{ transfer_script }}
 trans.control.max_per_node    =  {{ num_cpu_per_node }}                                 # feel free to adjust this value to match your system
-trans.control.error_tolerance = {{ error_tolerance }}
-trans.argument.flags          = [createmap_target.output.mapfile]
-trans.argument.store_basename = caldata_transfer
-trans.argument.newparmdbext   = /instrument_amp_clock_offset
-trans.argument.ionex_server   = {{ ionex_server }}
-trans.argument.ionex_prefix   = {{ ionex_prefix }}
-trans.argument.ionexPath      = {{ ionex_path }}
+trans.control.error_tolerance =  {{ error_tolerance }}
+trans.argument.flags          =  [createmap_target.output.mapfile]
+trans.argument.store_basename =  caldata_transfer
+trans.argument.newparmdbext   =  /instrument_amp_clock_offset
+trans.argument.ionex_server   =  {{ ionex_server }}
+trans.argument.ionex_prefix   =  {{ ionex_prefix }}
+trans.argument.ionexPath      =  {{ ionex_path }}
 
 # generate mapfile with the parmDBs to be applied to the target data
 parmmap.control.kind               =  plugin
