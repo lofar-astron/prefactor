@@ -44,8 +44,10 @@
 ! reference_station      = CS001HBA0
 
 ## Values needed for RMextract
-# the URL of the server where  the IONEX files can be downloaded
-# leave it at "None" to disable downloads
+# the URL of the server where the IONEX files can be downloaded
+# leave it at "None" to disable downloads, or set it to:
+#   ftp://ftp.unibe.ch/aiub/CODE/
+# to download from the "standard" server
 ! ionex_server  = None
 # the prefix of the IONEX files
 ! ionex_prefix  = CODG
