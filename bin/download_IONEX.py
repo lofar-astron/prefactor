@@ -59,7 +59,9 @@ def download_IONEX(ms_input,server="ftp://ftp.unibe.ch/aiub/CODE/",prefix='CODG'
                 dates_done.append(datestr)
 
 def main(msname, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
-    download_IONEX(msname,server=ionex_server,prefix=ionex_prefix,ionexPath=ionexPath)
+    # no download if ionex_server == None
+    if ionex_server.strip(' []\'\"').lower() != 'none':
+        download_IONEX(msname,server=ionex_server,prefix=ionex_prefix,ionexPath=ionexPath)
     
 
 if __name__ == '__main__':
