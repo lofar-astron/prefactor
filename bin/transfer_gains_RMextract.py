@@ -92,7 +92,7 @@ def add_COMMONROTATION_vals(outDB, MSinfo, server, prefix, ionexPath):
                                    stime=rmdict['times'], etime=timesteps, asStartEnd=False)
         outDB.addValues('CommonRotationAngle:'+antenna,newValue)
 
-def main(msname, store_basename='caldata_transfer', newparmdbext='-instrument_amp_clock_offset', 
+def main(msname, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
          ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
 
     # name (path) for parmdb to be written
@@ -100,12 +100,13 @@ def main(msname, store_basename='caldata_transfer', newparmdbext='-instrument_am
 
     # load the numpy arrays written by the previous scripts
     # (filenames constructed in the same way as in these scripts)
-    freqs_ampl = np.load('freqs_for_amplitude_array.npy')
-    amps_array = np.load(store_basename + '_amplitude_array.npy')
-    clock_array = np.load('fitted_data_dclock_' + store_basename + '_1st.npy')
-    freqs_phase = np.load('freqs_for_phase_array.npy')
-    phases_array  = np.load(store_basename + '_phase_array.npy')
-    station_names = np.load(store_basename + '_station_names.npy')
+    from os.path import join
+    freqs_ampl    = np.load(join(store_directory,'freqs_for_amplitude_array.npy'))
+    amps_array    = np.load(join(store_directory,store_basename + '_amplitude_array.npy'))
+    clock_array   = np.load(join(store_directory,'fitted_data_dclock_' + store_basename + '_1st.npy'))
+    freqs_phase   = np.load(join(store_directory,'freqs_for_phase_array.npy'))
+    phases_array  = np.load(join(store_directory,store_basename + '_phase_array.npy'))
+    station_names = np.load(join(store_directory,store_basename + '_station_names.npy'))
 
     #print "phases shape:",np.shape(phases_array)
     #print "amps shape:",np.shape(amps_array)
