@@ -75,7 +75,7 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, plot_im_high, plot_im_low, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, plot_im_high, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, plot_im_low, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -212,6 +212,15 @@ wsclean_high2.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
 wsclean_high2.argument.weighting-rank-filter    =   3
+
+# plot the high-res image and mask, length = nbands
+plot_im_high.control.type                       =   pythonplugin
+plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
+plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
+plot_im_high.control.mapfiles_in                =   [wsclean_high2.output.wsclean_high2-image.fits.mapfile,mask_high.output.mapfile]
+plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
+plot_im_high.control.outputkey                  =   imname
+plot_im_high.argument.flags                     =   [imhigh,maskhigh,imname]
 
 # move the high2 images to where we want them
 move_high2.control.kind                         =  recipe
@@ -387,6 +396,15 @@ wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
 wsclean_low2.argument.weighting-rank-filter     =   3
 
+# plot the low-res image and mask, length = nbands
+plot_im_low.control.type                        =   pythonplugin
+plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
+plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
+plot_im_low.control.mapfiles_in                 =   [wsclean_low2.output.wsclean_low2-image.fits.mapfile,mask_low.output.mapfile]
+plot_im_low.control.inputkeys                   =   [imlow,masklow]
+plot_im_low.control.outputkey                   =   imname
+plot_im_low.argument.flags                      =   [imlow,masklow,imname]
+
 # move the low2 images to where we want them
 move_low2.control.kind                          =  recipe
 move_low2.control.type                          =  executable_args
@@ -470,24 +488,6 @@ copy_skymodels.control.executable               =  /bin/cp
 copy_skymodels.control.mapfile_in               =  merge.output.mapfile
 copy_skymodels.control.inputkey                 =  source
 copy_skymodels.control.arguments                =  [source,{{ data_input_path }}]
-
-# plot the high-res image and mask, length = nbands
-plot_im_high.control.type                       =   pythonplugin
-plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
-plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
-plot_im_high.control.mapfiles_in                =   [wsclean_high2.output.wsclean_high2-image.fits.mapfile,mask_high.output.mapfile]
-plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
-plot_im_high.control.outputkey                  =   imname
-plot_im_high.argument.flags                     =   [imhigh,maskhigh,imname]
-
-# plot the low-res image and mask, length = nbands
-plot_im_low.control.type                        =   pythonplugin
-plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
-plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
-plot_im_low.control.mapfiles_in                 =   [wsclean_low2.output.wsclean_low2-image.fits.mapfile,mask_low.output.mapfile]
-plot_im_low.control.inputkeys                   =   [imlow,masklow]
-plot_im_low.control.outputkey                   =   imname
-plot_im_low.argument.flags                      =   [imlow,masklow,imname]
 
 # create a map with the generated plots 
 createmap_plots.control.kind                    =   plugin
