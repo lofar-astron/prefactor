@@ -1,4 +1,4 @@
-# Initial Subtract Pipeline
+# Initial Subtract Deep Pipeline
 #
 #   Adapted from (and shamelesly copied from) Factor
 #
@@ -27,6 +27,11 @@
 #   "Gain:0:0:*","Gain:1:1:*"
 #
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.
+
+#### Deep imaging version
+# - wsclean is used to make a deep image with channels equal to the number of input frequency bands
+# - clean components are taken from the channel images/models and subtracted
+
 
 ##### parameters you will need to adjust.
 ! data_input_path         = /data/scratch/username/PathToYourTargetData/
@@ -76,9 +81,8 @@
 ! makesourcedb           = /soft/lofar-220216/bin/makesourcedb
 
 
-
-# the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, combine_mapfile_deep,  wsclean_high1_deep, createmap_high1_deep_image, mask_high_deep, wsclean_high2_deep,createmap_high2_deep_image,createmap_high2_deep_image_bands,createmap_high2_deep_model_bands, plot_im_high_deep, mk_inspect_dir, copy_mask, move_high2_deep, fits_to_image_high_deep, casa_to_bbs_high_deep, make_sourcedb_high_deep, expand_sourcedb_high_deep,  parmdbs_to_realimag, subtract_high, correct_high, combine_mapfile_low_deep,  wsclean_low1_deep, createmap_low1_deep_image, mask_low_deep, wsclean_low2_deep,createmap_low2_deep_image,createmap_low2_deep_image_bands,createmap_low2_deep_model_bands, plot_im_low_deep, copy_mask_low_deep, move_low2_deep, fits_to_image_low_deep, casa_to_bbs_low_deep, make_sourcedb_low_deep, expand_sourcedb_low_deep,   subtract_low, merge, copy_skymodels,  createmap_plots, move_plots]
+##### the Steps in this pipeline
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, combine_mapfile_deep,  wsclean_high1_deep, createmap_high1_deep_image, mask_high_deep, wsclean_high2_deep,createmap_high2_deep_image,createmap_high2_deep_image_bands,createmap_high2_deep_model_bands, plot_im_high_deep, mk_inspect_dir, copy_mask_high_deep, fits_to_image_high_deep, casa_to_bbs_high_deep, make_sourcedb_high_deep, expand_sourcedb_high_deep,  parmdbs_to_realimag, subtract_high, correct_high, combine_mapfile_low_deep,  wsclean_low1_deep, createmap_low1_deep_image, mask_low_deep, wsclean_low2_deep,createmap_low2_deep_image,createmap_low2_deep_image_bands,createmap_low2_deep_model_bands, plot_im_low_deep, copy_mask_low_deep, fits_to_image_low_deep, casa_to_bbs_low_deep, make_sourcedb_low_deep, expand_sourcedb_low_deep,  subtract_low, merge, copy_skymodels,  createmap_plots, move_high2_deep, move_low2_deep, move_plots]
 
 
 # create a mapfile with all MSs, length = nfiles
@@ -99,6 +103,7 @@ combine_mapfile.control.mapfile_dir             =  input.output.mapfile_dir
 combine_mapfile.control.filename                =  combine_mapfile.mapfile
 
 # compute frequency groupings, image sizes, averaging values, etc., len = different
+# the deep version of the do_magic_script should return mapfiles sorted by increasing frequency
 do_magic.control.type                           =  pythonplugin                
 do_magic.control.executable                     =  {{ do_magic_script }}
 do_magic.argument.flags                         =  [combine_mapfile.output.mapfile]
@@ -248,6 +253,7 @@ createmap_high2_deep_image_bands.control.folder                  =   input.outpu
 createmap_high2_deep_image_bands.control.pattern                 =   *wsclean_high2_deep-0*-image.fits
 
 # create a map with the wsclean model bands
+# should return a mapfile sorted by increasing channel number (i.e. frequency) to match the do_magic output
 createmap_high2_deep_model_bands.control.kind                    =   plugin
 createmap_high2_deep_model_bands.control.type                    =   createMapfile
 createmap_high2_deep_model_bands.control.method                  =   mapfile_from_folder
@@ -271,13 +277,13 @@ mk_inspect_dir.control.type                     =  makeDirectory
 mk_inspect_dir.control.directory                =  {{ inspection_directory }}
 
 # copy the mask images to where we want them
-copy_mask.control.kind                          =  recipe
-copy_mask.control.type                          =  executable_args
-copy_mask.control.executable                    =  /bin/cp
-copy_mask.control.max_per_node                  =  10      #not much use to have too many of those
-copy_mask.control.mapfile_in                    =  mask_high_deep.output.mapfile
-copy_mask.control.inputkey                      =  source
-copy_mask.control.arguments                     =  [source,{{ inspection_directory }}]
+copy_mask_high_deep.control.kind                          =  recipe
+copy_mask_high_deep.control.type                          =  executable_args
+copy_mask_high_deep.control.executable                    =  /bin/cp
+copy_mask_high_deep.control.max_per_node                  =  10      #not much use to have too many of those
+copy_mask_high_deep.control.mapfile_in                    =  mask_high_deep.output.mapfile
+copy_mask_high_deep.control.inputkey                      =  source
+copy_mask_high_deep.control.arguments                     =  [source,{{ inspection_directory }}]
 
 # convert high-res images to casa images, length = nbands
 fits_to_image_high_deep.control.type                 =   pythonplugin
