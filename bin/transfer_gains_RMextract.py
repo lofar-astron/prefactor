@@ -60,15 +60,13 @@ def make_empty_parmdb(outname):
     myParmdb.addDefValues("RotationMeasure",1e-6)
     return myParmdb
 
-def add_COMMONROTATION_vals(outDB, MSinfo, server, prefix, ionexPath):
+def add_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     """
     Call getRM() from RMextract to get the RM values for the opbservation,
     convert this to rotation values and write COMMONROTATION to the parmdb
 
     Parameters
     ----------
-    outDB : parmDB object
-       the parmBD where the rotation values are to be written
     MSinfo : ReadMs object
        the ReadMs object for the MS for which we compute the rotation values
     server : str or None
@@ -86,11 +84,14 @@ def add_COMMONROTATION_vals(outDB, MSinfo, server, prefix, ionexPath):
     timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
     # same for frequencies
     freqsteps = np.full_like(MSinfo.msfreqvalues,MSinfo.freqpara['step'])
+    rmdict = {}
     for antenna in rmdict['station_names']:
         rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
         newValue = outDB.makeValue(values=rotation_angles, sfreq=MSinfo.msfreqvalues, efreq=freqsteps,
                                    stime=rmdict['times'], etime=timesteps, asStartEnd=False)
-        outDB.addValues('CommonRotationAngle:'+antenna,newValue)
+        rmdict[antenna] = newValue
+        
+    return rmdict
 
 def main(msname, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
          ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
@@ -121,6 +122,11 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
     endfreqs   = msinfo.msfreqvalues+msinfo.GetFreqpara('step')/2.
     ntimes  = 1
     nfreqs  = len(startfreqs)
+
+
+    if ionex_server.strip(' []\'\"').lower() == 'none':
+        ionex_server = None
+    rmdict = add_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath)
 
     outDB = make_empty_parmdb(newparmDB)
 
@@ -174,11 +180,11 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
                                       sfreq=startfreqs[0], efreq=endfreqs[-1],
                                       stime=starttime, etime=endtime, asStartEnd=True)
         outDB.addValues('Clock:'+antenna,ValueHolder)
+        
+        outDB.addValues('CommonRotationAngle:'+antenna,rmdict[antenna])
 
-    if ionex_server.strip(' []\'\"').lower() == 'none':
-        ionex_server = None
-    add_COMMONROTATION_vals(outDB, msinfo, ionex_server, ionex_prefix, ionexPath)
 
+    outDB.flush()
     outDB = False
     return {'transfer_parmDB': newparmDB }
 
@@ -212,5 +218,5 @@ if __name__ == '__main__':
         #newparmDB = MS+args.extension
         #outDB = make_empty_parmdb(newparmDB)
         #add_COMMONROTATION_vals(outDB, msinfo, args.server, args.prefix, args.ionexpath)
-        main(MS, store_basename=args.basename, store_directory='.', newparmdbext=args.extension, 
+        main(MS, store_basename=args.basename, store_directory=args.storedir, newparmdbext=args.extension, 
          ionex_server=args.server, ionex_prefix=args.prefix, ionexPath=args.ionexpath)
