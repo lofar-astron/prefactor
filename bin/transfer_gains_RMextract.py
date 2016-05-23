@@ -197,6 +197,8 @@ if __name__ == '__main__':
                         help='Directory where to store the IONEX files. (default: \"IONEXdata/\")')
     parser.add_argument('--basename', type=str, default='caldata_transfer',
                         help='Base-name of the numpy files with the calibrator values. (default: \"caldata_transfer\")')
+    parser.add_argument('--storedir', type=str, default='.',
+                        help='Directory of the numpy files with the calibrator values. (default: \".\")')
     parser.add_argument('--extension', type=str, default='-instrument_amp_clock_offset',
                         help='Extension to the MS-name to get the name of the parmDB. (default: \"-instrument_amp_clock_offset\")')
 
@@ -206,7 +208,9 @@ if __name__ == '__main__':
     for MS in args.MSfile:
         print "Working on:", MS
         #main(MS, args.basename, args.extension, server=args.server, prefix=args.prefix, ionexPath=args.ionexpath)
-        msinfo = ReadMs(MS)
-        newparmDB = MS+args.extension
-        outDB = make_empty_parmdb(newparmDB)
-        add_COMMONROTATION_vals(outDB, msinfo, args.server, args.prefix, args.ionexpath)
+        #msinfo = ReadMs(MS)
+        #newparmDB = MS+args.extension
+        #outDB = make_empty_parmdb(newparmDB)
+        #add_COMMONROTATION_vals(outDB, msinfo, args.server, args.prefix, args.ionexpath)
+        main(MS, store_basename=args.basename, store_directory='.', newparmdbext=args.extension, 
+         ionex_server=args.server, ionex_prefix=args.prefix, ionexPath=args.ionexpath)
