@@ -60,7 +60,7 @@ def make_empty_parmdb(outname):
     myParmdb.addDefValues("RotationMeasure",1e-6)
     return myParmdb
 
-def add_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
+def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     """
     Call getRM() from RMextract to get the RM values for the opbservation,
     convert this to rotation values and write COMMONROTATION to the parmdb
@@ -76,21 +76,9 @@ def add_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     path : str
        path where we can find or store the IONEX files
     """
-    c = 299792458.0
     from RMextract import getRM
     rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
-    lambdaSquared = (c/MSinfo.msfreqvalues)**2
-    # get an array wwith the same size as rmdict['times'] but filled with rmdict['timestep']
-    timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
-    # same for frequencies
-    freqsteps = np.full_like(MSinfo.msfreqvalues,MSinfo.freqpara['step'])
-    rmdict = {}
-    for antenna in rmdict['station_names']:
-        rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
-        newValue = outDB.makeValue(values=rotation_angles, sfreq=MSinfo.msfreqvalues, efreq=freqsteps,
-                                   stime=rmdict['times'], etime=timesteps, asStartEnd=False)
-        rmdict[antenna] = newValue
-        
+
     return rmdict
 
 def main(msname, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
@@ -126,7 +114,15 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
 
     if ionex_server.strip(' []\'\"').lower() == 'none':
         ionex_server = None
-    rmdict = add_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath)
+    rmdict = get_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath)
+
+    c = 299792458.0
+    lambdaSquared = (c/msinfo.msfreqvalues)**2
+    # get an array wwith the same size as rmdict['times'] but filled with rmdict['timestep']
+    timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
+    # same for frequencies
+    freqsteps = np.full_like(msinfo.msfreqvalues,msinfo.freqpara['step'])
+        
 
     outDB = make_empty_parmdb(newparmDB)
 
@@ -181,7 +177,9 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
                                       stime=starttime, etime=endtime, asStartEnd=True)
         outDB.addValues('Clock:'+antenna,ValueHolder)
         
-        outDB.addValues('CommonRotationAngle:'+antenna,rmdict[antenna])
+        rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
+        newValue = outDB.makeValue(values=rotation_angles, sfreq=msinfo.msfreqvalues, efreq=freqsteps, stime=rmdict['times'], etime=timesteps, asStartEnd=False)
+        outDB.addValues('CommonRotationAngle:'+antenna,newValue)
 
 
     outDB.flush()
