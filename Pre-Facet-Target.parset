@@ -34,7 +34,7 @@
 ! results_directory    = /media/scratch/test/username/WhereYouWantYourProcessedData/
 
 # number of processes to use per step per node
-! num_proc_per_node        = 8
+! num_proc_per_node        = 10
 # number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! num_proc_per_node_limit  = 4
 
@@ -236,6 +236,7 @@ check_unflagged.control.type            =  pythonplugin
 check_unflagged.control.executable      =  {{ check_flagged_script }}
 check_unflagged.argument.flags          =  [dpppconcat.output.mapfile]
 check_unflagged.argument.min_fraction   =  {{ min_unflagged_fraction }}
+# this step writes hostnames into "check_unflagged.flagged.mapfile" due to a "feature" of the pythonplugin
 
 # prune flagged files from mapfile
 check_unflagged_map.control.kind               =  plugin
@@ -259,7 +260,7 @@ gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solu
 
 # generate a mapfile with all files in a single entry
 h5_imp_gsmsol_map.control.kind               =  plugin
-h5_imp_gsmsol_map.control.type               =  createMapfile
+h5_imp_gsmsol_map.control.type               =  MapfileToOne
 h5_imp_gsmsol_map.control.method             =  mapfile_all_to_one
 h5_imp_gsmsol_map.control.mapfile_in         =  check_unflagged_map.output.mapfile
 h5_imp_gsmsol_map.control.mapfile_dir        =  input.output.mapfile_dir
