@@ -192,7 +192,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                     skip_this = False
             filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
             freqID = int(((numSB/2.+fgroup*numSB+1)*freq_width+minfreq)/1e6)
-            groupname = time_groups[time]['basename']+'_%Xt_%dg.ms'%(time,freqID)
+            groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
             if type(stepname) is str:
                 groupname += stepname
             if type(target_path) is str:
