@@ -66,7 +66,7 @@ def plugin_main(args, **kwargs):
         sw = solWriter(soltabs[st])
         sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
                                    os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    del h5parmDB 
+    h5parmDB.close()
 
     #generate mapfile and wrap up
     mapfileentry = {}
@@ -116,7 +116,7 @@ def main(msfileslist, hdf5fileName, hdf5_dir='.', instrument='/instrument', sols
         sw = solWriter(soltabs[st])
         sw.addHistory('CREATE (by losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
                                    os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    del h5parmDB 
+    h5parmDB.close()
 
     result = {}
     result['h5parm'] = hdf5File
@@ -476,5 +476,5 @@ if __name__=='__main__':
         sw = solWriter(soltabs[st])
         sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
                                    os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    del h5parmDB 
+    h5parmDB.close()
 
