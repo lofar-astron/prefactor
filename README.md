@@ -17,7 +17,7 @@ The version 2.0 development branch includes:
 
 It does not (yet?) include:
 * speed and disk usage improvements by optimized usage of NDPPP
-* wide-band cleaning in InitSubtract (see deepimage branch)
+* wide-band cleaning in Initial-Subtract (see deepimage branch)
 
 There is a wiki page with more or less useful hints: http://www.lofar.org/wiki/doku.php?id=public:user_software:prefactor
 
