@@ -279,6 +279,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     low_paddedsize_map = DataMap([])
     numfiles = 0
     nbands = len(bands)
+    nchansout_clean1 = np.int(nbands/4)
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
@@ -320,7 +321,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     deep_low_size_map = DataMap([DataProduct('localhost', str(deep_imsize_low_res)+" "+str(deep_imsize_low_res_stretch), False)])
     deep_low_paddedsize_map = DataMap([DataProduct('localhost', str(deep_imsize_low_pad)+" "+str(deep_imsize_low_pad_stretch), False)])
     nbands_map = DataMap([DataProduct('localhost', str(nbands), False)])
-
+    nchansout_clean1_map = DataMap([DataProduct('localhost', str(nchansout_clean1), False)])
     print "InitSubtract_sort_and_compute.py: Computing averaging steps."
     (freqstep, timestep) = bands[0].get_averaging_steps()
     # get mapfiles for freqstep and timestep with the length of single_map
@@ -354,7 +355,9 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     deep_low_paddedsize_map.save(deep_low_padsize_name)
     
     nbands_mapname = os.path.join(mapfile_dir, outmapname+'_nbands')
+    nchansout_clean1_mapname = os.path.join(mapfile_dir, outmapname+'_nchansout_clean1')
     nbands_map.save(nbands_mapname)
+    nchansout_clean1_map.save(nchansout_clean1_mapname)
     
     freqstepname = os.path.join(mapfile_dir, outmapname+'_freqstep')
     freqstep_map.save(freqstepname)
