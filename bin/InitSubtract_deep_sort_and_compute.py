@@ -355,8 +355,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     deep_low_paddedsize_map.save(deep_low_padsize_name)
     
     nbands_mapname = os.path.join(mapfile_dir, outmapname+'_nbands')
-    nchansout_clean1_mapname = os.path.join(mapfile_dir, outmapname+'_nchansout_clean1')
     nbands_map.save(nbands_mapname)
+    nchansout_clean1_mapname = os.path.join(mapfile_dir, outmapname+'_nchansout_clean1')
     nchansout_clean1_map.save(nchansout_clean1_mapname)
     
     freqstepname = os.path.join(mapfile_dir, outmapname+'_freqstep')
@@ -369,7 +369,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
               'high_padsize_mapfile' : high_padsize_name, 'low_padsize_mapfile' : low_padsize_name,
               'deep_high_size_mapfile' : deep_high_sizename, 'deep_low_size_mapfile' : deep_low_sizename,
               'deep_high_padsize_mapfile' : deep_high_padsize_name, 'deep_low_padsize_mapfile' : deep_low_padsize_name,
-              'nbands' : nbands_mapname,
+              'nbands' : nbands_mapname, 'nchansout_clean1' : nchansout_clean1_mapname,
               'freqstep' : freqstepname, 'timestep' : timestepname}
     return result
 
