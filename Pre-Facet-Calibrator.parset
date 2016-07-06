@@ -25,6 +25,8 @@
 # where to put the files with the calibration values that are to be transferred to the target
 ! cal_values_directory = /media/scratch/test/username/WhereYouWantToStoreTheValuesFromTheCalibrator/
 
+# NDPPP-compatible pattern for baselines or stations to be flagged
+! flag_baselines         = [ CS013HBA* ]
 # name of the station that will be used as a reference for the phase-plots
 ! reference_station      = CS001HBA0
 
@@ -67,7 +69,7 @@ ndppp_prep_cal.argument.msout.datacolumn       = DATA
 ndppp_prep_cal.argument.msout.writefullresflag = False
 ndppp_prep_cal.argument.steps                  = [flag,filter,avg,flagamp]
 ndppp_prep_cal.argument.flag.type              = preflagger
-ndppp_prep_cal.argument.flag.baseline          = [ CS013HBA* ]        # feel free to change that, but CS013 is usually bad.
+ndppp_prep_cal.argument.flag.baseline          = {{ flag_baselines }}
 ndppp_prep_cal.argument.filter.type            = filter
 ndppp_prep_cal.argument.filter.baseline        = CS*, RS*&&
 ndppp_prep_cal.argument.filter.remove          = true                     # fully kick out the international stations.

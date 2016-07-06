@@ -38,6 +38,8 @@
 # where to put the files with the calibration values that are to be transferred to the target
 ! cal_values_directory = /media/scratch/test/username/WhereYouWantToStoreTheValuesFromTheCalibrator/
 
+# NDPPP-compatible pattern for baselines or stations to be flagged
+! flag_baselines         = [ CS013HBA* ]
 # minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! min_unflagged_fraction = 0.5
 # name of the station that will be used as a reference for the phase-plots
@@ -90,6 +92,7 @@ calibrator_pipeline.control.cal_input_pattern     =  {{ cal_input_pattern }}
 calibrator_pipeline.control.calibrator_skymodel   =  {{ calibrator_skymodel }}
 calibrator_pipeline.control.inspection_directory  =  {{ inspection_directory }}
 calibrator_pipeline.control.cal_values_directory  =  {{ cal_values_directory }}
+calibrator_pipeline.control.flag_baselines        =  {{ flag_baselines }}
 calibrator_pipeline.control.reference_station     =  {{ reference_station }}
 calibrator_pipeline.control.calib_cal_parset      =  {{ calib_cal_parset }}
 calibrator_pipeline.control.losoto_importer       =  {{ losoto_importer }}
@@ -116,6 +119,7 @@ target_pipeline.control.results_directory       =  {{ results_directory }}
 target_pipeline.control.ionex_server            =  {{ ionex_server }}
 target_pipeline.control.ionex_prefix            =  {{ ionex_prefix }}
 target_pipeline.control.ionex_path              =  {{ ionex_path }}
+target_pipeline.control.flag_baselines          =  {{ flag_baselines }}
 target_pipeline.control.min_unflagged_fraction  =  {{ min_unflagged_fraction }}
 target_pipeline.control.reference_station       =  {{ reference_station }}
 target_pipeline.control.ATeam_predict_parset    =  {{ ATeam_predict_parset }}
