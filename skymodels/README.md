@@ -9,7 +9,6 @@ The files so far:
 * *3c147-SH.skymodel* : 3C147 from Scaife \& Heald, single point source
 * *3c286-SH.skymodel* : 3C286 from Scaife \& Heald, single point source
 * *3c287-SH.skymodel* : 3C287 from Scaife \& Heald, single point source
-* *3c295-SH.skymodel* : 3C295 from Scaife \& Heald, single point source
 * *3c295-twocomp.skymodel* : 3C295 with two components, flux from Scaife \& Heald
 * *3c380-SH.skymodel* : 3C380 from Scaife \& Heald, single point source
 * *3c48-SH.skymodel* : 3C48 from Scaife \& Heald, single point source
