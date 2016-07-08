@@ -250,6 +250,11 @@ amps_array = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 minscale = np.zeros( nants )
 maxscale = np.zeros( nants )
 
+if len(freqs_new) < 20:
+    print "Frequency span is less than 20 subbands! The filtering will not work!"
+    print "Please run the calibrator pipeline on the full calibrator bandwidth." 
+    raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
+
 # remove the badd subbands given by the user
 print "Have",max(SBgrid),"subbands."
 for bad in bad_sblist:
