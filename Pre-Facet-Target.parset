@@ -78,7 +78,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, parmmap, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, gsmcalibtarget, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_parmmap, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
+pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, parmmap, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
 
 # create the inspection_directory if needed
 mk_inspect_dir.control.kind               =  plugin
@@ -181,8 +181,8 @@ create_ateam_model_map.control.files             =  [ {{ ATeam_skymodel }} ]
 create_ateam_model_map.control.mapfile_dir       =  input.output.mapfile_dir
 create_ateam_model_map.control.filename          =  ateam_model_name.mapfile
 
-# make sourcedbs from the ateam-res skymodels, length = 1
-# outtype = blob for the same reasons as for sourcedb_high 
+# make sourcedbs from the A-Team skymodel, length = 1
+# outtype = blob, because NDPPP likes that 
 make_sourcedb_ateam.control.kind                 =  recipe
 make_sourcedb_ateam.control.type                 =  executable_args
 make_sourcedb_ateam.control.executable           =  {{ makesourcedb }}
@@ -292,17 +292,85 @@ check_unflagged_map.control.mapfile_dir        =  input.output.mapfile_dir
 check_unflagged_map.control.filename           =  check_unflagged_map.mapfile
 check_unflagged_map.control.prune_str          =  None
 
-# phase calibration on the gsm skymodel
-gsmcalibtarget.control.type                            =  python-calibrate-stand-alone
-gsmcalibtarget.control.max_per_node                    =  {{ num_proc_per_node_limit }}
-gsmcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
-gsmcalibtarget.argument.force                          =  True
-gsmcalibtarget.argument.observation                    =  check_unflagged_map.output.mapfile
-gsmcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
-gsmcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}
-gsmcalibtarget.argument.catalog                        =  {{ target_skymodel }}
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
-gsmcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
+# create a mapfile with the A-Team skymodel, length = 1
+create_target_model_map.control.kind              =  plugin
+create_target_model_map.control.type              =  addListMapfile
+create_target_model_map.control.hosts             =  ['localhost']
+create_target_model_map.control.files             =  [ {{ target_skymodel }} ]
+create_target_model_map.control.mapfile_dir       =  input.output.mapfile_dir
+create_target_model_map.control.filename          =  target_model_name.mapfile
+
+# make sourcedbs from the target skymodel, length = 1
+# outtype = blob, because NDPPP likes that 
+make_sourcedb_target.control.kind                 =  recipe
+make_sourcedb_target.control.type                 =  executable_args
+make_sourcedb_target.control.executable           =  {{ makesourcedb }}
+make_sourcedb_target.control.error_tolerance      =  {{ error_tolerance }}
+make_sourcedb_target.control.args_format          =  lofar
+make_sourcedb_target.control.outputkey            =  out
+make_sourcedb_target.control.mapfile_in           =  create_target_model_map.output.mapfile
+make_sourcedb_target.control.inputkey             =  in
+make_sourcedb_target.argument.format              =  <
+make_sourcedb_target.argument.outtype             =  blob
+
+# expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
+expand_sourcedb_target.control.kind               =  plugin
+expand_sourcedb_target.control.type               =  expandMapfile
+expand_sourcedb_target.control.mapfile_in         =  make_sourcedb_target.output.mapfile
+expand_sourcedb_target.control.mapfile_to_match   =  check_unflagged_map.output.mapfile
+expand_sourcedb_target.control.mapfile_dir        =  input.output.mapfile_dir
+expand_sourcedb_target.control.filename           =  expand_sourcedb_target.datamap
+
+# generate mapfile with the parmDB names to be used in the gsmcal steps
+gsmcal_parmmap.control.kind               =  plugin
+gsmcal_parmmap.control.type               =  createMapfile
+gsmcal_parmmap.control.method             =  add_suffix_to_file
+gsmcal_parmmap.control.mapfile_in         =  check_unflagged_map.output.mapfile
+gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
+gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
+gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
+
+# solve for phase-only calibration solutions
+# solve and apply are seperate to allow to solve on a subset of baselines but apply to all
+gsmcal_solve.control.type                             = dppp
+gsmcal_solve.control.environment                      = {OMP_NUM_THREADS: 4} 
+gsmcal_solve.control.error_tolerance                  = {{ error_tolerance }}
+gsmcal_solve.control.inplace                          = True
+gsmcal_solve.control.max_per_node                     = {{ num_proc_per_node_limit }}
+gsmcal_solve.argument.numthreads                      = {{ max_dppp_threads }}
+gsmcal_solve.argument.msin                            = check_unflagged_map.output.mapfile
+gsmcal_solve.argument.msin.datacolumn                 = DATA
+gsmcal_solve.argument.msin.baseline                   = CS*&; RS*&; CS*&RS*
+gsmcal_solve.argument.msout.datacolumn                = CORRECTED_DATA
+gsmcal_solve.argument.steps                           = [filter,gaincal]	
+gsmcal_solve.filter.type                              = filter
+gsmcal_solve.filter.blrange                           = [150, 999999]
+gsmcal_solve.argument.gaincal.type                    = gaincal
+gsmcal_solve.argument.gaincal.maxiter                 = 500
+gsmcal_solve.argument.gaincal.caltype                 = phaseonly
+gsmcal_solve.argument.gaincal.nchan                   = 0
+gsmcal_solve.argument.gaincal.solint                  = 1
+gsmcal_solve.argument.gaincal.sourcedb                = expand_sourcedb_target.output.mapfile
+gsmcal_solve.argument.gaincal.parmdb                  = gsmcal_parmmap.output.mapfile
+gsmcal_solve.argument.gaincal.predict.usebeammodel    = True
+gsmcal_solve.argument.gaincal.predict.usechannelfreq  = True
+gsmcal_solve.argument.gaincal.predict.beammode        = array_factor
+
+# apply the phase-only calibration solutions
+# solve and apply are seperate to allow to solve on a subset of baselines but apply to all
+gsmcal_apply.control.type                             = dppp
+gsmcal_apply.control.error_tolerance                  = {{ error_tolerance }}
+gsmcal_apply.control.inplace                          = True
+gsmcal_apply.control.max_per_node                     = {{ num_proc_per_node_limit }}
+gsmcal_apply.argument.numthreads                      = {{ max_dppp_threads }}
+gsmcal_apply.argument.msin                            = check_unflagged_map.output.mapfile
+gsmcal_apply.argument.msin.datacolumn                 = DATA
+gsmcal_apply.argument.msout.datacolumn                = CORRECTED_DATA
+gsmcal_apply.argument.msout.writefullresflag          = False
+gsmcal_apply.argument.steps                           = [applycal]
+gsmcal_apply.argument.applycal.type                   = applycal
+gsmcal_apply.argument.applycal.correction             = gain
+gsmcal_apply.argument.applycal.parmdb                 = gsmcal_parmmap.output.mapfile
 
 # generate a mapfile with all files in a single entry
 h5_imp_gsmsol_map.control.kind               =  plugin
@@ -346,15 +414,6 @@ plot_gsm_phases.argument.LoSoTo.Steps.plot.ColorAxis  =  [pol]
 plot_gsm_phases.argument.LoSoTo.Steps.plot.Reference  =  {{ reference_station }}
 plot_gsm_phases.argument.LoSoTo.Steps.plot.PlotFlag   =  False
 plot_gsm_phases.argument.LoSoTo.Steps.plot.Prefix     =  {{ inspection_directory }}/gsm_phases_
-
-# generate mapfile with the parmDBs that were created by BBS in the gsmcalibtarget step
-gsmcal_parmmap.control.kind               =  plugin
-gsmcal_parmmap.control.type               =  createMapfile
-gsmcal_parmmap.control.method             =  add_suffix_to_file
-gsmcal_parmmap.control.mapfile_in         =  check_unflagged_map.output.mapfile
-gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
-gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
-gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
 
 # plot the phase solutions from the phase-only calibration of the target
 old_plot_gsmphases.control.kind               =  recipe
