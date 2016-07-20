@@ -14,9 +14,9 @@
 pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, gsmcal_antmap, make_structurefunction, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, ndppp_prep_target, trans, parmmap, calibtarget, dpppaverage, ateamtarget, ateamcliptar, sortmap_tar, dpppconcat, gsmcalibtarget, gsmcal_parmmap,  gsmcal_antmap, make_structurefunction, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 
 
 # parameters you will need to adjust.
@@ -46,6 +46,7 @@ pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal,
 ! transfer_script      = /cep3home/horneffer/Pre-Facet-Cal/bin/transfer_amplitudes+clock+offset_toMS.py
 ! ATeam_Clipper        = /cep3home/horneffer/Pre-Facet-Cal/bin/Ateamclipper.py
 ! plotphases_script    = /cep3home/horneffer/Pre-Facet-Cal/bin/plot_solutions_all_stations.py
+! structurefunction_script = /cep3home/horneffer/Pre-Facet-Cal/bin/getStructure_from_phases.py
 ! flagging_strategy    = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_12_0/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
 
 # set this to True if you want the pipeline run to continue if single bands fail
@@ -287,6 +288,24 @@ gsmcal_parmmap.control.mapfile_in         =  dpppconcat.output.mapfile
 gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
 gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
 gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
+
+# generate mapfile with the antenna tables of the concatenated target datafiles
+gsmcal_antmap.control.kind               =  plugin
+gsmcal_antmap.control.type               =  createMapfile
+gsmcal_antmap.control.method             =  add_suffix_to_file
+gsmcal_antmap.control.mapfile_in         =  dpppconcat.output.mapfile
+gsmcal_antmap.control.add_suffix_to_file =  /ANTENNA
+gsmcal_antmap.control.mapfile_dir        =  input.output.mapfile_dir
+gsmcal_antmap.control.filename           =  gsmcal_antmaps.mapfile
+
+# plot the phase solutions from the phase-only calibration of the target
+make_structurefunction.control.kind               =  recipe
+make_structurefunction.control.type               =  executable_args
+make_structurefunction.control.executable         =  {{ structurefunction_script }}
+make_structurefunction.control.max_per_node       =  24
+make_structurefunction.control.mapfiles_in        =  [gsmcal_antmap.output.mapfile,gsmcal_antmap.output.mapfile,dpppconcat.output.mapfile]
+make_structurefunction.control.inputkeys          =  [inparmdb,inants,outbase]
+make_structurefunction.control.arguments          =  [inparmdb,inants,outbase]
 
 # plot the phase solutions from the phase-only calibration of the target
 plot_gsm_phases.control.kind               =  recipe
