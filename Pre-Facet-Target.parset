@@ -219,10 +219,9 @@ predict_ateam.argument.predict.operation         =  replace
 predict_ateam.argument.predict.sourcedb          =  sourcedb
 predict_ateam.argument.predict.sources           =  [VirA_4_patch,CygAGG,CasA_4_patch,TauAGG]
 predict_ateam.argument.predict.usebeammodel      =  True
-predict_ateam.argument.predict.applybeam.invert  =  false
 # This is run on single subbands, which means that it is ineed "more correct" 
 # to set usechannelfreq to false
-predict_ateam.argument.predict.applybeam.usechannelfreq  =  false
+predict_ateam.argument.predict.usechannelfreq  =  false
 
 # run the a-team clipper to flag data affected by the a-team
 ateamcliptar.control.kind               =  recipe
@@ -352,9 +351,9 @@ gsmcal_solve.argument.gaincal.nchan                   = 0
 gsmcal_solve.argument.gaincal.solint                  = 1
 gsmcal_solve.argument.gaincal.sourcedb                = expand_sourcedb_target.output.mapfile
 gsmcal_solve.argument.gaincal.parmdb                  = gsmcal_parmmap.output.mapfile
-gsmcal_solve.argument.gaincal.predict.usebeammodel    = True
-gsmcal_solve.argument.gaincal.predict.usechannelfreq  = True
-gsmcal_solve.argument.gaincal.predict.beammode        = array_factor
+gsmcal_solve.argument.gaincal.usebeammodel            = True
+gsmcal_solve.argument.gaincal.usechannelfreq          = True
+gsmcal_solve.argument.gaincal.beammode                = array_factor
 
 # apply the phase-only calibration solutions
 # solve and apply are seperate to allow to solve on a subset of baselines but apply to all
