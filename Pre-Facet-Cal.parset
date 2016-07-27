@@ -303,7 +303,7 @@ make_structurefunction.control.kind               =  recipe
 make_structurefunction.control.type               =  executable_args
 make_structurefunction.control.executable         =  {{ structurefunction_script }}
 make_structurefunction.control.max_per_node       =  24
-make_structurefunction.control.mapfiles_in        =  [gsmcal_antmap.output.mapfile,gsmcal_antmap.output.mapfile,dpppconcat.output.mapfile]
+make_structurefunction.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,gsmcal_antmap.output.mapfile,dpppconcat.output.mapfile]
 make_structurefunction.control.inputkeys          =  [inparmdb,inants,outbase]
 make_structurefunction.control.arguments          =  [inparmdb,inants,outbase]
 
