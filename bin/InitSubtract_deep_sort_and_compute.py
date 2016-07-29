@@ -279,7 +279,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     low_paddedsize_map = DataMap([])
     numfiles = 0
     nbands = len(bands)
-    nchansout_clean1 = np.int(nbands/4)
+    if nbands > 4:
+        nchansout_clean1 = np.int(nbands/4)
+    else:
+        nchansout_clean1 = np.int(nbands)
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
