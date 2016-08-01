@@ -12,7 +12,7 @@ def main(statefile):
     for i, item in enumerate(current_state[1]):
         name = item[0]
         try:
-            name = os.path.basename(item[1]['ok.mapfile']).rstrip('.ok.mapfile')
+            name = os.path.basename(item[1]['ok.mapfile'])[:-11]
         except:
             print 'using task as name'
         print 'Step Nr.: {0}  Task: {1}  Name: {2}'.format(i+1, item[0], name)
@@ -29,7 +29,7 @@ def main(statefile):
         return
 
     # delete all steps after the given step number
-    # remiving a step from the middle will result in an invalid statefile
+    # removing a step from the middle will result in an invalid statefile
     new_state = copy.deepcopy(current_state)
     new_state[1] = new_state[1][:int(del_number_raw)-1]
 

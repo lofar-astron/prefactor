@@ -177,7 +177,7 @@ class Band(object):
 
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
-         fieldsize_highres=2.5, fieldsize_lowres=6.5):
+         fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.):
     """
     Check a list of MS files for missing frequencies
 
@@ -197,6 +197,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         How many FWHM's shall the high-res images be.
     fieldsize_lowres : float, optional
         How many FWHM's shall the low-res images be.
+    image_padding : float, optional
+        How much padding shall we add to the padded image sizes.
+    y_axis_stretch : float, optional
+        How much shall the y-axis be stretched or compressed. 
 
     Returns
     -------
@@ -224,6 +228,13 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     else:
         raise TypeError('sort_into_freqBands: type of "ms_input" unknown!')
 
+    cellsize_highres_deg = float(cellsize_highres_deg)
+    cellsize_lowres_deg = float(cellsize_lowres_deg)
+    fieldsize_highres = float(fieldsize_highres)
+    fieldsize_lowres = float(fieldsize_lowres)
+    image_padding = float(image_padding)
+    y_axis_stretch = float(y_axis_stretch)
+
     msdict = {}
     for ms in ms_list:
         # group all MSs by frequency
@@ -243,6 +254,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     file_single_map = DataMap([])
     high_size_map = DataMap([])
     low_size_map = DataMap([])
+    high_paddedsize_map = DataMap([])
+    low_paddedsize_map = DataMap([])
     numfiles = 0
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
@@ -250,10 +263,18 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         numfiles += len(band.files)
         for filename in band.files:
             file_single_map.append(DataProduct('localhost', filename, False))
-        (imsize_high_res, imsize_low_res) = band.get_image_sizes(float(cellsize_highres_deg), float(cellsize_lowres_deg),
-                                                                 float(fieldsize_highres), float(fieldsize_lowres))
-        high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res), False))
-        low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res), False))
+        (imsize_high_res, imsize_low_res) = band.get_image_sizes(cellsize_highres_deg, cellsize_lowres_deg,
+                                                                 fieldsize_highres, fieldsize_lowres)
+        imsize_high_res_stretch = band.get_optimum_size(int(imsize_high_res*y_axis_stretch))
+        high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res_stretch), False))
+        imsize_low_res_stretch = band.get_optimum_size(int(imsize_low_res*y_axis_stretch))
+        low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res_stretch), False))
+        imsize_high_pad = band.get_optimum_size(int(imsize_high_res*image_padding))
+        imsize_high_pad_stretch = band.get_optimum_size(int(imsize_high_res*image_padding*y_axis_stretch))
+        high_paddedsize_map.append(DataProduct('localhost', str(imsize_high_pad)+" "+str(imsize_high_pad_stretch), False))
+        imsize_low_pad = band.get_optimum_size(int(imsize_low_res*image_padding))
+        imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch))
+        low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
 
     print "InitSubtract_sort_and_compute.py: Computing averaging steps."
     (freqstep, timestep) = bands[0].get_averaging_steps()
@@ -272,12 +293,17 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     high_size_map.save(high_sizename)
     low_sizename = os.path.join(mapfile_dir, outmapname+'_low_size')
     low_size_map.save(low_sizename)
+    high_padsize_name = os.path.join(mapfile_dir, outmapname+'_high_padded_size')
+    high_paddedsize_map.save(high_padsize_name)
+    low_padsize_name = os.path.join(mapfile_dir, outmapname+'_low_padded_size')
+    low_paddedsize_map.save(low_padsize_name)
     freqstepname = os.path.join(mapfile_dir, outmapname+'_freqstep')
     freqstep_map.save(freqstepname)
     timestepname = os.path.join(mapfile_dir, outmapname+'_timestep')
     timestep_map.save(timestepname)
     result = {'groupmap': groupmapname, 'single_mapfile' : file_single_mapname,
               'high_size_mapfile' : high_sizename, 'low_size_mapfile' : low_sizename,
+              'high_padsize_mapfile' : high_padsize_name, 'low_padsize_mapfile' : low_padsize_name,
               'freqstep' : freqstepname, 'timestep' : timestepname}
     return result
 

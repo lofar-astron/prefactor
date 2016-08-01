@@ -6,10 +6,10 @@
 # - external version of the initsubtract step of Factor
 # - will change the input-MSs (adds SUBTRACTED_DATA_HIGH and 
 #   SUBTRACTED_DATA_ALL columns)
-# - copies merged skymodels into folder with input data "data_input_path"
+# - copies merged skymodels into folder with input data: "data_input_path"
 # - requires combined predict-corrupt-subtract step in NDPPP 
-#   (currently in the LOFAR-trunk, will be included in LOFAR release 2.15)
-# - in addition to the stahdard LOFAR software it requires wsclean
+#   (included in LOFAR since release 2.15)
+# - in addition to the standard LOFAR software it requires wsclean
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
@@ -34,6 +34,7 @@
 # name of the direction independent parmDBs inside the measurement sets
 # needs to include the leading "/" to indicate that the parmDB is a subdirectory of the MS
 ! direction_indep_parmDBs = /instrument_directionindependent
+! inspection_directory = /media/scratch/test/username/WhereYouWantImagesAndInspectionPlots/
 
 ##### imaging parameters (Feel free to leave them untouched.)
 #### specify  the image parameters here
@@ -47,14 +48,18 @@
 # 7 klambda is machted to 7.5 arcsec cellsize
 ! maxlambda_highres    = 7000 
 ! maxlambda_lowres     = 2000
+# How much padding shall we add during the imaging? 
+! image_padding        = 1.4
+# How much shall the y-axis be stretched or compressed?
+# Used to get rectangular images. Use at your own risk!
+! axis_stretch         = 1.
 
 ##### performance parameters
-! max_imagers_per_node      =  3
-! max_percent_mem_per_img   =  30
-! max_cpus_per_img          =  10
+! max_imagers_per_node      =  2
+! max_percent_mem_per_img   =  45
+! max_cpus_per_img          =  20
 ! max_dppp_per_node         =  6
 ! max_dppp_threads          =  8
-! local_scratch_dir         =  /path/to/local/scratch/dir
 # set this to True if you want the pipeline run to continue if single bands fail
 ! error_tolerance           =  False
 
@@ -70,7 +75,7 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, wsclean_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, plot_im_high, plot_im_low, createmap_plots, copy_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, plot_im_high, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, plot_im_low, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -99,6 +104,8 @@ do_magic.argument.cellsize_highres_deg          =  {{ cellsize_highres_deg }}
 do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_lowres_deg }}
 do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
+do_magic.argument.image_padding                 =  {{ image_padding }}
+do_magic.argument.y_axis_stretch                =  {{ axis_stretch }}
 
 # convert the output of do_magic into usable mapfiles,len = 1 / different 
 do_magic_maps.control.kind                      =  plugin
@@ -109,6 +116,8 @@ do_magic_maps.control.mapfile_high_size_map     =  do_magic.output.high_size_map
 do_magic_maps.control.mapfile_low_size_map      =  do_magic.output.low_size_mapfile.mapfile
 do_magic_maps.control.mapfile_freqstep_map      =  do_magic.output.freqstep.mapfile
 do_magic_maps.control.mapfile_timestep_map      =  do_magic.output.timestep.mapfile
+do_magic_maps.control.mapfile_high_padsize_map  =  do_magic.output.high_padsize_mapfile.mapfile
+do_magic_maps.control.mapfile_low_padsize_map   =  do_magic.output.low_padsize_mapfile.mapfile
 
 # create a mapfile with the direction independent parmDBs, length = nfiles
 create_parmdb_map.control.kind                  =  plugin
@@ -128,10 +137,11 @@ wsclean_high1.control.outputkey                 =   name
 wsclean_high1.control.args_format               =   wsclean
 wsclean_high1.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high1.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.high_size_map]
-wsclean_high1.control.inputkeys                 =   [msfile,imsize]
+wsclean_high1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.high_padsize_map,do_magic_maps.output.high_size_map]
+wsclean_high1.control.inputkeys                 =   [msfile,paddedsize,outputsize]
 wsclean_high1.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,msfile]
-wsclean_high1.argument.size                     =   imsize
+wsclean_high1.argument.size                     =   paddedsize
+wsclean_high1.argument.trim                     =   outputsize
 wsclean_high1.argument.niter                    =   40000
 wsclean_high1.argument.threshold                =   0.0
 wsclean_high1.argument.pol                      =   I
@@ -142,7 +152,6 @@ wsclean_high1.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high1.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high1.argument.j                        =   {{ max_cpus_per_img }}
-wsclean_high1.argument.tempdir                  =   {{ local_scratch_dir }}
 wsclean_high1.argument.weighting-rank-filter    =   3
 
 # make masks for the high-res images, length = nbands
@@ -163,6 +172,20 @@ mask_high.argument.img_format                   =   fits
 mask_high.argument.atrous_jmax                  =   3
 mask_high.argument.trim_by                      =   0.1
 
+# create the inspection_directory if needed
+mk_inspect_dir.control.kind                     =  plugin
+mk_inspect_dir.control.type                     =  makeDirectory
+mk_inspect_dir.control.directory                =  {{ inspection_directory }}
+
+# copy the mask images to where we want them
+copy_mask.control.kind                          =  recipe
+copy_mask.control.type                          =  executable_args
+copy_mask.control.executable                    =  /bin/cp
+copy_mask.control.max_per_node                  =  10      #not much use to have too many of those
+copy_mask.control.mapfile_in                    =  mask_high.output.mapfile
+copy_mask.control.inputkey                      =  source
+copy_mask.control.arguments                     =  [source,{{ inspection_directory }}]
+
 # second high-res imaging, length = nbands
 wsclean_high2.control.kind                      =   recipe
 wsclean_high2.control.type                      =   executable_args
@@ -172,11 +195,12 @@ wsclean_high2.control.outputkey                 =   name
 wsclean_high2.control.args_format               =   wsclean
 wsclean_high2.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high2.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask_high.output.mapfile,do_magic_maps.output.high_size_map]
-wsclean_high2.control.inputkeys                 =   [msfile,fitsmask,imsize]
+wsclean_high2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask_high.output.mapfile,do_magic_maps.output.high_padsize_map,do_magic_maps.output.high_size_map]
+wsclean_high2.control.inputkeys                 =   [msfile,fitsmask,paddedsize,outputsize]
 wsclean_high2.argument.flags                    =   [-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_high2.argument.fitsmask                 =   fitsmask
-wsclean_high2.argument.size                     =   imsize
+wsclean_high2.argument.size                     =   paddedsize
+wsclean_high2.argument.trim                     =   outputsize
 wsclean_high2.argument.niter                    =   40000
 wsclean_high2.argument.threshold                =   mask_high.output.threshold_5sig.mapfile
 wsclean_high2.argument.pol                      =   I
@@ -187,8 +211,25 @@ wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
-wsclean_high2.argument.tempdir                  =   {{ local_scratch_dir }}
 wsclean_high2.argument.weighting-rank-filter    =   3
+
+# plot the high-res image and mask, length = nbands
+plot_im_high.control.type                       =   pythonplugin
+plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
+plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
+plot_im_high.control.mapfiles_in                =   [wsclean_high2.output.wsclean_high2-image.fits.mapfile,mask_high.output.mapfile]
+plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
+plot_im_high.control.outputkey                  =   imname
+plot_im_high.argument.flags                     =   [imhigh,maskhigh,imname]
+
+# move the high2 images to where we want them
+move_high2.control.kind                         =  recipe
+move_high2.control.type                         =  executable_args
+move_high2.control.executable                   =  /bin/mv
+move_high2.control.max_per_node                 =  10      #not much use to have too many of those
+move_high2.control.mapfile_in                   =  wsclean_high2.output.wsclean_high2-image.fits.mapfile
+move_high2.control.inputkey                     =  source
+move_high2.control.arguments                    =  [source,{{ inspection_directory }}]
 
 # convert high-res images to casa images, length = nbands
 fits_to_image_high.control.type                 =   pythonplugin
@@ -233,21 +274,21 @@ expand_sourcedb_high.control.mapfile_dir        =   input.output.mapfile_dir
 expand_sourcedb_high.control.filename           =   expand_sourcedb_high.datamap
 
 # convert the parmdbs to real/imag values, length = nfiles
-parmdbs_to_realimag.control.type                 =   pythonplugin
-parmdbs_to_realimag.control.executable           =   {{ realimag_script }}
-parmdbs_to_realimag.control.error_tolerance      =   {{ error_tolerance }}
-parmdbs_to_realimag.control.mapfiles_in          =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
-parmdbs_to_realimag.control.inputkeys            =   [dummy, pdb_in]
-parmdbs_to_realimag.control.outputkey            =   pdb_out
-parmdbs_to_realimag.argument.flags               =   [pdb_in, pdb_out]
+parmdbs_to_realimag.control.type                =   pythonplugin
+parmdbs_to_realimag.control.executable          =   {{ realimag_script }}
+parmdbs_to_realimag.control.error_tolerance     =   {{ error_tolerance }}
+parmdbs_to_realimag.control.mapfiles_in         =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
+parmdbs_to_realimag.control.inputkeys           =   [dummy, pdb_in]
+parmdbs_to_realimag.control.outputkey           =   pdb_out
+parmdbs_to_realimag.argument.flags              =   [pdb_in, pdb_out]
 
 # Predict, corrupt, and subtract the high-resolution model, length = nfiles
 # The low-resolution model will be subtracted from the 
 # output column (SUBTRACTED_DATA_HIGH) later
 subtract_high.control.type                      =   dppp
-subtract_high.control.opts.mapfiles_in          =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,parmdbs_to_realimag.output.mapfile]
-subtract_high.control.opts.inputkeys            =   [msin,sourcedb,parmdb]
-subtract_high.control.opts.inplace              =   True
+subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_high.control.inputkeys                 =   [msin,sourcedb,parmdb]
+subtract_high.control.inplace                   =   True
 subtract_high.control.max_per_node              =   {{ max_dppp_per_node }}
 subtract_high.argument.numthreads               =   {{ max_dppp_threads }}
 subtract_high.control.error_tolerance           =   {{ error_tolerance }}
@@ -293,10 +334,11 @@ wsclean_low1.control.outputkey                  =   name
 wsclean_low1.control.args_format                =   wsclean
 wsclean_low1.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low1.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low1.control.mapfiles_in                =   [regroup_map.output.mapfile,do_magic_maps.output.low_size_map]
-wsclean_low1.control.inputkeys                  =   [msfile,imsize]
+wsclean_low1.control.mapfiles_in                =   [regroup_map.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map]
+wsclean_low1.control.inputkeys                  =   [msfile,paddedsize,outputsize]
 wsclean_low1.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
-wsclean_low1.argument.size                      =   imsize
+wsclean_low1.argument.size                      =   paddedsize
+wsclean_low1.argument.trim                      =   outputsize
 wsclean_low1.argument.niter                     =   20000
 wsclean_low1.argument.threshold                 =   0.0
 wsclean_low1.argument.pol                       =   I
@@ -307,7 +349,6 @@ wsclean_low1.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low1.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low1.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low1.argument.j                         =   {{ max_cpus_per_img }}
-wsclean_low1.argument.tempdir                   =   {{ local_scratch_dir }}
 wsclean_low1.argument.weighting-rank-filter     =   3
 
 # make masks for the low-res images, length = nbands
@@ -337,11 +378,12 @@ wsclean_low2.control.outputkey                  =   name
 wsclean_low2.control.args_format                =   wsclean
 wsclean_low2.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low2.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low2.control.mapfiles_in                =   [regroup_map.output.mapfile,mask_low.output.mapfile,do_magic_maps.output.low_size_map]
-wsclean_low2.control.inputkeys                  =   [msfile,fitsmask,imsize]
+wsclean_low2.control.mapfiles_in                =   [regroup_map.output.mapfile,mask_low.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map]
+wsclean_low2.control.inputkeys                  =   [msfile,fitsmask,paddedsize,outputsize]
 wsclean_low2.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_low2.argument.fitsmask                  =   fitsmask
-wsclean_low2.argument.size                      =   imsize
+wsclean_low2.argument.size                      =   paddedsize
+wsclean_low2.argument.trim                      =   outputsize
 wsclean_low2.argument.niter                     =   20000
 wsclean_low2.argument.threshold                 =   mask_low.output.threshold_5sig.mapfile
 wsclean_low2.argument.pol                       =   I
@@ -352,8 +394,25 @@ wsclean_low2.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low2.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
-wsclean_low2.argument.tempdir                   =   {{ local_scratch_dir }}
 wsclean_low2.argument.weighting-rank-filter     =   3
+
+# plot the low-res image and mask, length = nbands
+plot_im_low.control.type                        =   pythonplugin
+plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
+plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
+plot_im_low.control.mapfiles_in                 =   [wsclean_low2.output.wsclean_low2-image.fits.mapfile,mask_low.output.mapfile]
+plot_im_low.control.inputkeys                   =   [imlow,masklow]
+plot_im_low.control.outputkey                   =   imname
+plot_im_low.argument.flags                      =   [imlow,masklow,imname]
+
+# move the low2 images to where we want them
+move_low2.control.kind                          =  recipe
+move_low2.control.type                          =  executable_args
+move_low2.control.executable                    =  /bin/mv
+move_low2.control.max_per_node                  =  10      #not much use to have too many of those
+move_low2.control.mapfile_in                    =  wsclean_low2.output.wsclean_low2-image.fits.mapfile
+move_low2.control.inputkey                      =  source
+move_low2.control.arguments                     =  [source,{{ inspection_directory }}]
 
 # convert low-res images to casa images, length = nbands
 fits_to_image_low.control.type                  =   pythonplugin
@@ -398,9 +457,9 @@ expand_sourcedb_low.control.filename            =   expand_sourcedb_low.datamap
 
 # Predict, corrupt, and subtract the low-resolution model, length = nfiles
 subtract_low.control.type                       =   dppp
-subtract_low.control.opts.mapfiles_in           =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,parmdbs_to_realimag.output.mapfile]
-subtract_low.control.opts.inputkeys             =   [msin,sourcedb,parmdb]
-subtract_low.control.opts.inplace               =   True
+subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_low.control.inputkeys                  =   [msin,sourcedb,parmdb]
+subtract_low.control.inplace                    =   True
 subtract_low.control.max_per_node               =   {{ max_dppp_per_node }}
 subtract_low.argument.numthreads                =   {{ max_dppp_threads }}
 subtract_low.control.error_tolerance            =   {{ error_tolerance }}
@@ -430,25 +489,7 @@ copy_skymodels.control.mapfile_in               =  merge.output.mapfile
 copy_skymodels.control.inputkey                 =  source
 copy_skymodels.control.arguments                =  [source,{{ data_input_path }}]
 
-# plot the high-res image and mask
-plot_im_high.control.type                       =   pythonplugin
-plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
-plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
-plot_im_high.control.mapfiles_in                =   [wsclean_high2.output.wsclean_high2-image.fits.mapfile,mask_high.output.mapfile]
-plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
-plot_im_high.control.outputkey                  =   imname
-plot_im_high.argument.flags                     =   [imhigh,maskhigh,imname]
-
-# plot the low-res image and mask
-plot_im_low.control.type                        =   pythonplugin
-plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
-plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
-plot_im_low.control.mapfiles_in                 =   [wsclean_low2.output.wsclean_low2-image.fits.mapfile,mask_low.output.mapfile]
-plot_im_low.control.inputkeys                   =   [imlow,masklow]
-plot_im_low.control.outputkey                   =   imname
-plot_im_low.argument.flags                      =   [imlow,masklow,imname]
-
-# plot the high-res image and mask
+# create a map with the generated plots 
 createmap_plots.control.kind                    =   plugin
 createmap_plots.control.type                    =   createMapfile
 createmap_plots.control.method                  =   mapfile_from_folder
@@ -457,11 +498,10 @@ createmap_plots.control.filename                =   diagnostic_plots.mapfile
 createmap_plots.control.folder                  =   input.output.working_directory/input.output.job_name
 createmap_plots.control.pattern                 =   *.png
 
-
-# copy the plots to the directory with the input data, length = nbands
-copy_plots.control.kind                         =  recipe
-copy_plots.control.type                         =  executable_args
-copy_plots.control.executable                   =  /bin/cp
-copy_plots.control.mapfile_in                   =  createmap_plots.output.mapfile
-copy_plots.control.inputkey                     =  source
-copy_plots.control.arguments                    =  [source,{{ data_input_path }}]
+# move the plots to the directory with the input data, length = 2x nbands
+move_plots.control.kind                         =  recipe
+move_plots.control.type                         =  executable_args
+move_plots.control.executable                   =  /bin/mv
+move_plots.control.mapfile_in                   =  createmap_plots.output.mapfile
+move_plots.control.inputkey                     =  source
+move_plots.control.arguments                    =  [source,{{ inspection_directory }}]

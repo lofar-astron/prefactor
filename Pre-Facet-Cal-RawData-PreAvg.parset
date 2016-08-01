@@ -11,13 +11,13 @@
 
 
 ### First run this and check the generated plots! Modify and re-run if neccessary.
-pipeline.steps=[createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
+pipeline.steps=[createmap_cal, combine_cal_map, sortmap_cal, do_sortmap_cal_maps, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, combine_cal_map, sortmap_cal, do_sortmap_cal_maps, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, combine_target_map, sortmap_target, do_sortmap_target_maps, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
-# pipeline.steps=[createmap_target, sortmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results]
+# pipeline.steps=[createmap_target, combine_target_map, sortmap_target, do_sortmap_target_maps, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[createmap_target, combine_target_map, sortmap_target, do_sortmap_target_maps, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, dpppaverage, gsmcalibtarget, make_results_mapfile, move_results]
 
 # parameters you will need to adjust.
 ! avg_timestep_pre     = 2   # averaging in 1st NDPPP run  \  these two together should average
@@ -65,24 +65,37 @@ createmap_cal.control.filename        =   createmap_cal.mapfile
 createmap_cal.control.folder          =   {{ cal_input_path }}
 createmap_cal.control.pattern         =   {{ cal_input_pattern }}
 
+# combine all entries into one mapfile, for the sortmap script
+combine_cal_map.control.kind            =   plugin
+combine_cal_map.control.type            =   createMapfile
+combine_cal_map.control.method          =   mapfile_all_to_one
+combine_cal_map.control.mapfile_dir     =   input.output.mapfile_dir
+combine_cal_map.control.filename        =   combine_tar_map.mapfile
+combine_cal_map.control.mapfile_in      =   createmap_cal.output.mapfile
+
 # sort the calibrator data into groups so that NDPPP can concatenate them
-sortmap_cal.control.kind            =   plugin
-sortmap_cal.control.type            =   groupMapfileObsSB
-sortmap_cal.control.mapfile_dir     =   input.output.mapfile_dir
-sortmap_cal.control.filename        =   sortmap_cal.mapfile
-sortmap_cal.control.mapfile_in      =   createmap_cal.output.mapfile
-sortmap_cal.control.target_path     =   input.output.working_directory/input.output.job_name
-sortmap_cal.control.target_ext      =   .cal_concat     
-sortmap_cal.control.numSB           =   {{ num_SBs_per_group }}
-sortmap_cal.control.numCh_per_SB    =   {{ num_ch_per_SB }}
-sortmap_cal.control.NDPPPfill       =   True
-sortmap_cal.control.truncateLastSBs =   True  # This means that a excess subbands that don't make a full group get discarded
+sortmap_cal.control.type               =  pythonplugin  
+sortmap_cal.control.executable         =  {{ sortmap_script }}
+sortmap_cal.argument.flags             =  [combine_cal_map.output.mapfile]
+sortmap_cal.argument.filename          =  sortmap_cal
+sortmap_cal.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_cal.argument.numSB             =  {{ num_SBs_per_group }}
+sortmap_cal.argument.NDPPPfill         =  True
+sortmap_cal.argument.stepname          =  ndppp_prep_cal
+sortmap_cal.argument.truncateLastSBs   =  True
+
+# convert the output of sortmap_cal into usable mapfiles
+do_sortmap_cal_maps.control.kind                      =  plugin
+do_sortmap_cal_maps.control.type                      =  mapfilenamesFromMapfiles
+do_sortmap_cal_maps.control.mapfile_groupmap          =  sortmap_cal.output.groupmapfile.mapfile
+do_sortmap_cal_maps.control.mapfile_datamap           =  sortmap_cal.output.mapfile.mapfile
+do_sortmap_cal_maps.control.mapfile_flagmap           =  sortmap_cal.output.flagmapfile.mapfile
 
 # I want to run demixing, for that I need a MS with names for the instrument tables
 demix-parmdbs_cal.control.kind               =  plugin
 demix-parmdbs_cal.control.type               =  createMapfile
 demix-parmdbs_cal.control.method             =  add_suffix_to_file
-demix-parmdbs_cal.control.mapfile_in         =  sortmap_cal.output.groupmap
+demix-parmdbs_cal.control.mapfile_in         =  do_sortmap_cal_maps.output.groupmap
 demix-parmdbs_cal.control.add_suffix_to_file =  -demix-inst
 demix-parmdbs_cal.control.mapfile_dir        =  input.output.mapfile_dir  
 demix-parmdbs_cal.control.filename           =  demix-parmdbs_cal.mapfile
@@ -91,7 +104,7 @@ demix-parmdbs_cal.control.filename           =  demix-parmdbs_cal.mapfile
 dumb_smart_demixing_cal.control.type            =  pythonplugin
 dumb_smart_demixing_cal.control.executable      =  {{ dumb_smart_script }}
 dumb_smart_demixing_cal.control.error_tolerance =  {{ error_tolerance }}
-dumb_smart_demixing_cal.argument.flags          =  sortmap_cal.output.mapfile
+dumb_smart_demixing_cal.argument.flags          =  do_sortmap_cal_maps.output.datamap
 dumb_smart_demixing_cal.argument.sourcelist     =  "CasA CygA VirA TauA"
 dumb_smart_demixing_cal.argument.elevlimit      =  0deg
 
@@ -101,8 +114,8 @@ ndppp_prep_cal.control.type                    = dppp
 ndppp_prep_cal.control.max_per_node            = 8                     # \ feel free to adjust these two values to match your system
 ndppp_prep_cal.control.environment             = {OMP_NUM_THREADS: 5}  # / they should be reasonable for JURECA
 ndppp_prep_cal.control.error_tolerance         = {{ error_tolerance }}
-ndppp_prep_cal.control.mapfile_out             = sortmap_cal.output.groupmap  # specify the output filenames
-ndppp_prep_cal.control.mapfiles_in             = [sortmap_cal.output.mapfile, demix-parmdbs_cal.output.mapfile, dumb_smart_demixing_cal.output.demixsources.mapfile, sortmap_cal.output.flagmap]
+ndppp_prep_cal.control.mapfile_out             = do_sortmap_cal_maps.output.groupmap  # specify the output filenames
+ndppp_prep_cal.control.mapfiles_in             = [do_sortmap_cal_maps.output.datamap, demix-parmdbs_cal.output.mapfile, dumb_smart_demixing_cal.output.demixsources.mapfile, do_sortmap_cal_maps.output.flagmap]
 ndppp_prep_cal.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
 #ndppp_prep_cal.argument.msin                  = # see ndppp_prep_cal.control.inputkeys
 ndppp_prep_cal.argument.msin.datacolumn        = DATA
@@ -212,24 +225,37 @@ createmap_target.control.filename        =   createmap_target.mapfile
 createmap_target.control.folder          =   {{ target_input_path }}
 createmap_target.control.pattern         =   {{ target_input_pattern }}
 
-# sort the calibrator data into groups so that NDPPP can concatenate them
-sortmap_target.control.kind            =   plugin
-sortmap_target.control.type            =   groupMapfileObsSB
-sortmap_target.control.mapfile_dir     =   input.output.mapfile_dir
-sortmap_target.control.filename        =   sortmap_target.mapfile
-sortmap_target.control.mapfile_in      =   createmap_target.output.mapfile
-sortmap_target.control.target_path     =   input.output.working_directory/input.output.job_name
-sortmap_target.control.target_ext      =   .tar_concat     
-sortmap_target.control.numSB           =   {{ num_SBs_per_group }}
-sortmap_target.control.numCh_per_SB    =   {{ num_ch_per_SB }}
-sortmap_target.control.NDPPPfill       =   True
-sortmap_target.control.truncateLastSBs =   True  # This means that a excess subbands that don't make a full group get discarded
+# combine all entries into one mapfile, for the sortmap script
+combine_target_map.control.kind            =   plugin
+combine_target_map.control.type            =   createMapfile
+combine_target_map.control.method          =   mapfile_all_to_one
+combine_target_map.control.mapfile_dir     =   input.output.mapfile_dir
+combine_target_map.control.filename        =   combine_tar_map.mapfile
+combine_target_map.control.mapfile_in      =   createmap_target.output.mapfile
+
+# sort the target data into groups so that NDPPP can concatenate them
+sortmap_target.control.type               =  pythonplugin  
+sortmap_target.control.executable         =  {{ sortmap_script }}
+sortmap_target.argument.flags             =  [combine_target_map.output.mapfile]
+sortmap_target.argument.filename          =  sortmap_target
+sortmap_target.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
+sortmap_target.argument.NDPPPfill         =  True
+sortmap_target.argument.stepname          =  ndppp_prep_target
+sortmap_target.argument.truncateLastSBs   =  True
+
+# convert the output of sortmap_target into usable mapfiles
+do_sortmap_target_maps.control.kind                      =  plugin
+do_sortmap_target_maps.control.type                      =  mapfilenamesFromMapfiles
+do_sortmap_target_maps.control.mapfile_groupmap          =  sortmap_target.output.groupmapfile.mapfile
+do_sortmap_target_maps.control.mapfile_datamap           =  sortmap_target.output.mapfile.mapfile
+do_sortmap_target_maps.control.mapfile_flagmap           =  sortmap_target.output.flagmapfile.mapfile
 
 # I want to run demixing, for that I need a MS with names for the instrument tables
 demix-parmdbs_target.control.kind               =  plugin
 demix-parmdbs_target.control.type               =  createMapfile
 demix-parmdbs_target.control.method             =  add_suffix_to_file
-demix-parmdbs_target.control.mapfile_in         =  sortmap_target.output.groupmap
+demix-parmdbs_target.control.mapfile_in         =  do_sortmap_target_maps.output.groupmap
 demix-parmdbs_target.control.add_suffix_to_file =  -demix-inst
 demix-parmdbs_target.control.mapfile_dir        =  input.output.mapfile_dir  
 demix-parmdbs_target.control.filename           =  demix-parmdbs_target.mapfile
@@ -237,8 +263,8 @@ demix-parmdbs_target.control.filename           =  demix-parmdbs_target.mapfile
 # Get the sources to be demixed for each epoch
 dumb_smart_demixing_target.control.type            =  pythonplugin
 dumb_smart_demixing_target.control.executable      =  {{ dumb_smart_script }}
-dumb_smart_demixing_target.control.error_tolerance = {{ error_tolerance }}
-dumb_smart_demixing_target.argument.flags          =  sortmap_target.output.mapfile
+dumb_smart_demixing_target.control.error_tolerance =  {{ error_tolerance }}
+dumb_smart_demixing_target.argument.flags          =  do_sortmap_target_maps.output.datamap
 dumb_smart_demixing_target.argument.sourcelist     =  "CasA CygA VirA TauA"
 dumb_smart_demixing_target.argument.elevlimit      =  0deg
 
@@ -248,8 +274,8 @@ ndppp_prep_target.control.type                    = dppp
 ndppp_prep_target.control.max_per_node            = 2                      # \ feel free to adjust these two values to match your system
 ndppp_prep_target.control.environment             = {OMP_NUM_THREADS: 12}  # / they should be reasonable for JURECA
 ndppp_prep_target.control.error_tolerance         = {{ error_tolerance }}
-ndppp_prep_target.control.mapfile_out             = sortmap_target.output.groupmap  # specify the output filenames
-ndppp_prep_target.control.mapfiles_in             = [sortmap_target.output.mapfile, demix-parmdbs_target.output.mapfile, dumb_smart_demixing_target.output.demixsources.mapfile, sortmap_target.output.flagmap]
+ndppp_prep_target.control.mapfile_out             = do_sortmap_target_maps.output.groupmap  # specify the output filenames
+ndppp_prep_target.control.mapfiles_in             = [do_sortmap_target_maps.output.datamap, demix-parmdbs_target.output.mapfile, dumb_smart_demixing_target.output.demixsources.mapfile, do_sortmap_target_maps.output.flagmap]
 ndppp_prep_target.control.inputkeys               = [msin,demix.instrumentmodel,demix.subtractsources,flagedge.chan]
 #ndppp_prep_target.argument.msin                  = # see ndppp_prep_target.control.inputkeys
 ndppp_prep_target.argument.msin.datacolumn        = DATA

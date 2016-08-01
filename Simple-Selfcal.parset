@@ -1,0 +1,279 @@
+# Simple Selfcal Pipeline
+#
+# Pipeline to do the initial subtraction of all sources 
+# - does a simple selfcal: image with wsclean, phase calibrate on results
+# - will replace the instrument_directionindependent inside the MSs
+# - in addition to the standard LOFAR software it requires wsclean
+# - expects shared filesystem, that all nodes can reach all files!
+#   (E.g. a single workstation or compute cluster with shared filesystem
+#   doesn't work on multiple nodes on CEP-2 or CEP3.)
+
+##### parameters you will need to adjust.
+! data_input_path         = /data/scratch/username/PathToYourTargetData/
+! data_input_pattern      = L*.pre-cal.ms
+! inspection_directory    = /media/scratch/test/username/WhereYouWantImagesForInspection/
+
+##### imaging parameters (Feel free to leave them untouched.)
+#### specify  the image parameters here
+# cellsize in degrees, 0.00084 is about 3 arcsec
+! cellsize_deg = 0.00084
+# maximum uv-distance in lambda that will be used for imaging
+# 30 klambda corresponds to about 7 arcsec (with uniform weighting)
+! maxlambda    = 30000 
+# size of the image is this value times the FWHM of the station beam
+! fieldsize       = 1.6
+
+##### performance parameters
+! max_imagers_per_node      =  3
+! max_percent_mem_per_img   =  30
+! max_cpus_per_img          =  10
+! max_dppp_per_node         =  6
+! max_dppp_threads          =  8
+# set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance           =  False
+
+##### pathes to the scripts etc.
+! wsclean_executable     = /homea/htb00/htb003/local_jureca/bin/wsclean
+! do_magic_script        = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
+! make_clean_mask_script = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
+! fits_to_casa_script    = /homea/htb00/htb001/prefactor/bin/convert_fits_image_to_casa.py
+! casapy2bbs             = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
+! makesourcedb           = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
+! gsm_cal_parset         = /homea/htb00/htb001/prefactor/parsets/gsmcal.parset
+! dummy_skymodel         = /homea/htb00/htb001/prefactor/skymodels/3c295-SH.skymodel
+! plotphases_script      = /homea/htb00/htb001/prefactor/bin/plot_solutions_all_stations.py
+
+
+# the Steps in this pipeline
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, wsclean_imag1, mask, copy_mask, wsclean_imag2, move_imag, fits_to_image, casa_to_bbs, make_sourcedb, expand_sourcedb, predict_model, selfcalibtarget, selfcal_parmmap, plot_gsm_phases, createmap_plots, copy_plots]
+#pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, wsclean_imag1, mask, copy_mask, wsclean_imag2, move_imag, fits_to_image, casa_to_bbs, make_sourcedb, expand_sourcedb, predict_model, selfcalibtarget]
+
+
+# create a mapfile with all MSs, length = nfiles
+create_ms_map.control.kind                      =   plugin
+create_ms_map.control.type                      =   createMapfile
+create_ms_map.control.method                    =   mapfile_from_folder
+create_ms_map.control.mapfile_dir               =   input.output.mapfile_dir
+create_ms_map.control.filename                  =   create_ms_map.mapfile
+create_ms_map.control.folder                    =   {{ data_input_path }}
+create_ms_map.control.pattern                   =   {{ data_input_pattern }}
+
+# generate a mapfile with all files in a single entry, length = 1
+combine_mapfile.control.kind                    =  plugin
+combine_mapfile.control.type                    =  createMapfile
+combine_mapfile.control.method                  =  mapfile_all_to_one
+combine_mapfile.control.mapfile_in              =  create_ms_map.output.mapfile
+combine_mapfile.control.mapfile_dir             =  input.output.mapfile_dir  
+combine_mapfile.control.filename                =  combine_mapfile.mapfile
+
+# compute frequency groupings, image sizes, averaging values, etc., len = different
+do_magic.control.type                           =  pythonplugin                
+do_magic.control.executable                     =  {{ do_magic_script }}
+do_magic.argument.flags                         =  [combine_mapfile.output.mapfile]
+do_magic.argument.outmapname                    =  do_magic.datamap
+do_magic.argument.mapfile_dir                   =  input.output.mapfile_dir
+do_magic.argument.cellsize_highres_deg          =  {{ cellsize_deg }} 
+do_magic.argument.fieldsize_highres             =  {{ fieldsize }}
+do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_deg }} 
+
+# convert the output of do_magic into usable mapfiles,len = 1 / different 
+do_magic_maps.control.kind                      =  plugin
+do_magic_maps.control.type                      =  mapfilenamesFromMapfiles
+do_magic_maps.control.mapfile_groupmap          =  do_magic.output.groupmap.mapfile
+do_magic_maps.control.mapfile_single_map        =  do_magic.output.single_mapfile.mapfile
+do_magic_maps.control.mapfile_size_map          =  do_magic.output.high_size_mapfile.mapfile
+
+# first high-res imaging, length = nbands
+wsclean_imag1.control.kind                      =   recipe
+wsclean_imag1.control.type                      =   executable_args
+wsclean_imag1.control.executable                =   {{ wsclean_executable }}
+wsclean_imag1.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_imag1.control.outputkey                 =   name
+wsclean_imag1.control.args_format               =   wsclean
+wsclean_imag1.control.max_per_node              =   {{ max_imagers_per_node }}
+wsclean_imag1.control.error_tolerance           =   {{ error_tolerance }}
+wsclean_imag1.control.mapfiles_in               =   [do_magic_maps.output.groupmap,do_magic_maps.output.size_map]
+wsclean_imag1.control.inputkeys                 =   [msfile,imsize]
+wsclean_imag1.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_imag1.argument.size                     =   imsize
+wsclean_imag1.argument.niter                    =   20000
+wsclean_imag1.argument.threshold                =   0.0
+wsclean_imag1.argument.pol                      =   I
+wsclean_imag1.argument.weight                   =   briggs 0.0
+wsclean_imag1.argument.mgain                    =   0.65
+wsclean_imag1.argument.minuv-l                  =   80
+wsclean_imag1.argument.maxuv-l                  =   {{ maxlambda }}
+wsclean_imag1.argument.scale                    =   {{ cellsize_deg }}
+wsclean_imag1.argument.mem                      =   {{ max_percent_mem_per_img }}
+wsclean_imag1.argument.j                        =   {{ max_cpus_per_img }}
+
+# make masks for the high-res images, length = nbands
+mask.control.type                          =   pythonplugin
+mask.control.executable                    =   {{ make_clean_mask_script }}
+mask.control.max_per_node                  =   {{ max_imagers_per_node }}
+mask.control.error_tolerance               =   {{ error_tolerance }}
+mask.control.mapfile_in                    =   wsclean_imag1.output.wsclean_imag1-image.fits.mapfile
+mask.control.inputkey                      =   imagefile
+mask.control.outputkey                     =   maskfile
+mask.argument.flags                        =   [imagefile,maskfile]
+mask.argument.threshisl                    =   3.0
+mask.argument.threshpix                    =   5.0
+mask.argument.atrous_do                    =   True
+mask.argument.rmsbox                       =   (150,50)
+mask.argument.adaptive_rmsbox              =   True
+mask.argument.img_format                   =   fits
+mask.argument.atrous_jmax                  =   3
+mask.argument.trim_by                      =   0.1
+
+# copy the mask images to where we want them
+copy_mask.control.kind               =  recipe
+copy_mask.control.type               =  executable_args
+copy_mask.control.executable         =  /bin/cp
+copy_mask.control.max_per_node       =  10      #not much use to have too many of those
+copy_mask.control.mapfile_in         =  mask.output.mapfile
+copy_mask.control.inputkey           =  source
+copy_mask.control.arguments          =  [source,{{ inspection_directory }}]
+
+# second high-res imaging, length = nbands
+wsclean_imag2.control.kind                      =   recipe
+wsclean_imag2.control.type                      =   executable_args
+wsclean_imag2.control.executable                =   {{ wsclean_executable }}
+wsclean_imag2.control.outputsuffixes            =   [-image.fits,-model.fits]
+wsclean_imag2.control.outputkey                 =   name
+wsclean_imag2.control.args_format               =   wsclean
+wsclean_imag2.control.max_per_node              =   {{ max_imagers_per_node }}
+wsclean_imag2.control.error_tolerance           =   {{ error_tolerance }}
+wsclean_imag2.control.mapfiles_in               =   [do_magic_maps.output.groupmap,mask.output.mapfile,do_magic_maps.output.size_map]
+wsclean_imag2.control.inputkeys                 =   [msfile,fitsmask,imsize]
+wsclean_imag2.argument.flags                    =   [-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_imag2.argument.fitsmask                 =   fitsmask
+wsclean_imag2.argument.size                     =   imsize
+wsclean_imag2.argument.niter                    =   80000
+wsclean_imag2.argument.threshold                =   mask.output.threshold_5sig.mapfile
+wsclean_imag2.argument.pol                      =   I
+wsclean_imag2.argument.weight                   =   briggs 0.0
+wsclean_imag2.argument.mgain                    =   0.65
+wsclean_imag2.argument.minuv-l                  =   80
+wsclean_imag2.argument.maxuv-l                  =   {{ maxlambda }}
+wsclean_imag2.argument.scale                    =   {{ cellsize_deg }}
+wsclean_imag2.argument.mem                      =   {{ max_percent_mem_per_img }}
+wsclean_imag2.argument.j                        =   {{ max_cpus_per_img }}
+
+# move the images to where we want them, length = nbands
+move_imag.control.kind               =  recipe
+move_imag.control.type               =  executable_args
+move_imag.control.executable         =  /bin/mv
+move_imag.control.max_per_node       =  10      #not much use to have too many of those
+move_imag.control.mapfile_in         =  wsclean_imag2.output.wsclean_imag2-image.fits.mapfile
+move_imag.control.inputkey           =  source
+move_imag.control.arguments          =  [source,{{ inspection_directory }}]
+
+# convert high-res images to casa images, length = nbands
+fits_to_image.control.type                 =   pythonplugin
+fits_to_image.control.executable           =   {{ fits_to_casa_script }}
+fits_to_image.control.error_tolerance      =   {{ error_tolerance }}
+fits_to_image.control.mapfile_in           =   wsclean_imag2.output.wsclean_imag2-model.fits.mapfile
+fits_to_image.control.inputkey             =   fitsfile
+fits_to_image.control.outputkey            =   imagefile
+fits_to_image.argument.flags               =   [fitsfile,imagefile]
+fits_to_image.argument.force_stokes_i      =   True
+
+# convert high-res casa images to skymodel files, length = nbands
+casa_to_bbs.control.kind                   =   recipe
+casa_to_bbs.control.type                   =   executable_args
+casa_to_bbs.control.executable             =   {{ casapy2bbs }}
+casa_to_bbs.control.error_tolerance        =   {{ error_tolerance }}
+casa_to_bbs.control.mapfile_in             =   fits_to_image.output.mapfile
+casa_to_bbs.control.inputkey               =   inputmodel
+casa_to_bbs.control.outputkey              =   outfile
+casa_to_bbs.control.arguments              =   [-n,inputmodel,outfile]
+
+# make sourcedbs from the high-res skymodels, length = nbands
+# can use outtype=blob because we'll use NDPPP
+# also NDPPP doesn't wait for exclusive lock on blob-type sourceDBs
+make_sourcedb.control.kind                 =   recipe
+make_sourcedb.control.type                 =   executable_args
+make_sourcedb.control.executable           =   {{ makesourcedb }}
+make_sourcedb.control.error_tolerance      =   {{ error_tolerance }}
+make_sourcedb.control.args_format          =   lofar
+make_sourcedb.control.outputkey            =   out
+make_sourcedb.control.mapfile_in           =   casa_to_bbs.output.mapfile
+make_sourcedb.control.inputkey             =   in
+make_sourcedb.argument.format              =   <
+make_sourcedb.argument.outtype             =   blob
+
+# expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
+expand_sourcedb.control.kind               =   plugin
+expand_sourcedb.control.type               =   mapfileSingleToGroup
+expand_sourcedb.control.mapfile_in         =   make_sourcedb.output.mapfile
+expand_sourcedb.control.mapfile_groups     =   do_magic_maps.output.groupmap
+expand_sourcedb.control.mapfile_dir        =   input.output.mapfile_dir
+expand_sourcedb.control.filename           =   expand_sourcedb.datamap
+
+# Predict the unmodified high-resolution model into the MODEL_DATA column, length = nfiles 
+predict_model.control.type                      =   dppp
+predict_model.control.opts.mapfiles_in          =   [do_magic_maps.output.single_map,expand_sourcedb.output.mapfile]
+predict_model.control.opts.inputkeys            =   [msin,sourcedb]
+predict_model.control.opts.inplace              =   True
+predict_model.control.max_per_node              =   {{ max_dppp_per_node }}
+predict_model.argument.numthreads               =   {{ max_dppp_threads }}
+predict_model.control.error_tolerance           =   {{ error_tolerance }}
+predict_model.argument.msin.datacolumn          =   DATA
+predict_model.argument.msout                    =   .
+predict_model.argument.msout.datacolumn         =   MODEL_DATA
+predict_model.argument.steps                    =   [predict]
+predict_model.argument.predict.type             =   predict
+predict_model.argument.predict.sourcedb         =   sourcedb
+predict_model.argument.predict.operation        =   replace
+
+# phase calibration on the gsm skymodel
+selfcalibtarget.control.type                            =  python-calibrate-stand-alone
+selfcalibtarget.control.max_per_node                    =  12  # feel free to adjust this to match your system
+selfcalibtarget.control.error_tolerance                 =  {{ error_tolerance }}
+selfcalibtarget.control.opts.mapfiles_in                =  [do_magic_maps.output.single_map]
+selfcalibtarget.control.opts.inputkeys                  =  [msin]
+selfcalibtarget.argument.force                          =  True
+selfcalibtarget.argument.observation                    =  msin
+selfcalibtarget.argument.parmdb-name                    =  instrument_directionindependent
+selfcalibtarget.argument.parset                         =  {{ gsm_cal_parset }}
+selfcalibtarget.argument.catalog                        =  {{ dummy_skymodel }}
+selfcalibtarget.argument.Step.solve.Model.Sources       =  [@MODEL_DATA]
+selfcalibtarget.argument.Step.solve.Solve.CellSize.Freq =  0  # default: solution-cell spans all frequency channels
+selfcalibtarget.argument.Step.solve.Solve.CellSize.Time =  1  # default: one solution per time-step
+
+# generate mapfile with the parmDBs that were created by BBS in the selfcalibtarget step
+selfcal_parmmap.control.kind               =  plugin
+selfcal_parmmap.control.type               =  createMapfile
+selfcal_parmmap.control.method             =  add_suffix_to_file
+selfcal_parmmap.control.mapfile_in         =  do_magic_maps.output.single_map
+selfcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
+selfcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
+selfcal_parmmap.control.filename           =  selfcal_parmdbs.mapfile
+
+# plot the phase solutions from the phase-only calibration of the target
+plot_gsm_phases.control.kind         =  recipe
+plot_gsm_phases.control.type         =  executable_args
+plot_gsm_phases.control.executable   =  {{ plotphases_script }}
+plot_gsm_phases.control.max_per_node =  24
+plot_gsm_phases.control.mapfiles_in  =  [selfcal_parmmap.output.mapfile,do_magic_maps.output.single_map]
+plot_gsm_phases.control.inputkeys    =  [infile,outbase]
+plot_gsm_phases.control.arguments    =  [-p,infile,outbase]
+
+# generate a mapfile of all the diagnostic plots
+createmap_plots.control.kind            =   plugin
+createmap_plots.control.type            =   createMapfile
+createmap_plots.control.method          =   mapfile_from_folder
+createmap_plots.control.mapfile_dir     =   input.output.mapfile_dir
+createmap_plots.control.filename        =   diagnostic_plots.mapfile
+createmap_plots.control.folder          =   input.output.working_directory/input.output.job_name
+createmap_plots.control.pattern         =   *.png
+
+# copy the diagnostic plots to the results_directory
+copy_plots.control.kind               =  recipe
+copy_plots.control.type               =  executable_args
+copy_plots.control.executable         =  /bin/cp
+copy_plots.control.max_per_node       =  10      #not much use to have too many of those
+copy_plots.control.mapfile_in         =  createmap_plots.output.mapfile
+copy_plots.control.inputkey           =  source
+copy_plots.control.arguments          =  [source,{{ inspection_directory }}]
+

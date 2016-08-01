@@ -9,10 +9,10 @@
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
 
 ### First run this and check the generated plots! Modify and re-run if neccessary.
-pipeline.steps=[createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
+pipeline.steps=[createmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase]
 ### When calibrator processing is done, you can do the processing of the target data.
 ### Either by using the same pipeline and running this:
-# pipeline.steps=[ createmap_cal, sortmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, combine_target_map, sortmap_target, do_sortmap_maps, dpppcombine, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
+# pipeline.steps=[ createmap_cal, demix-parmdbs_cal, dumb_smart_demixing_cal, ndppp_prep_cal, calib_cal, h5_imp_map, h5imp_cal, fitclock, ampl, plots, phase, createmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, combine_target_map, sortmap_target, do_sortmap_maps, dpppcombine, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 ### Or by copying the *.npy files from the calibrator and running this:
 # pipeline.steps=[createmap_target, demix-parmdbs_target, dumb_smart_demixing_target, ndppp_prep_target, trans, calibtarget, combine_target_map, sortmap_target, do_sortmap_maps, dpppcombine, gsmcalibtarget, gsmcal_parmmap, plot_gsm_phases, make_results_mapfile, move_results, createmap_plots, copy_plots]
 
