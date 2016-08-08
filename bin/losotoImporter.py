@@ -168,12 +168,18 @@ def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile=None,compr
     if "CommonRotationAngle" in solTypes:
         solTypes.remove('CommonRotationAngle')
         solTypes.append('*RotationAngle')
+    if "RotationMeasure" in solTypes:
+        solTypes.remove('RotationMeasure')
+        solTypes.append('*RotationMeasure')
     if "ScalarPhase" in solTypes:
         solTypes.remove('ScalarPhase')
         solTypes.append('*ScalarPhase')
     if "CommonScalarPhase" in solTypes:
         solTypes.remove('CommonScalarPhase')
         solTypes.append('*ScalarPhase')
+    if "CommonScalarAmplitude" in solTypes:
+        solTypes.remove('CommonScalarAmplitude')
+        solTypes.append('*ScalarAmplitude')
     # and remove duplicate entries
     solTypes = list(set(solTypes))
 
@@ -249,25 +255,43 @@ def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile=None,compr
             np.putmask(weights, vals == 0., 0) # flag where val=0
             h5parmDB.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == '*RotationMeasure':
+            np.putmask(weights, vals == 0., 0) # flag where val=0
+            h5parm.makeSoltab(solset, 'rotationmeasure', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
             np.putmask(weights, vals == 0., 0)
             h5parmDB.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == '*ScalarAmplitude':
+            np.putmask(weights, vals == 0., 0)
+            h5parm.makeSoltab(solset, 'scalaramplitude', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
             np.putmask(weights, vals == 0., 0)
-            h5parmDB.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
+            # clock may be diag or scalar
+            if len(pols) == 0:
+                h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+            else:
+                h5parm.makeSoltab(solset, 'clock', axesNames=['pol','ant','freq','time'], \
+                    axesVals=[pol,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'TEC':
             np.putmask(weights, vals == 0., 0)
-            h5parmDB.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+            # tec may be diag or scalar
+            if len(pols) == 0:
+                h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+            else:
+                h5parm.makeSoltab(solset, 'tec', axesNames=['pol','dir','ant','freq','time'], \
+                    axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             np.putmask(vals, vals == 0., 1) # nans end up into 1s (as BBS output, flagged next line)
             np.putmask(weights, vals == 1., 0) # flag where val=1
             h5parmDB.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
-            #np.putmask(weights, vals == 0., 0) # TODO: NDPPP bug which put at 0 the reference antenna phase
+            np.putmask(weights, vals == 0., 0) # falg where val=0
             h5parmDB.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 
@@ -376,14 +400,32 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'RotationAngle':
         thisSolType, ant, dir = solEntry.split(':')
 
-    # For TEC assuming [TEC:ant]
+    # For RotationMeasure assuming [RotationMeasure:ant:sou]
+    elif thisSolType == 'RotationMeasure':
+        dir = 'pointing'
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, ant, dir = solEntry.split(':')
+
+    # For TEC assuming [TEC:ant or TEC:pol:ant]
     elif thisSolType == 'TEC':
-        thisSolType, ant = solEntry.split(':')
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, pol, ant = solEntry.split(':')
+            pol1 = pol
+            pol2 = pol
         dir = 'pointing'
 
-    # For Clock assuming [Clock:ant]
+    # For Clock assuming [Clock:ant or Clock:pol:ant]
     elif thisSolType == 'Clock':
-        thisSolType, ant = solEntry.split(':')
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, pol, ant = solEntry.split(':')
+            pol1 = pol
+            pol2 = pol
         dir = 'pointing'
 
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
@@ -391,8 +433,17 @@ def parmdbToAxes(solEntry):
         thisSolType, ant = solEntry.split(':')
         dir = 'pointing'
 
+    # For CommonScalarAmplitude assuming [CommonScalarAmplitude:ant]
+    elif thisSolType == 'CommonScalarAmplitude':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
     # For ScalarPhase assuming [ScalarPhase:ant:sou]
     elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
+
+    # For ScalarAmplitude assuming [ScalarAmplitude:ant:sou]
+    elif thisSolType == 'ScalarAmplitude':
         thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
@@ -423,9 +474,9 @@ if __name__=='__main__':
 
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <MSPattern> \n'
                                 '  <H5parm>    = (Path)name of the (new) H5parm file to be written.\n'
-                                '  <MSPattern> = Search pattern for the measurement sets with instrument tables.'
-                                '                (e.g. \"/data/scratch/MyObs/calibrator/L*.dppp\")'
-                                '                Probably needs to be put in quotes!')
+                                '  <MSPattern> = Search pattern for the measurement sets with instrument tables.\n'
+                                '                (e.g. \"/data/scratch/MyObs/calibrator/L*.dppp\")\n'
+                                '                Probably needs to be put in quotes when called from a shell!')
     opt.add_option('-i', '--instrument', dest="Instrument", type='string', default='/instrument',
                    help="Name of the instrument tables of the measurement sets. "
                    "If it starts with \"/\" -> instrument table is sub-directory within the MS directory. "
