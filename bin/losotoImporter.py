@@ -50,8 +50,8 @@ def plugin_main(args, **kwargs):
         sys.exit(1)
     skydbFile = os.path.join(datamap[0].file,'sky')
     if not os.path.isdir(skydbFile):
-        logging.critical('Missing sky table.')
-        sys.exit(1)
+        logging.warning('No sky table found. (Direction-dependent parameters will not work.)')
+        skydbFile = None
         
     #generate list of parmDB-filenames
     parmDBnames = [ MS.file+instrument for MS in datamap ]
@@ -100,8 +100,8 @@ def main(msfileslist, hdf5fileName, hdf5_dir='.', instrument='/instrument', sols
         sys.exit(1)
     skydbFile = os.path.join(msfiles[0],'sky')
     if not os.path.isdir(skydbFile):
-        logging.critical('Missing sky table.')
-        sys.exit(1)
+        logging.warning('No sky table found. (Direction-dependent parameters will not work.)')
+        skydbFile = None
         
     #generate list of parmDB-filenames
     parmDBnames = [ MS+instrument for MS in msfiles ]
@@ -123,16 +123,16 @@ def main(msfileslist, hdf5fileName, hdf5_dir='.', instrument='/instrument', sols
     return result
 
 
-def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile,compression=5,solsetName=None):
+def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile=None,compression=5,solsetName=None):
     """
     Write the contents of a list of parmDBs into a losoto-style hdf5-file
     h5parmName   - name (path) of the hdf5 file to generate
     parmDBs      - list with the names of the parmDBs
     antennaFile  - name (path) of an ANTENNA table of the observation
     fieldFile    - name (path) of a FIELD table of the observation
-    skydbFile    - name (path) of a skydb table of the calibration run
+    skydbFile    - name (path) of a skydb table of the calibration run (Needed for direction dependent parameters)
     compresion   - compression level for the hdf5-file (0 - none ; 9 - highest)
-    solsetName       - name of the solset to generate (default: "sol000")
+    solsetName   - name of the solset to generate (default: "sol000")
     """
 
     # open/create the h5parm file and the solution-set
@@ -299,6 +299,9 @@ def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile,compressio
         dirs.remove('pointing')
 
     if dirs != []:
+        if skydbFile == None:
+            logging.critical('No sky table given, but direction dependent parameters in parmDB. Exiting!')
+            sys.exit(1)
         sourceFile = skydbFile + '/SOURCES'
         src_table = pt.table(sourceFile, ack=False)
         sub_tables = src_table.getsubtables()
@@ -460,8 +463,8 @@ if __name__=='__main__':
         sys.exit(1)
     skydbFile = os.path.join(inMSs[0],'sky')
     if not os.path.isdir(skydbFile):
-        logging.critical('Missing sky table.')
-        sys.exit(1)
+        logging.warning('No sky table found. (Direction-dependent parameters will not work.)')
+        skydbFile = None
         
     #generate list of parmDB-filenames
     parmDBnames = [ MS.rstrip('/')+instrument for MS in inMSs ]
