@@ -476,5 +476,5 @@ if __name__=='__main__':
         sw = solWriter(soltabs[st])
         sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
                                    os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    h5parmDB.close()
+    h5parmDB.close() 
 

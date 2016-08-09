@@ -171,6 +171,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     else:
         ngroups = 1
         numSB = int(numFiles)
+    if ngroups < 1 :
+        raise ValueError('sort_times_into_freqGroups: Not enough input subbands to create at least one full (frequency-)group!')
     hostID = 0
     print "sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each."
     for time in timestamps:
@@ -192,7 +194,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                     skip_this = False
             filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
             freqID = int(((numSB/2.+fgroup*numSB+1)*freq_width+minfreq)/1e6)
-            groupname = time_groups[time]['basename']+'_%Xt_%dg.ms'%(time,freqID)
+            groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
             if type(stepname) is str:
                 groupname += stepname
             if type(target_path) is str:
