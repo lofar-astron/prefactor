@@ -12,11 +12,10 @@ It includes:
 * at least some documentation
 
 Version 1.0 does not include:
-* grouping of subbands by actual frequency instead of file number
+* grouping of subbands by actual frequency instead of file number (already implemented in branch v2.0-devel)
 * speed and disk usage improvements by optimized usage of NDPPP
 * applying Ionospheric RM corrections
-
-(Stay tuned for version 2. and / or check out the branch v2.0-devel)
+(Stay tuned for version 2., and / or check out the experimental branch v2.0-devel)
 
 There is a wiki page with more or less useful hints: http://www.lofar.org/wiki/doku.php?id=public:user_software:prefactor
 
@@ -28,12 +27,11 @@ There are several pipeline parsets in this repository:
 
 Software requirements:
 * the full "offline" LOFAR software installation version >= 2.15 (With small modifications the Pre-Facet-Cal pipelines can be run with older versions, but that is not supported by the authors anymore.)
-* LoSoTo 
+* LoSoTo (version >=0.3 -- see https://github.com/revoltek/losoto)
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * Python matplotlib
-* WSClean (for Initial-Subtract, version >=1.11)
-* APLpy (for Initial-Subtract)
+* WSClean (for Initial-Subtract, version >=1.9 -- see https://sourceforge.net/projects/wsclean/)
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Reinout van Weeren <rvanweeren somewhere cfa.harvard.edu>
