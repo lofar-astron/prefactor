@@ -178,11 +178,11 @@ class Band(object):
         return (initsubtract_freqstep, initsubtract_timestep)
         
     def nwavelengths(self,cellsize_highres_deg, cellsize_lowres_deg, initsubtract_timestep):
-	timestep_sec = 20.0/initsubtract_timestep
+	int_time_sec = self.timestep_sec * initsubtract_timestep
 	max_baseline_in_nwavelenghts_h = 1.0/(cellsize_highres_deg*3.0*np.pi/180.0)
 	max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
-	self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*timestep_sec/(24.0*60.0*60.0)
-	self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*timestep_sec/(24.0*60.0*60.0)
+	self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)
+	self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)
 	return (self.nwavelengths_high, self.nwavelengths_low)
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
