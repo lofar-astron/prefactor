@@ -178,11 +178,12 @@ class Band(object):
         return (initsubtract_freqstep, initsubtract_timestep)
         
     def nwavelengths(self,cellsize_highres_deg, cellsize_lowres_deg, initsubtract_timestep):
-		max_baseline_in_nwavelenghts_h = 1.0/(cellsize_highres_deg*3.0*np.pi/180.0)
-		max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
-		self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*self.timestep_sec/(24.0*60.0*60.0)
-		self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*self.timestep_sec/(24.0*60.0*60.0)
-		return (self.nwavelengths_high, self.nwavelengths_low)
+	timestep_sec = 20.0/initsubtract_timestep
+	max_baseline_in_nwavelenghts_h = 1.0/(cellsize_highres_deg*3.0*np.pi/180.0)
+	max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
+	self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*timestep_sec/(24.0*60.0*60.0)
+	self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*timestep_sec/(24.0*60.0*60.0)
+	return (self.nwavelengths_high, self.nwavelengths_low)
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
          fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.):
@@ -289,6 +290,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         nchansout_clean1 = np.int(nbands/4)
     else:
         nchansout_clean1 = np.int(nbands)
+        
+    (freqstep, timestep) = bands[0].get_averaging_steps()
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
@@ -333,7 +336,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     nbands_map = DataMap([DataProduct('localhost', str(nbands), False)])
     nchansout_clean1_map = DataMap([DataProduct('localhost', str(nchansout_clean1), False)])
     print "InitSubtract_sort_and_compute.py: Computing averaging steps."
-    (freqstep, timestep) = bands[0].get_averaging_steps()
+    
     # get mapfiles for freqstep and timestep with the length of single_map
     freqstep_map = DataMap([])
     timestep_map = DataMap([]) 
@@ -344,8 +347,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     for index in xrange(numfiles):
         freqstep_map.append(DataProduct('localhost', str(freqstep), False))
         timestep_map.append(DataProduct('localhost', str(timestep), False))
-        nwavelengths_high_map.append(DataProduct('localhost', str(nwavelengths_high), False))
-        nwavelengths_low_map.append(DataProduct('localhost', str(nwavelengths_low), False))
+    nwavelengths_high_map.append(DataProduct('localhost', str(nwavelengths_high), False))
+    nwavelengths_low_map.append(DataProduct('localhost', str(nwavelengths_low), False))
     
     groupmapname = os.path.join(mapfile_dir, outmapname)
     group_map.save(groupmapname)
