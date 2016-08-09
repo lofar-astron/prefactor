@@ -176,7 +176,13 @@ class Band(object):
         initsubtract_timestep = max(1, int(round(20.0 / self.timestep_sec)))
 
         return (initsubtract_freqstep, initsubtract_timestep)
-
+        
+    def nwavelengths(self,cellsize_highres_deg, cellsize_lowres_deg, initsubtract_timestep):
+		max_baseline_in_nwavelenghts_h = 1.0/(cellsize_highres_deg*3.0*np.pi/180.0)
+		max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
+		self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*self.timestep_sec/(24.0*60.0*60.0)
+		self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*self.timestep_sec/(24.0*60.0*60.0)
+		return (self.nwavelengths_high, self.nwavelengths_low)
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
          fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.):
@@ -301,8 +307,9 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         imsize_low_pad = band.get_optimum_size(int(imsize_low_res*image_padding))
         imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch))
         low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
+        (nwavelengths_high, nwavelengths_low) = band.nwavelengths(cellsize_highres_deg, cellsize_lowres_deg, timestep)
         
-        print band.freq/1e6, imsize_high_res, imsize_high_res_stretch, imsize_high_pad, imsize_high_pad_stretch, imsize_low_res, imsize_low_res_stretch, imsize_low_pad, imsize_low_pad_stretch
+        print band.freq/1e6, imsize_high_res, imsize_high_res_stretch, imsize_high_pad, imsize_high_pad_stretch, imsize_low_res, imsize_low_res_stretch, imsize_low_pad, imsize_low_pad_stretch, nwavelengths_high, nwavelengths_low
 
         
     
@@ -330,9 +337,15 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     # get mapfiles for freqstep and timestep with the length of single_map
     freqstep_map = DataMap([])
     timestep_map = DataMap([]) 
+    nwavelengths_high_map	= DataMap([])
+    nwavelengths_low_map 	= DataMap([])
+    
+    
     for index in xrange(numfiles):
         freqstep_map.append(DataProduct('localhost', str(freqstep), False))
         timestep_map.append(DataProduct('localhost', str(timestep), False))
+        nwavelengths_high_map.append(DataProduct('localhost', str(nwavelengths_high), False))
+        nwavelengths_low_map.append(DataProduct('localhost', str(nwavelengths_low), False))
     
     groupmapname = os.path.join(mapfile_dir, outmapname)
     group_map.save(groupmapname)
@@ -366,6 +379,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     freqstep_map.save(freqstepname)
     timestepname = os.path.join(mapfile_dir, outmapname+'_timestep')
     timestep_map.save(timestepname)
+    nwavelengths_high_name = os.path.join(mapfile_dir, outmapname+'_nwavelengths_high')
+    nwavelengths_high_map.save(nwavelengths_high_name)
+    nwavelengths_low_name = os.path.join(mapfile_dir, outmapname+'_nwavelengths_low')
+    nwavelengths_low_map.save(nwavelengths_low_name)
     
     result = {'groupmap': groupmapname, 'single_mapfile' : file_single_mapname,
               'high_size_mapfile' : high_sizename, 'low_size_mapfile' : low_sizename,
@@ -373,7 +390,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
               'deep_high_size_mapfile' : deep_high_sizename, 'deep_low_size_mapfile' : deep_low_sizename,
               'deep_high_padsize_mapfile' : deep_high_padsize_name, 'deep_low_padsize_mapfile' : deep_low_padsize_name,
               'nbands' : nbands_mapname, 'nchansout_clean1' : nchansout_clean1_mapname,
-              'freqstep' : freqstepname, 'timestep' : timestepname}
+              'freqstep' : freqstepname, 'timestep' : timestepname, 'nwavelengths_high_mapfile': nwavelengths_high_name, 
+              'nwavelengths_low_mapfile': nwavelengths_low_name}
     return result
 
 
