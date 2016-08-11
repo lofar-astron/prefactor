@@ -78,6 +78,7 @@ sortmap_cal.control.executable         =  {{ sortmap_script }}
 sortmap_cal.argument.flags             =  [combine_cal_map.output.mapfile]
 sortmap_cal.argument.filename          =  sortmap_cal
 sortmap_cal.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_cal.argument.target_path       =  input.output.working_directory
 sortmap_cal.argument.numSB             =  {{ num_SBs_per_group }}
 sortmap_cal.argument.NDPPPfill         =  True
 sortmap_cal.argument.stepname          =  ndppp_prep_cal
