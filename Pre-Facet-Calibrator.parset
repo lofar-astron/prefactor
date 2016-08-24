@@ -74,6 +74,7 @@ ndppp_prep_cal.argument.msin.datacolumn        = DATA
 ndppp_prep_cal.argument.msin.baseline          = CS*&; RS*&; CS*&RS*
 ndppp_prep_cal.argument.msout.datacolumn       = DATA
 ndppp_prep_cal.argument.msout.writefullresflag = False
+ndppp_prep_cal.argument.msout.overwrite        = True
 ndppp_prep_cal.argument.steps                  = [flag,filter,avg,flagamp]
 ndppp_prep_cal.argument.flag.type              = preflagger
 ndppp_prep_cal.argument.flag.baseline          = {{ flag_baselines }}

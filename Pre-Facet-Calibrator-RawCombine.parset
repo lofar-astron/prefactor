@@ -10,8 +10,8 @@
 
 ### parameters you will need to adjust.
 # averaging for the calibrator data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
+! avg_timestep         = 4   # averaging step needed to average the data to 4 seconds time resolution
+! avg_freqstep         = 16   # averaging step needed to average the data to 4 ch/SB frequency resolution
 # where to find the calibrator data
 ! cal_input_path       = /data/scratch/username/PathToYourCalibratorData/
 ! cal_input_pattern    = L*.MS
@@ -105,6 +105,7 @@ ndppp_prep_cal.argument.msin.datacolumn        = DATA
 ndppp_prep_cal.argument.msin.baseline          = CS*&; RS*&; CS*&RS*
 ndppp_prep_cal.argument.msout.datacolumn       = DATA
 ndppp_prep_cal.argument.msout.writefullresflag = False
+ndppp_prep_cal.argument.msout.overwrite        = True
 ndppp_prep_cal.argument.msin.missingdata       = True   #\ these two lines will make NDPPP generate dummy data when 
 ndppp_prep_cal.argument.msin.orderms           = False  #/ concatenating data
 ndppp_prep_cal.argument.msin.autoweight        = True   # recomended for processing raw input data 
@@ -132,6 +133,7 @@ calib_cal.control.type             =  python-calibrate-stand-alone
 calib_cal.control.max_per_node     =  {{ num_proc_per_node }}
 calib_cal.control.error_tolerance  =  {{ error_tolerance }}
 calib_cal.argument.force           =  True
+calib_cal.argument.numthreads      =  5
 calib_cal.argument.observation     =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
 calib_cal.argument.parset          =  {{ calib_cal_parset }}
 calib_cal.argument.catalog         =  {{ calibrator_skymodel }}
