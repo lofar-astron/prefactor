@@ -420,8 +420,8 @@ if __name__=='__main__':
 
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <MSPattern> \n'
                                 '  <H5parm>    = (Path)name of the (new) H5parm file to be written.\n'
-                                '  <MSPattern> = Search pattern for the measurement sets with instrument tables.'
-                                '                (e.g. \"/data/scratch/MyObs/calibrator/L*.dppp\")'
+                                '  <MSPattern> = Search pattern for the measurement sets with instrument tables.\n'
+                                '                (e.g. \"/data/scratch/MyObs/calibrator/L*.dppp\")\n'
                                 '                Probably needs to be put in quotes!')
     opt.add_option('-i', '--instrument', dest="Instrument", type='string', default='/instrument',
                    help="Name of the instrument tables of the measurement sets. "
