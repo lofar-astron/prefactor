@@ -115,6 +115,11 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
     if ionex_server.strip(' []\'\"').lower() == 'none':
         ionex_server = None
     rmdict = get_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath)
+    if not rmdict:
+        if not ionex_server:
+            raise ValueError("One or more IONEX files is not found on disk and download is disabled!")
+        else:
+            raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
 
     c = 299792458.0
     lambdaSquared = (c/msinfo.msfreqvalues)**2
