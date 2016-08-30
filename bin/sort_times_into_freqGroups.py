@@ -171,6 +171,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     else:
         ngroups = 1
         numSB = int(numFiles)
+    if ngroups < 1 :
+        raise ValueError('sort_times_into_freqGroups: Not enough input subbands to create at least one full (frequency-)group!')
     hostID = 0
     print "sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each."
     for time in timestamps:
