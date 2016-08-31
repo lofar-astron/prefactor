@@ -32,7 +32,7 @@ Outdated and thus deprecated are:
 * Pre-Facet-Cal-RawData-PreAvg.parset : A pre-facet pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step. (To reduce the number of files on systems where this is a problem, e.g. JURECA)
 
 Software requirements:
-* the full "offline" LOFAR software installation version >= 2.15 (With small modifications the Pre-Facet-Cal pipelines can be run with older versions, but that is not supported by the authors anymore.)
+* the full "offline" LOFAR software installation version >= 2.17
 * LoSoTo (version >=0.3 -- see https://github.com/revoltek/losoto)
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
