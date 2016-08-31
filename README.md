@@ -38,24 +38,26 @@ Software requirements:
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * RMextract (see https://github.com/maaijke/RMextract)
 * Python matplotlib
-* WSClean (for Initial-Subtract, version >=1.11)
+* WSClean (for Initial-Subtract, version >=1.12)
 * APLpy (for Initial-Subtract)
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
+* Martin Hardcastle <mjh somewhere extragalactic.info>
+* George Heald <heald somewhere astron.nl>
+* Andreas Horneffer <ahorneffer somewhere mpifr-bonn.mpg.de>
+* Soumyajit Mandal <mandal somewhere strw.leidenuniv.nl>
+* David Rafferty <drafferty somewhere hs.uni-hamburg.de>
+* Carole Roskowinski <carosko gmail.com>
+* Jose Sabater Montes <jsm somewhere iaa.es>
+* Timothy Shimwell <shimwell somewhere strw.leidenuniv.nl>
+* Sarrvesh Sridhar <sarrvesh somewhere astro.rug.nl>
 * Reinout van Weeren <rvanweeren somewhere cfa.harvard.edu>
 * Wendy Williams <wwilliams somewhere strw.leidenuniv.nl>
-* Martin Hardcastle <mjh somewhere extragalactic.info>
-* Timothy Shimwell <shimwell somewhere strw.leidenuniv.nl>
-* David Rafferty <drafferty somewhere hs.uni-hamburg.de>
-* Jose Sabater Montes <jsm somewhere iaa.es>
-* George Heald <heald somewhere astron.nl>
-* Sarrvesh Sridhar <sarrvesh somewhere astro.rug.nl>
-* Andreas Horneffer <ahorneffer somewhere mpifr-bonn.mpg.de>
 
 With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> for developing the 
 genericpipeline.
 
-This procedure is also fully described in these papers:
+The procedure is also mostly described in these papers:
 * van Weeren et al. ApJ submitted
 * Williams et al. MNRAS submitted
 
