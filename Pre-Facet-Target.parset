@@ -79,7 +79,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, parmmap, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
+pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, parmmap, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
 
 # create the inspection_directory if needed
 mk_inspect_dir.control.kind               =  plugin
@@ -295,7 +295,16 @@ check_unflagged_map.control.mapfile_dir        =  input.output.mapfile_dir
 check_unflagged_map.control.filename           =  check_unflagged_map.mapfile
 check_unflagged_map.control.prune_str          =  None
 
-# create a mapfile with the A-Team skymodel, length = 1
+# if wished, download the tgss skymodel for the target
+sky_tar.control.type               =  pythonplugin  
+sky_tar.control.executable         =  {{ get_tgss_skymodel }}
+sky_tar.argument.flags             =  [combine_target_map.output.mapfile]
+sky_tar.argument.Yes               =  {{ use_tgss_target }}
+sky_tar.argument.SkymodelTar       =  {{ target_skymodel }}
+sky_tar.argument.Radius            =  5 #in degrees
+
+
+# create a mapfile with the target skymodel, length = 1
 create_target_model_map.control.kind              =  plugin
 create_target_model_map.control.type              =  addListMapfile
 create_target_model_map.control.hosts             =  ['localhost']
