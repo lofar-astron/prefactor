@@ -29,6 +29,21 @@ def _calc_edge_chans(inmap, numch, edgeFactor=32):
         print '_calc_edge_chans: flaglist:', str(flaglist).replace(' ','')
     return outmap
 
+def input2bool(invar):
+    if isinstance(invar, bool):
+        return invar
+    elif isinstance(invar, str):
+        if invar.upper() == 'TRUE' or invar == '1':
+            return True
+        elif invar.upper() == 'FALSE' or invar == '0':
+            return False
+        else:
+            raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
+    elif isinstance(invar, int) or isinstance(invar, float):
+        return bool(invar)
+    else:
+        raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+
 def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
          mergeLastGroup=False, truncateLastSBs=True):
     """
@@ -76,6 +91,11 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         Dict with the name of the generated mapfile
 
     """
+
+    NDPPPfill = input2bool(NDPPPfill)
+    mergeLastGroup = input2bool(mergeLastGroup)
+    truncateLastSBs = input2bool(truncateLastSBs)
+
     if not filename or not mapfile_dir:
         raise ValueError('sort_times_into_freqGroups: filename and mapfile_dir are needed!')
     if mergeLastGroup and truncateLastSBs:
