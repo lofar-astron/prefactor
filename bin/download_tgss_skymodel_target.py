@@ -37,9 +37,9 @@ def grab_coo_MS(MS):
 
 ########################################################################
 def input2strlist_nomapfile(invar):    
-   """ from bin/download_IONEX.py
-   give the list of MSs from the list provided as a string
-   """
+    """ from bin/download_IONEX.py
+    give the list of MSs from the list provided as a string
+    """
    
     str_list = None
     if type(invar) is str:
@@ -55,7 +55,7 @@ def input2strlist_nomapfile(invar):
 
     
 ########################################################################
-def main(ms_input,SkymodelTar,Radius,Yes=True):
+def main(ms_input,SkymodelTar,Radius,Yes="True"):
     """
     Download the TGSS skymodel for the target field
 
@@ -84,5 +84,26 @@ def main(ms_input,SkymodelTar,Radius,Yes=True):
     else:
         print "USING the skymodel provided in "+ SkymodelTar
         
+    
+########################################################################
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Find automatically between skymodels the one to use (for the Calibrator)')
+    
+    parser.add_argument('MSfile', type=str, nargs='+',
+                        help='One (or more MSs) for which we search matching skymodel.')
+    parser.add_argument('SkyTar', type=str, 
+                        help='Full name (with path) to the skymodel; the TGSS skymodel will be downloaded here')
+    parser.add_argument('--Radius', type=float, 
+                        help='Radius for the TGSS cone search in degrees')
+        
+ 
+   
+    args = parser.parse_args()
+    radius=5
+    if args.Radius:
+        radius=args.Radius
+    
+    main(args.MSfile,args.SkyTar, str(radius))
     
 
