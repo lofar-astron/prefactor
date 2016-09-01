@@ -72,18 +72,18 @@ def input2strlist_nomapfile(invar):
    """ 
    from bin/download_IONEX.py
    give the list of MSs from the list provided as a string
-  """
-    str_list = None
-    if type(invar) is str:
-        if invar.startswith('[') and invar.endswith(']'):
-            str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
-        else:
-            str_list = [invar.strip(' \'\"')]
-    elif type(invar) is list:
-        str_list = [str(f).strip(' \'\"') for f in invar]
-    else:
-        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-    return str_list
+   """
+   str_list = None
+   if type(invar) is str:
+       if invar.startswith('[') and invar.endswith(']'):
+           str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
+       else:
+           str_list = [invar.strip(' \'\"')]
+   elif type(invar) is list:
+       str_list = [str(f).strip(' \'\"') for f in invar]
+   else:
+       raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
+   return str_list
 
 
 
@@ -113,7 +113,7 @@ def main(ms_input,DirSkymodelCal):
         # Getting the name of the Calibrator from the information stored in a MS
         # NB: we suppose that all the calibrators observations have this field filled in (MS/Observation, column LOFAR_TARGET)
         nameCal=grab_name_MS(input2strlist_nomapfile(ms_input)[0])
-    
+        
         # Looking in the folder DirSkymodelCal to find the corresponding skymodel
         # NB: we suppose that the name of the calibrator is included in the name of the skymodel
         skymodelCal=find_skymodel(nameCal,DirSkymodelCal)
