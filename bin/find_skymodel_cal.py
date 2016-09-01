@@ -88,7 +88,7 @@ def input2strlist_nomapfile(invar):
 
 
 ########################################################################
-def main(ms_input,DirSkymodelCal):
+def main(ms_input,DirSkymodelCal,extensionSky=".skymodel"):
 
     """
     Find automatically the skymodel to use for the Calibrator 
@@ -99,7 +99,11 @@ def main(ms_input,DirSkymodelCal):
     ms_input : str
         String from the list (map) of the calibrator MSs
     DirSkymodelCal : str
-        Path to the skymodel file, or to the folder where the skymodels are stored        
+        Path to the skymodel file, or to the folder where the skymodels are stored    
+    [extensionSky] :  str
+        Default: ".skymodel"
+        extension of the skymodel files
+ 
         
     Returns
     -------
@@ -108,7 +112,9 @@ def main(ms_input,DirSkymodelCal):
     """    
 
     if os.path.isfile(DirSkymodelCal):
+        print "Using the skymodel provided :" +DirSkymodelCal
         return { 'SkymodelCal' : DirSkymodelCal }
+        
     elif os.path.isdir(DirSkymodelCal):
         # Getting the name of the Calibrator from the information stored in a MS
         # NB: we suppose that all the calibrators observations have this field filled in (MS/Observation, column LOFAR_TARGET)
@@ -116,9 +122,30 @@ def main(ms_input,DirSkymodelCal):
         
         # Looking in the folder DirSkymodelCal to find the corresponding skymodel
         # NB: we suppose that the name of the calibrator is included in the name of the skymodel
-        skymodelCal=find_skymodel(nameCal,DirSkymodelCal)
+        skymodelCal=find_skymodel(nameCal,DirSkymodelCal,extensionSky)
         return { 'SkymodelCal' : skymodelCal }
     else:
         raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal) )
 
 
+########################################################################
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Find automatically between skymodels the one to use (for the Calibrator)')
+    
+    parser.add_argument('MSfile', type=str, nargs='+',
+                        help='One (or more MSs) for which we search matching skymodel.')
+    parser.add_argument('DirSky', type=str, 
+                        help='Path to the skymodel file, or to the folder where the skymodels are stored.')
+    parser.add_argument('--extsky', type=str, 
+                        help='extension of the skymodel files. (default: \".skymodel\")')
+        
+ 
+   
+    args = parser.parse_args()
+    extensionSky='.skymodel'
+    if args.extsky:
+        extensionSky=args.extsky
+    
+    main(args.MSfile,args.DirSky, extensionSky)
+    
