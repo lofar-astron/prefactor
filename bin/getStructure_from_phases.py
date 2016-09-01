@@ -190,7 +190,7 @@ def getStructure(pdname,antennas,nr_grid=1,doplot=True,outbasename='ionosphere',
     return S0s,betas
 
 
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('parmdb',help='Name of solution parmdb')
     parser.add_argument('anttab',help='Name of antenna table')
@@ -209,6 +209,3 @@ def main():
     print parmdb,anttab,dofilter,doplot,outbasename
     
     getStructure(parmdb,anttab,nr_grid,doplot,outbasename,dofilter)
-
-if __name__ == "__main__":
-    main()
