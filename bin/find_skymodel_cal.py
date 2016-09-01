@@ -99,25 +99,26 @@ def main(ms_input,DirSkymodelCal):
     ms_input : str
         String from the list (map) of the calibrator MSs
     DirSkymodelCal : str
-        Path to the forlder where the skymodels are stored
-        
+        Path to the skymodel file, or to the folder where the skymodels are stored        
         
     Returns
     -------
     {'SkymodelCal':skymodelCal} : "dict"
         Path to the skymodel of the calibrator
     """    
+
+    if os.path.isfile(DirSkymodelCal):
+        return { 'SkymodelCal' : DirSkymodelCal }
+    elif os.path.isdir(DirSkymodelCal):
+        # Getting the name of the Calibrator from the information stored in a MS
+        # NB: we suppose that all the calibrators observations have this field filled in (MS/Observation, column LOFAR_TARGET)
+        nameCal=grab_name_MS(input2strlist_nomapfile(ms_input)[0])
     
-    
-    # Getting the name of the Calibrator from the information stored in a MS
-    # NB: we suppose that all the calibrators observations have this field filled in (MS/Observation, column LOFAR_TARGET)
-    nameCal=grab_name_MS(input2strlist_nomapfile(ms_input)[0])
-    
-    
-    # Looking in the folder DirSkymodelCal to find the corresponding skymodel
-    # NB: we suppose that the name of the calibrator is included in the name of the skymodel
-    skymodelCal=find_skymodel(nameCal,DirSkymodelCal)
-    return { 'SkymodelCal' : skymodelCal }
-    
+        # Looking in the folder DirSkymodelCal to find the corresponding skymodel
+        # NB: we suppose that the name of the calibrator is included in the name of the skymodel
+        skymodelCal=find_skymodel(nameCal,DirSkymodelCal)
+        return { 'SkymodelCal' : skymodelCal }
+    else:
+        raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal) )
 
 

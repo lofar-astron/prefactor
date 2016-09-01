@@ -103,10 +103,13 @@ sky_cal.control.error_tolerance    = {{ error_tolerance }}
 sky_cal.argument.flags             = [combine_data_cal_map.output.mapfile]
 sky_cal.argument.DirSkymodelCal    = {{ calibrator_path_skymodel }}
 
-# extract from the mapfile from sky_cal, the path to the skymodel (used by calib_cal)
-sky_cal_path.control.kind           =  plugin
-sky_cal_path.control.type           =  filenameFromMapfile
-sky_cal_path.control.mapfile_dir    =  sky_cal.output.SkymodelCal.mapfile
+## extract from the mapfile from sky_cal, the path to the skymodel (used by calib_cal)
+#sky_cal_path.control.kind           =  plugin
+#sky_cal_path.control.type           =  filenameFromMapfile
+#sky_cal_path.control.filename       =  sky_cal.output.SkymodelCal.mapfile
+sky_cal_path.control.kind              =  plugin
+sky_cal_path.control.type              =  mapfilenamesFromMapfiles
+sky_cal_path.control.mapfile_FilePath  =  sky_cal.output.SkymodelCal.mapfile
 
 # now run BBS on the NDPPP-ed calibrator data.
 calib_cal.control.type             =  python-calibrate-stand-alone
