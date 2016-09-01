@@ -206,8 +206,7 @@ def solplot_ampphase(parmdb, imageroot, refstationi, norm_amp_lim=False, median_
     return
 
 
-def main():
-    
+if __name__ == "__main__":   
     parser = argparse.ArgumentParser() #prog='plot_solutions_all_stations.py',usage='[options] <parmdb> <imageroot> ')
     parser.add_argument('-p', '--phase-only', dest='phaseonly', action="store_true", default=False, help="plot phase-only solutions")
     parser.add_argument('-n', '--norm-amplitude-limits', dest='norm_amp_lim', action="store_true", default=False, help="plot amps between 0 and 2")
@@ -237,7 +236,3 @@ def main():
         solplot_phaseonly(parmdb, imageroot, refstation, plot_international=plot_international)
     else:
         solplot_ampphase(parmdb, imageroot, refstation, norm_amp_lim=norm_amp_lim, median_amp=median_amp, plot_international=plot_international)
-
-
-if __name__ == "__main__":
-    main()
