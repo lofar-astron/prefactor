@@ -134,7 +134,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Find automatically between skymodels the one to use (for the Calibrator)')
     
     parser.add_argument('MSfile', type=str, nargs='+',
-                        help='One (or more MSs) for which we search matching skymodel.')
+                        help='One (or more MSs) for which we search the matching skymodel.')
     parser.add_argument('DirSky', type=str, 
                         help='Path to the skymodel file, or to the folder where the skymodels are stored.')
     parser.add_argument('--extsky', type=str, 
