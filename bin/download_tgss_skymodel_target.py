@@ -25,12 +25,17 @@ def grab_coo_MS(MS):
     # NB: they are given in rad,rad (J2000) 
     [[[ra,dec]]] = pt.table(MS+'::FIELD', readonly=True, ack=False).getcol('PHASE_DIR')
     
+    # RA is stocked in the MS in [-pi;pi]
+    # => shift for the negative angles before the conversion to deg (so that RA in [0;2pi])
+    if ra<0:
+        ra=ra+2*np.pi
+    
     # convert radians to degrees
     ra_deg =  ra/np.pi*180.
     dec_deg = dec/np.pi*180.
     
     # and sending the coordinates in deg
-    return coo_tar.ra.deg,coo_tar.dec.deg
+    return ra_deg,dec_deg
 
 
 ########################################################################
@@ -89,11 +94,11 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True"):
             return
         else:
             download_flag = True
-    elif DoDownload.upper() == "False" or DoDownload.upper() == "NO":
+    elif DoDownload.upper() == "FALSE" or DoDownload.upper() == "NO":
          if FileExists:
             print "USING the exising skymodel in "+ SkymodelPath
             return
-        else:
+         else:
             raise ValueError("download_tgss_skymodel_target: Path: \"%s\" does not exist and TGSS download is disabled!"%(SkymodelPath))
 
     # If we got here, then we are supposed to download the skymodel.
@@ -112,10 +117,10 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True"):
 ########################################################################
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Find automatically between skymodels the one to use (for the Calibrator)')
+    parser = argparse.ArgumentParser(description=' Download the TGSS skymodel for the target field')
     
     parser.add_argument('MSfile', type=str, nargs='+',
-                        help='One (or more MSs) for which we search matching skymodel.')
+                        help='One (or more MSs) for which a TGSS skymodel will be download.')
     parser.add_argument('SkyTar', type=str, 
                         help='Full name (with path) to the skymodel; the TGSS skymodel will be downloaded here')
     parser.add_argument('--Radius', type=float, 
