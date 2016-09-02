@@ -304,7 +304,7 @@ sky_tar.control.type               =  pythonplugin
 sky_tar.control.executable         =  {{ get_tgss_skymodel_script }}
 sky_tar.argument.flags             =  [combine_target_map.output.mapfile]
 sky_tar.argument.DoDownload        =  {{ use_tgss_target }}
-sky_tar.argument.SkymodelTar       =  {{ target_skymodel }}
+sky_tar.argument.SkymodelPath      =  {{ target_skymodel }}
 sky_tar.argument.Radius            =  5. #in degrees
 
 # create a mapfile with the target skymodel, length = 1
@@ -357,7 +357,7 @@ gsmcal_solve.argument.msin                            = check_unflagged_map.outp
 gsmcal_solve.argument.msin.datacolumn                 = DATA
 gsmcal_solve.argument.msin.baseline                   = CS*&; RS*&; CS*&RS*
 gsmcal_solve.argument.msout.datacolumn                = CORRECTED_DATA
-gsmcal_solve.argument.steps                           = [filter,gaincal]	
+gsmcal_solve.argument.steps                           = [filter,gaincal]
 gsmcal_solve.filter.type                              = filter
 gsmcal_solve.filter.blrange                           = [150, 999999]
 gsmcal_solve.argument.gaincal.type                    = gaincal
