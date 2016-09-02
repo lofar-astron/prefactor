@@ -10,8 +10,8 @@
 
 import matplotlib as mpl
 mpl.use("Agg")
+import casacore.tables as pt
 import lofar.parmdb as pd
-import pyrap.tables as pt
 from pylab import *
 import scipy
 from scipy.optimize import leastsq
