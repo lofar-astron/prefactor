@@ -431,8 +431,8 @@ gsmcal_antmap.control.filename           =  gsmcal_antmaps.mapfile
 make_structurefunction.control.kind               =  recipe
 make_structurefunction.control.type               =  executable_args
 make_structurefunction.control.executable         =  {{ structurefunction_script }}
-make_structurefunction.control.max_per_node       =  24
-make_structurefunction.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,gsmcal_antmap.output.mapfile,dpp
+make_structurefunction.control.max_per_node       =  {{ num_proc_per_node }}
+make_structurefunction.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,gsmcal_antmap.output.mapfile,check_unflagged_map.output.mapfile]
 make_structurefunction.control.inputkeys          =  [inparmdb,inants,outbase]
 make_structurefunction.control.arguments          =  [inparmdb,inants,outbase]
 
