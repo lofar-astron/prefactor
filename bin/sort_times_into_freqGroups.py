@@ -156,18 +156,16 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
             sw = pt.table(ms+'::SPECTRAL_WINDOW', ack=False)
             freq = sw.col('REF_FREQUENCY')[0]            
             if first:
-                freq_width = sw.col('TOTAL_BANDWIDTH')[0]
+                file_bandwidth = sw.col('TOTAL_BANDWIDTH')[0]
                 nchans = sw.col('CHAN_WIDTH')[0].shape[0]
                 chwidth = sw.col('CHAN_WIDTH')[0][0]
-                maxfreq = freq
-                minfreq = freq
+                freqset = set([freq])
                 first = False
             else:
-                assert freq_width == sw.col('TOTAL_BANDWIDTH')[0]
+                assert file_bandwidth == sw.col('TOTAL_BANDWIDTH')[0]
                 assert nchans == sw.col('CHAN_WIDTH')[0].shape[0]
                 assert chwidth == sw.col('CHAN_WIDTH')[0][0]
-                maxfreq = max(maxfreq,freq)
-                minfreq = min(minfreq,freq)
+                freqset.add(freq)
             freqs.append(freq)
             sw.close()
         time_groups[time]['freq_names'] = zip(freqs,time_groups[time]['files'])
@@ -176,11 +174,18 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         #time_groups[time]['freqs'] = [freq for (freq,name) in freq_names]
     print "sort_times_into_freqGroups: Collected the frequencies for the time-groups"
 
+    freqliste = np.array(list(freqset))
+    freqliste.sort()
+    freq_width = np.min(freqliste[1:]-freqliste[:-1])
+    if file_bandwidth > freq_width:
+        raise ValueError("Bandwidth of files is larger than minimum frequency step between two files!")
+    if file_bandwidth < (freq_width/2.):
+        raise ValueError("Bandwidth of files is smaller than half the minimum frequency step between two files! (More than half the data is missing.)")
     #the new output map
     filemap = MultiDataMap()
     groupmap = DataMap()
-    maxfreq = maxfreq+freq_width/2.
-    minfreq = minfreq-freq_width/2.
+    maxfreq = np.max(freqliste)+freq_width/2.
+    minfreq = np.min(freqliste)-freq_width/2.
     numFiles = round((maxfreq-minfreq)/freq_width)
     numSB = int(numSB)
     if numSB > 0:
