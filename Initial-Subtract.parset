@@ -65,12 +65,12 @@
 
 ##### pathes to the scripts etc.
 ! wsclean_executable          = /homea/htb00/htb003/local_jureca/bin/wsclean
-! do_magic_script             = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
-! merge_skymodels_script      = /homea/htb00/htb001/prefactor/bin/merge_skymodels.py
-! make_clean_mask_script      = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
-! fits_to_casa_script         = /homea/htb00/htb001/prefactor/bin/convert_fits_image_to_casa.py
-! realimag_script             = /homea/htb00/htb001/prefactor/bin/parmdb_gain_to_real-imag.py
-! plot_subtract_images_script = /homea/htb00/htb001/prefactor/bin/plot_subtract_images.py
+! do_magic_script             = /homea/htb00/htb001/prefactor/scripts/InitSubtract_sort_and_compute.py
+! merge_skymodels_script      = /homea/htb00/htb001/prefactor/scripts/merge_skymodels.py
+! make_clean_mask_script      = /homea/htb00/htb001/prefactor/scripts/make_clean_mask.py
+! fits_to_casa_script         = /homea/htb00/htb001/prefactor/scripts/convert_fits_image_to_casa.py
+! realimag_script             = /homea/htb00/htb001/prefactor/scripts/parmdb_gain_to_real-imag.py
+! plot_subtract_images_script = /homea/htb00/htb001/prefactor/scripts/plot_subtract_images.py
 ! casapy2bbs                  = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 

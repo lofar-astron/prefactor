@@ -71,12 +71,12 @@
 
 ##### pathes to the scripts etc.
 ! wsclean_executable     = /soft/wsclean/bin/wsclean
-! do_magic_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/InitSubtract_deep_sort_and_compute.py
-! merge_skymodels_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/merge_skymodels.py
-! make_clean_mask_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/make_clean_mask.py
-! fits_to_casa_script    = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/convert_fits_image_to_casa.py
-! realimag_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/parmdb_gain_to_real-imag.py
-! plot_subtract_images_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/plot_subtract_images.py
+! do_magic_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/InitSubtract_deep_sort_and_compute.py
+! merge_skymodels_script = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/merge_skymodels.py
+! make_clean_mask_script = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/make_clean_mask.py
+! fits_to_casa_script    = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/convert_fits_image_to_casa.py
+! realimag_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/parmdb_gain_to_real-imag.py
+! plot_subtract_images_script = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/plot_subtract_images.py
 ! casapy2bbs             = /soft/lofar-220216/bin/casapy2bbs.py
 ! makesourcedb           = /soft/lofar-220216/bin/makesourcedb
 
