@@ -69,13 +69,12 @@
 ! merge_skymodels_script      = /homea/htb00/htb001/prefactor/scripts/merge_skymodels.py
 ! make_clean_mask_script      = /homea/htb00/htb001/prefactor/scripts/make_clean_mask.py
 ! fits_to_casa_script         = /homea/htb00/htb001/prefactor/scripts/convert_fits_image_to_casa.py
-! realimag_script             = /homea/htb00/htb001/prefactor/scripts/parmdb_gain_to_real-imag.py
 ! plot_subtract_images_script = /homea/htb00/htb001/prefactor/scripts/plot_subtract_images.py
 ! casapy2bbs                  = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, plot_im_high, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, parmdbs_to_realimag, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, plot_im_low, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, wsclean_high1, mask_high, mk_inspect_dir, copy_mask, wsclean_high2, plot_im_high, move_high2, fits_to_image_high, casa_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, correct_high, regroup_map, wsclean_low1, mask_low, wsclean_low2, plot_im_low, move_low2, fits_to_image_low, casa_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -275,20 +274,11 @@ expand_sourcedb_high.control.mapfile_groups     =   do_magic_maps.output.groupma
 expand_sourcedb_high.control.mapfile_dir        =   input.output.mapfile_dir
 expand_sourcedb_high.control.filename           =   expand_sourcedb_high.datamap
 
-# convert the parmdbs to real/imag values, length = nfiles
-parmdbs_to_realimag.control.type                =   pythonplugin
-parmdbs_to_realimag.control.executable          =   {{ realimag_script }}
-parmdbs_to_realimag.control.error_tolerance     =   {{ error_tolerance }}
-parmdbs_to_realimag.control.mapfiles_in         =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
-parmdbs_to_realimag.control.inputkeys           =   [dummy, pdb_in]
-parmdbs_to_realimag.control.outputkey           =   pdb_out
-parmdbs_to_realimag.argument.flags              =   [pdb_in, pdb_out]
-
 # Predict, corrupt, and subtract the high-resolution model, length = nfiles
 # The low-resolution model will be subtracted from the 
 # output column (SUBTRACTED_DATA_HIGH) later
 subtract_high.control.type                      =   dppp
-subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,create_parmdb_map.output.mapfile]
 subtract_high.control.inputkeys                 =   [msin,sourcedb,parmdb]
 subtract_high.control.inplace                   =   True
 subtract_high.control.max_per_node              =   {{ max_dppp_per_node }}
@@ -305,7 +295,7 @@ subtract_high.argument.subtract.applycal.parmdb =   parmdb
 
 # Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nfiles
 correct_high.control.type                       =   dppp
-correct_high.control.mapfiles_in                =   [do_magic_maps.output.single_map,parmdbs_to_realimag.output.mapfile,do_magic_maps.output.freqstep_map,do_magic_maps.output.timestep_map]
+correct_high.control.mapfiles_in                =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile,do_magic_maps.output.freqstep_map,do_magic_maps.output.timestep_map]
 correct_high.control.inputkeys                  =   [msin,parmdb,avg.freqstep,avg.timestep]
 correct_high.control.max_per_node               =   {{ max_dppp_per_node }}
 correct_high.argument.numthreads                =   {{ max_dppp_threads }}
@@ -461,7 +451,7 @@ expand_sourcedb_low.control.filename            =   expand_sourcedb_low.datamap
 
 # Predict, corrupt, and subtract the low-resolution model, length = nfiles
 subtract_low.control.type                       =   dppp
-subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,create_parmdb_map.output.mapfile]
 subtract_low.control.inputkeys                  =   [msin,sourcedb,parmdb]
 subtract_low.control.inplace                    =   True
 subtract_low.control.max_per_node               =   {{ max_dppp_per_node }}
