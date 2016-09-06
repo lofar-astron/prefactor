@@ -152,6 +152,7 @@ wsclean_high1.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high1.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high1.argument.j                        =   {{ max_cpus_per_img }}
+wsclean_high1.argument.tempdir                  =   {{ local_scratch_dir }}
 wsclean_high1.argument.weighting-rank-filter    =   3
 
 # make masks for the high-res images, length = nbands
@@ -211,6 +212,7 @@ wsclean_high2.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2.argument.j                        =   {{ max_cpus_per_img }}
+wsclean_high2.argument.tempdir                  =   {{ local_scratch_dir }}
 wsclean_high2.argument.weighting-rank-filter    =   3
 
 # plot the high-res image and mask, length = nbands
@@ -349,6 +351,7 @@ wsclean_low1.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low1.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low1.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low1.argument.j                         =   {{ max_cpus_per_img }}
+wsclean_low1.argument.tempdir                   =   {{ local_scratch_dir }}
 wsclean_low1.argument.weighting-rank-filter     =   3
 
 # make masks for the low-res images, length = nbands
@@ -394,6 +397,7 @@ wsclean_low2.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low2.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low2.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low2.argument.j                         =   {{ max_cpus_per_img }}
+wsclean_low2.argument.tempdir                   =   {{ local_scratch_dir }}
 wsclean_low2.argument.weighting-rank-filter     =   3
 
 # plot the low-res image and mask, length = nbands
@@ -498,7 +502,7 @@ createmap_plots.control.filename                =   diagnostic_plots.mapfile
 createmap_plots.control.folder                  =   input.output.working_directory/input.output.job_name
 createmap_plots.control.pattern                 =   *.png
 
-# move the plots to the directory with the input data, length = 2x nbands
+# move the plots to the inpection directory, length = 2x nbands
 move_plots.control.kind                         =  recipe
 move_plots.control.type                         =  executable_args
 move_plots.control.executable                   =  /bin/mv
