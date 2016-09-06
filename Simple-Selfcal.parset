@@ -34,14 +34,14 @@
 
 ##### pathes to the scripts etc.
 ! wsclean_executable     = /homea/htb00/htb003/local_jureca/bin/wsclean
-! do_magic_script        = /homea/htb00/htb001/prefactor/bin/InitSubtract_sort_and_compute.py
-! make_clean_mask_script = /homea/htb00/htb001/prefactor/bin/make_clean_mask.py
-! fits_to_casa_script    = /homea/htb00/htb001/prefactor/bin/convert_fits_image_to_casa.py
+! do_magic_script        = /homea/htb00/htb001/prefactor/scripts/InitSubtract_sort_and_compute.py
+! make_clean_mask_script = /homea/htb00/htb001/prefactor/scripts/make_clean_mask.py
+! fits_to_casa_script    = /homea/htb00/htb001/prefactor/scripts/convert_fits_image_to_casa.py
 ! casapy2bbs             = /homea/htb00/htb003/lofar_jureca_2-15/bin/casapy2bbs.py
 ! makesourcedb           = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 ! gsm_cal_parset         = /homea/htb00/htb001/prefactor/parsets/gsmcal.parset
 ! dummy_skymodel         = /homea/htb00/htb001/prefactor/skymodels/3c295-SH.skymodel
-! plotphases_script      = /homea/htb00/htb001/prefactor/bin/plot_solutions_all_stations.py
+! plotphases_script      = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
 
 
 # the Steps in this pipeline

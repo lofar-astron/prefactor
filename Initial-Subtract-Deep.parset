@@ -70,19 +70,18 @@
 ! error_tolerance           =  False
 
 ##### pathes to the scripts etc.
-! wsclean_executable     = /soft/wsclean/bin/wsclean
-! do_magic_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/InitSubtract_deep_sort_and_compute.py
-! merge_skymodels_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/merge_skymodels.py
-! make_clean_mask_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/make_clean_mask.py
-! fits_to_casa_script    = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/convert_fits_image_to_casa.py
-! realimag_script        = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/parmdb_gain_to_real-imag.py
-! plot_subtract_images_script = /home/wwilliams/scripts/git/wprefactor/prefactor/bin/plot_subtract_images.py
-! casapy2bbs             = /soft/lofar-220216/bin/casapy2bbs.py
-! makesourcedb           = /soft/lofar-220216/bin/makesourcedb
+! wsclean_executable          = /soft/wsclean/bin/wsclean
+! do_magic_script             = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/InitSubtract_deep_sort_and_compute.py
+! merge_skymodels_script      = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/merge_skymodels.py
+! make_clean_mask_script      = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/make_clean_mask.py
+! fits_to_casa_script         = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/convert_fits_image_to_casa.py
+! plot_subtract_images_script = /home/wwilliams/scripts/git/wprefactor/prefactor/scripts/plot_subtract_images.py
+! casapy2bbs                  = /soft/lofar-220216/bin/casapy2bbs.py
+! makesourcedb                = /soft/lofar-220216/bin/makesourcedb
 
 
 ##### the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, combine_mapfile_deep,  wsclean_high1_deep, createmap_high1_deep_image, mask_high_deep, wsclean_high2_deep,createmap_high2_deep_image,createmap_high2_deep_image_bands,createmap_high2_deep_model_bands, plot_im_high_deep, mk_inspect_dir, copy_mask_high_deep, fits_to_image_high_deep, casa_to_bbs_high_deep, make_sourcedb_high_deep, expand_sourcedb_high_deep,  parmdbs_to_realimag, subtract_high, correct_high, combine_mapfile_low_deep,  wsclean_low1_deep, createmap_low1_deep_image, mask_low_deep, wsclean_low2_deep,createmap_low2_deep_image,createmap_low2_deep_image_bands,createmap_low2_deep_model_bands, plot_im_low_deep, copy_mask_low_deep, fits_to_image_low_deep, casa_to_bbs_low_deep, make_sourcedb_low_deep, expand_sourcedb_low_deep,  subtract_low, merge, copy_skymodels,  createmap_plots, move_high2_deep, move_low2_deep, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, combine_mapfile_deep,  wsclean_high1_deep, createmap_high1_deep_image, mask_high_deep, wsclean_high2_deep,createmap_high2_deep_image,createmap_high2_deep_image_bands,createmap_high2_deep_model_bands, plot_im_high_deep, mk_inspect_dir, copy_mask_high_deep, fits_to_image_high_deep, casa_to_bbs_high_deep, make_sourcedb_high_deep, expand_sourcedb_high_deep, subtract_high, correct_high, combine_mapfile_low_deep,  wsclean_low1_deep, createmap_low1_deep_image, mask_low_deep, wsclean_low2_deep,createmap_low2_deep_image,createmap_low2_deep_image_bands,createmap_low2_deep_model_bands, plot_im_low_deep, copy_mask_low_deep, fits_to_image_low_deep, casa_to_bbs_low_deep, make_sourcedb_low_deep, expand_sourcedb_low_deep,  subtract_low, merge, copy_skymodels,  createmap_plots, move_high2_deep, move_low2_deep, move_plots]
 
 
 # create a mapfile with all MSs, length = nfiles
@@ -133,6 +132,8 @@ do_magic_maps.control.mapfile_deep_high_size_map     =  do_magic.output.deep_hig
 do_magic_maps.control.mapfile_deep_low_size_map      =  do_magic.output.deep_low_size_mapfile.mapfile
 do_magic_maps.control.mapfile_deep_high_padsize_map  =  do_magic.output.deep_high_padsize_mapfile.mapfile
 do_magic_maps.control.mapfile_deep_low_padsize_map   =  do_magic.output.deep_low_padsize_mapfile.mapfile
+do_magic_maps.control.mapfile_nwavelengths_high_map  =  do_magic.output.nwavelengths_high_mapfile.mapfile
+do_magic_maps.control.mapfile_nwavelengths_low_map   =  do_magic.output.nwavelengths_low_mapfile.mapfile
 
 # create a mapfile with the direction independent parmDBs, length = nfiles
 create_parmdb_map.control.kind                  =  plugin
@@ -160,8 +161,8 @@ wsclean_high1_deep.control.outputkey                 =   name
 wsclean_high1_deep.control.args_format               =   wsclean
 wsclean_high1_deep.control.max_per_node              =   1
 wsclean_high1_deep.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high1_deep.control.mapfiles_in               =   [combine_mapfile_deep.output.mapfile,do_magic_maps.output.deep_high_padsize_map,do_magic_maps.output.deep_high_size_map,do_magic_maps.output.nchansout_clean1_map]
-wsclean_high1_deep.control.inputkeys                 =   [msfile,paddedsize,outputsize,nchansout_clean1]
+wsclean_high1_deep.control.mapfiles_in               =   [combine_mapfile_deep.output.mapfile,do_magic_maps.output.deep_high_padsize_map,do_magic_maps.output.deep_high_size_map,do_magic_maps.output.nchansout_clean1_map,do_magic_maps.output.nwavelengths_high_map]
+wsclean_high1_deep.control.inputkeys                 =   [msfile,paddedsize,outputsize,nchansout_clean1,nwavelengths]
 wsclean_high1_deep.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,-joinchannels,msfile]
 wsclean_high1_deep.argument.size                     =   paddedsize
 wsclean_high1_deep.argument.trim                     =   outputsize
@@ -171,6 +172,7 @@ wsclean_high1_deep.argument.threshold                =   0.0
 wsclean_high1_deep.argument.pol                      =   I
 wsclean_high1_deep.argument.weight                   =   briggs 0.0
 wsclean_high1_deep.argument.mgain                    =   0.65
+wsclean_high1_deep.argument.baseline-averaging       =   nwavelengths
 wsclean_high1_deep.argument.minuv-l                  =   80
 wsclean_high1_deep.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high1_deep.argument.scale                    =   {{ cellsize_highres_deg }}
@@ -215,9 +217,9 @@ wsclean_high2_deep.control.outputkey                 =   name
 wsclean_high2_deep.control.args_format               =   wsclean
 wsclean_high2_deep.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high2_deep.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high2_deep.control.mapfiles_in               =   [combine_mapfile_deep.output.mapfile,mask_high_deep.output.mapfile,do_magic_maps.output.deep_high_padsize_map,do_magic_maps.output.deep_high_size_map,do_magic_maps.output.nbands_map]
-wsclean_high2_deep.control.inputkeys                 =   [msfile,fitsmask,paddedsize,outputsize,nbands]
-wsclean_high2_deep.argument.flags                    =   [-update-model-required,-reorder,-fitbeam,-joinchannels,msfile]
+wsclean_high2_deep.control.mapfiles_in               =   [combine_mapfile_deep.output.mapfile,mask_high_deep.output.mapfile,do_magic_maps.output.deep_high_padsize_map,do_magic_maps.output.deep_high_size_map,do_magic_maps.output.nbands_map,do_magic_maps.output.nwavelengths_high_map]
+wsclean_high2_deep.control.inputkeys                 =   [msfile,fitsmask,paddedsize,outputsize,nbands,nwavelengths]
+wsclean_high2_deep.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,-joinchannels,msfile]
 wsclean_high2_deep.argument.fitsmask                 =   fitsmask
 wsclean_high2_deep.argument.size                     =   paddedsize
 wsclean_high2_deep.argument.trim                     =   outputsize
@@ -227,13 +229,14 @@ wsclean_high2_deep.argument.threshold                =   mask_high_deep.output.t
 wsclean_high2_deep.argument.pol                      =   I
 wsclean_high2_deep.argument.weight                   =   briggs 0.0
 wsclean_high2_deep.argument.mgain                    =   0.65
+wsclean_high2_deep.argument.baseline-averaging       =   nwavelengths
 wsclean_high2_deep.argument.minuv-l                  =   80
 wsclean_high2_deep.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high2_deep.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high2_deep.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high2_deep.argument.j                        =   {{ max_cpus_per_img }}
 wsclean_high2_deep.argument.weighting-rank-filter    =   3
-wsclean_high2_deep.argument.tempdir                   =   {{ local_scratch_dir }}
+wsclean_high2_deep.argument.tempdir                  =   {{ local_scratch_dir }}
 
 # create a map with the wsclean MFS image only
 createmap_high2_deep_image.control.kind              =   plugin
@@ -328,20 +331,11 @@ expand_sourcedb_high_deep.control.mapfile_groups     =   do_magic_maps.output.gr
 expand_sourcedb_high_deep.control.mapfile_dir        =   input.output.mapfile_dir
 expand_sourcedb_high_deep.control.filename           =   expand_sourcedb_high_deep.datamap
 
-# convert the parmdbs to real/imag values, length = nfiles
-parmdbs_to_realimag.control.type                =   pythonplugin
-parmdbs_to_realimag.control.executable          =   {{ realimag_script }}
-parmdbs_to_realimag.control.error_tolerance     =   {{ error_tolerance }}
-parmdbs_to_realimag.control.mapfiles_in         =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile]
-parmdbs_to_realimag.control.inputkeys           =   [dummy, pdb_in]
-parmdbs_to_realimag.control.outputkey           =   pdb_out
-parmdbs_to_realimag.argument.flags              =   [pdb_in, pdb_out]
-
 # Predict, corrupt, and subtract the high-resolution model, length = nfiles
 # The low-resolution model will be subtracted from the 
 # output column (SUBTRACTED_DATA_HIGH) later
 subtract_high.control.type                      =   dppp
-subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high_deep.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high_deep.output.mapfile,create_parmdb_map.output.mapfile]
 subtract_high.control.inputkeys                 =   [msin,sourcedb,parmdb]
 subtract_high.control.inplace                   =   True
 subtract_high.control.max_per_node              =   {{ max_dppp_per_node }}
@@ -358,7 +352,7 @@ subtract_high.argument.subtract.applycal.parmdb =   parmdb
 
 # Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nfiles
 correct_high.control.type                       =   dppp
-correct_high.control.mapfiles_in                =   [do_magic_maps.output.single_map,parmdbs_to_realimag.output.mapfile,do_magic_maps.output.freqstep_map,do_magic_maps.output.timestep_map]
+correct_high.control.mapfiles_in                =   [do_magic_maps.output.single_map,create_parmdb_map.output.mapfile,do_magic_maps.output.freqstep_map,do_magic_maps.output.timestep_map]
 correct_high.control.inputkeys                  =   [msin,parmdb,avg.freqstep,avg.timestep]
 correct_high.control.max_per_node               =   {{ max_dppp_per_node }}
 correct_high.argument.numthreads                =   {{ max_dppp_threads }}
@@ -389,8 +383,8 @@ wsclean_low1_deep.control.outputkey                  =   name
 wsclean_low1_deep.control.args_format                =   wsclean
 wsclean_low1_deep.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low1_deep.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low1_deep.control.mapfiles_in                =   [combine_mapfile_low_deep.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map,do_magic_maps.output.nchansout_clean1_map]
-wsclean_low1_deep.control.inputkeys                  =   [msfile,paddedsize,outputsize,nchansout_clean1]
+wsclean_low1_deep.control.mapfiles_in                =   [combine_mapfile_low_deep.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map,do_magic_maps.output.nchansout_clean1_map,do_magic_maps.output.nwavelengths_low_map]
+wsclean_low1_deep.control.inputkeys                  =   [msfile,paddedsize,outputsize,nchansout_clean1,nwavelengths]
 wsclean_low1_deep.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,-joinchannels,msfile]
 wsclean_low1_deep.argument.size                      =   paddedsize
 wsclean_low1_deep.argument.trim                      =   outputsize
@@ -400,6 +394,7 @@ wsclean_low1_deep.argument.threshold                 =   0.0
 wsclean_low1_deep.argument.pol                       =   I
 wsclean_low1_deep.argument.weight                    =   briggs 0.0
 wsclean_low1_deep.argument.mgain                     =   0.65
+wsclean_low1_deep.argument.baseline-averaging        =   nwavelengths
 wsclean_low1_deep.argument.minuv-l                   =   80
 wsclean_low1_deep.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low1_deep.argument.scale                     =   {{ cellsize_lowres_deg }}
@@ -444,8 +439,8 @@ wsclean_low2_deep.control.outputkey                  =   name
 wsclean_low2_deep.control.args_format                =   wsclean
 wsclean_low2_deep.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low2_deep.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low2_deep.control.mapfiles_in                =   [combine_mapfile_low_deep.output.mapfile,mask_low_deep.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map,do_magic_maps.output.nbands_map]
-wsclean_low2_deep.control.inputkeys                  =   [msfile,fitsmask,paddedsize,outputsize,nbands]
+wsclean_low2_deep.control.mapfiles_in                =   [combine_mapfile_low_deep.output.mapfile,mask_low_deep.output.mapfile,do_magic_maps.output.low_padsize_map,do_magic_maps.output.low_size_map,do_magic_maps.output.nbands_map,do_magic_maps.output.nwavelengths_low_map]
+wsclean_low2_deep.control.inputkeys                  =   [msfile,fitsmask,paddedsize,outputsize,nbands,nwavelengths]
 wsclean_low2_deep.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,-joinchannels,msfile]
 wsclean_low2_deep.argument.fitsmask                  =   fitsmask
 wsclean_low2_deep.argument.size                      =   paddedsize
@@ -456,6 +451,7 @@ wsclean_low2_deep.argument.threshold                 =   mask_low_deep.output.th
 wsclean_low2_deep.argument.pol                       =   I
 wsclean_low2_deep.argument.weight                    =   briggs 0.0
 wsclean_low2_deep.argument.mgain                     =   0.65
+wsclean_low2_deep.argument.baseline-averaging        =   nwavelengths
 wsclean_low2_deep.argument.minuv-l                   =   80
 wsclean_low2_deep.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low2_deep.argument.scale                     =   {{ cellsize_lowres_deg }}
@@ -552,7 +548,7 @@ expand_sourcedb_low_deep.control.filename            =   expand_sourcedb_low_dee
 
 # Predict, corrupt, and subtract the low-resolution model, length = nfiles
 subtract_low.control.type                       =   dppp
-subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low_deep.output.mapfile,parmdbs_to_realimag.output.mapfile]
+subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low_deep.output.mapfile,create_parmdb_map.output.mapfile]
 subtract_low.control.inputkeys                  =   [msin,sourcedb,parmdb]
 subtract_low.control.inplace                    =   True
 subtract_low.control.max_per_node               =   {{ max_dppp_per_node }}
@@ -618,12 +614,3 @@ move_plots.control.executable                   =  /bin/mv
 move_plots.control.mapfile_in                   =  createmap_plots.output.mapfile
 move_plots.control.inputkey                     =  source
 move_plots.control.arguments                    =  [source,{{ inspection_directory }}]
-
-
-
-
-
-
-
-
-
