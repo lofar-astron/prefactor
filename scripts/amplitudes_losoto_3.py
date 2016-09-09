@@ -390,7 +390,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
 
 
     for i in range(0,len(freqs_new)):
-        ampsoutfile.write('%s %s %s %s %s\n'%(amptab.ant[antenna_id], antenna_id,i, np.median(amp_xx[:,i], axis=0), np.median(amp_yy[:,i], axis=0) )
+        ampsoutfile.write('%s %s %s %s %s\n'%(amptab.ant[antenna_id], antenna_id,i, np.median(amp_xx[:,i], axis=0), np.median(amp_yy[:,i], axis=0)))
 
     for time in range(0,len(amptab.time[:])):
         amps_array[antenna_id,time,:,0] = np.copy(savitzky_golay(amp_xx[time,:], 17, 2))
