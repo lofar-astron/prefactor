@@ -6,30 +6,30 @@ to prepare said data for the Factor facet calibration (https://github.com/lofar-
 also useful if you don't plan to run Factor.
 
 It includes:
+* applying Ionospheric RM corrections
 * clock-TEC separation with transfer of clock from the calibrator to the target
 * some flagging and averaging of amplitude solutions
+* grouping of subbands by actual frequency
+* speed and disk usage improvements by optimized usage of NDPPP
+* (optional) wide-band cleaning in Initial-Subtract 
 * diagnostic plots
 * at least some documentation
 
-The version 2.0 development branch includes:
-* grouping of subbands by actual frequency instead of file number
-* applying Ionospheric RM corrections
-
-It does not (yet?) include:
-* speed and disk usage improvements by optimized usage of NDPPP
-* wide-band cleaning in Initial-Subtract (see deepimage branch)
-
-There is a wiki page with more or less useful hints: http://www.lofar.org/wiki/doku.php?id=public:user_software:prefactor
+The documentation can be found on the GitHub wiki pages: https://github.com/lofar-astron/prefactor/wiki
 
 There are several pipeline parsets in this repository:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline. 
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline. 
 * Pre-Facet-Cal.parset : The "standard" pipeline, calling first the calibrator and then the target pipelines.
-* Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration, this could also be done as the first step of Factor.)
+* Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
+* Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
 
-Outdated and thus deprecated are:
-* Pre-Facet-Cal-RawData-Single.parset : A pre-facet pipeline to work on raw (non NDPPP'ed) data
-* Pre-Facet-Cal-RawData-PreAvg.parset : A pre-facet pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step. (To reduce the number of files on systems where this is a problem, e.g. JURECA)
+Experimental or outdated and thus deprecated are:
+* Pre-Facet-Cal-RawData-Single.parset : Old version of a pre-facet pipeline to work on raw (non NDPPP'ed) data
+* Pre-Facet-Cal-RawData-PreAvg.parset : Old version of a pre-facet pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step. (To reduce the number of files on systems where this is a problem, e.g. JURECA)
+* Pre-Facet-Calibrator-RawSingle.parset : A version of a pre-facet calibrator pipeline to work on raw (non NDPPP'ed) data
+* Pre-Facet-Calibrator-RawCombine.parset : A version of a pre-facet calibrator pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step.
+* Simple-Selfcal.parset : As the name says, an experimental selfcal pipeline.
 
 Software requirements:
 * the full "offline" LOFAR software installation version >= 2.17
