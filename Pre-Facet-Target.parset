@@ -82,7 +82,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, parmmap, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
+pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
 
 # create the inspection_directory if needed
 mk_inspect_dir.control.kind               =  plugin
@@ -129,20 +129,20 @@ trans.argument.ionex_server     =  {{ ionex_server }}
 trans.argument.ionex_prefix     =  {{ ionex_prefix }}
 trans.argument.ionexPath        =  {{ ionex_path }}
 
-# generate mapfile with the parmDBs to be applied to the target data
-parmmap.control.kind               =  plugin
-parmmap.control.type               =  createMapfile
-parmmap.control.method             =  add_suffix_to_file
-parmmap.control.mapfile_in         =  createmap_target.output.mapfile
-parmmap.control.add_suffix_to_file =  /instrument_amp_clock_offset
-parmmap.control.mapfile_dir        =  input.output.mapfile_dir
-parmmap.control.filename           =  targetparmdb.mapfile
+## generate mapfile with the parmDBs to be applied to the target data
+#parmmap.control.kind               =  plugin
+#parmmap.control.type               =  createMapfile
+#parmmap.control.method             =  add_suffix_to_file
+#parmmap.control.mapfile_in         =  createmap_target.output.mapfile
+#parmmap.control.add_suffix_to_file =  /instrument_amp_clock_offset
+#parmmap.control.mapfile_dir        =  input.output.mapfile_dir
+#parmmap.control.filename           =  targetparmdb.mapfile
 
 # run NDPPP on the target data to flag, transfer calibrator values, and average
 ndppp_prep_target.control.type                      = dppp
 ndppp_prep_target.control.max_per_node              = {{ num_proc_per_node_limit }}
 ndppp_prep_target.control.error_tolerance           = {{ error_tolerance }}
-ndppp_prep_target.control.mapfiles_in               = [createmap_target.output.mapfile, parmmap.output.mapfile]
+ndppp_prep_target.control.mapfiles_in               = [createmap_target.output.mapfile, trans.output.mapfile]
 ndppp_prep_target.control.inputkeys                 = [input_file, parmdb_file]
 ndppp_prep_target.argument.numthreads               = {{ max_dppp_threads }}
 ndppp_prep_target.argument.msin                     = input_file
