@@ -96,7 +96,6 @@ calib_cal.control.type             =  python-calibrate-stand-alone
 calib_cal.control.max_per_node     =  {{ num_proc_per_node }}
 calib_cal.control.error_tolerance  =  {{ error_tolerance }}
 calib_cal.argument.force           =  True
-calib_cal.argument.numthreads      =  5
 calib_cal.argument.observation     =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
 calib_cal.argument.parset          =  {{ calib_cal_parset }}
 calib_cal.argument.catalog         =  {{ calibrator_skymodel }}
