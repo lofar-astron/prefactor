@@ -4,6 +4,7 @@
 # - Works on raw data, that has not been processed with NDPPP before.
 # - Combines several subbands into one MS in the first NDPPP step to 
 #   reduce the number of files. (May be more efficient on some machines.)
+# - requires LOFAR software version >= 2.17
 # - Expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
@@ -24,7 +25,7 @@
 # where to put the files with the calibration values that are to be transferred to the target
 ! cal_values_directory = /media/scratch/test/username/WhereYouWantToStoreTheValuesFromTheCalibrator/
 
-# NDPPP-compatible pattern for baselines or stations to be flagged
+# NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! flag_baselines         = [ CS013HBA* ]
 # name of the station that will be used as a reference for the phase-plots
 ! reference_station      = CS001HBA0
@@ -39,7 +40,7 @@
 ! plotsols_script      = /homea/htb00/htb001/prefactor/scripts/examine_npys.py
 ! fit_XYoffset_script  = /homea/htb00/htb001/prefactor/scripts/find_cal_global_phaseoffset_losoto.py
 ! plotphases_script    = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
-! losoto_executable    = /opt/cep/losoto/current/bin/losoto
+! losoto_executable    = /homea/htb00/htb003/local_jureca/bin/losoto
 
 # number of processes to use per step per node
 ! num_proc_per_node        = 24
