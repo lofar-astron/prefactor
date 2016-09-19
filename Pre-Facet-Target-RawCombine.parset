@@ -279,7 +279,7 @@ check_unflagged_map.control.prune_str    =  None
 # if wished, download the tgss skymodel for the target
 sky_tar.control.type               =  pythonplugin  
 sky_tar.control.executable         =  {{ get_tgss_skymodel_script }}
-sky_tar.argument.flags             =  [combine_target_map.output.mapfile]
+sky_tar.argument.flags             =  [combine_data_target_map.output.mapfile]
 sky_tar.argument.DoDownload        =  {{ use_tgss_target }}
 sky_tar.argument.SkymodelPath      =  {{ target_skymodel }}
 sky_tar.argument.Radius            =  5. #in degrees
