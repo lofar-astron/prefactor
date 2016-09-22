@@ -49,7 +49,7 @@ else:
 
 make_matrixplot = True
 source_id  = 0
-show_plot  = True
+show_plot  = False
 
 print "bad SBs:",bad_sblist
 

@@ -50,7 +50,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, sky_cal_path, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, sky_cal_path, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_txts, copy_cal_txts, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
@@ -221,23 +221,23 @@ copy_cal_pngs.control.mapfile_in         =  createmap_cal_pngs.output.mapfile
 copy_cal_pngs.control.inputkey           =  source
 copy_cal_pngs.control.arguments          =  [source,{{ inspection_directory }}]
 
-# generate a mapfile of all the diagnostic pdfs
-createmap_cal_pdfs.control.kind            =   plugin
-createmap_cal_pdfs.control.type            =   createMapfile
-createmap_cal_pdfs.control.method          =   mapfile_from_folder
-createmap_cal_pdfs.control.mapfile_dir     =   input.output.mapfile_dir
-createmap_cal_pdfs.control.filename        =   diagnostic_pdfs.mapfile
-createmap_cal_pdfs.control.folder          =   input.output.working_directory/input.output.job_name
-createmap_cal_pdfs.control.pattern         =   *.pdf
+# generate a mapfile of all the diagnostic txts
+createmap_cal_txts.control.kind            =   plugin
+createmap_cal_txts.control.type            =   createMapfile
+createmap_cal_txts.control.method          =   mapfile_from_folder
+createmap_cal_txts.control.mapfile_dir     =   input.output.mapfile_dir
+createmap_cal_txts.control.filename        =   diagnostic_txts.mapfile
+createmap_cal_txts.control.folder          =   input.output.working_directory/input.output.job_name
+createmap_cal_txts.control.pattern         =   *.txt
 
-# copy the diagnostic pdfs to the inspection directory
-copy_cal_pdfs.control.kind               =  recipe
-copy_cal_pdfs.control.type               =  executable_args
-copy_cal_pdfs.control.executable         =  /bin/cp
-copy_cal_pdfs.control.max_per_node       =  {{ num_proc_per_node_limit }}
-copy_cal_pdfs.control.mapfile_in         =  createmap_cal_pdfs.output.mapfile
-copy_cal_pdfs.control.inputkey           =  source
-copy_cal_pdfs.control.arguments          =  [source,{{ inspection_directory }}]
+# copy the diagnostic txts to the inspection directory
+copy_cal_txts.control.kind               =  recipe
+copy_cal_txts.control.type               =  executable_args
+copy_cal_txts.control.executable         =  /bin/cp
+copy_cal_txts.control.max_per_node       =  {{ num_proc_per_node_limit }}
+copy_cal_txts.control.mapfile_in         =  createmap_cal_txts.output.mapfile
+copy_cal_txts.control.inputkey           =  source
+copy_cal_txts.control.arguments          =  [source,{{ inspection_directory }}]
 
 # create the cal_values_directory if needed
 mk_cal_values_dir.control.kind               =  plugin
