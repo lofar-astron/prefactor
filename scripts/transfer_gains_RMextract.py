@@ -78,7 +78,7 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
        path where we can find or store the IONEX files
     """
     from RMextract import getRM
-    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
+    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
 
     return rmdict
 
