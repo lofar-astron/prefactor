@@ -80,6 +80,23 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
     return rmdict
 
+def input2strlist_nomapfile(invar):
+    """ from bin/download_IONEX.py
+    give the list of MSs from the list provided as a string
+    """
+    str_list = None
+    if type(invar) is str:
+        if invar.startswith('[') and invar.endswith(']'):
+            str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
+        else:
+            str_list = [invar.strip(' \'\"')]
+    elif type(invar) is list:
+        str_list = [str(f).strip(' \'\"') for f in invar]
+    else:
+        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
+    return str_list
+
+
 def main(ms_input, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
          ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
    
@@ -225,22 +242,6 @@ def main(ms_input, store_basename='caldata_transfer', store_directory='.', newpa
         outDB = False
     #return {'transfer_parmDB': newparmDB }
     return {'transfer_parmDB': newparmDBlist }
-
-def input2strlist_nomapfile(invar):
-    """ from bin/download_IONEX.py
-    give the list of MSs from the list provided as a string
-    """
-    str_list = None
-    if type(invar) is str:
-        if invar.startswith('[') and invar.endswith(']'):
-            str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
-        else:
-            str_list = [invar.strip(' \'\"')]
-    elif type(invar) is list:
-        str_list = [str(f).strip(' \'\"') for f in invar]
-    else:
-        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-    return str_list
 
 
 if __name__ == '__main__':
