@@ -247,7 +247,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Create a parmDB with values from the calibrator and rotaton values from RMextract.')
 
-    parser.add_argument('MSfile', type=str, nargs='+',
+    parser.add_argument('MSfiles', type=str, nargs='+',
                         help='One or more MSs for which the IONEX data should be downloaded.')
     parser.add_argument('--server', type=str, default='None',               
                         help='URL of the server to use. (default: None)')
@@ -264,5 +264,5 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
-    main(args.MSfile, store_basename=args.basename, store_directory=args.storedir, newparmdbext=args.extension, 
+    main(args.MSfiles, store_basename=args.basename, store_directory=args.storedir, newparmdbext=args.extension, 
          ionex_server=args.server, ionex_prefix=args.prefix, ionexPath=args.ionexpath)
