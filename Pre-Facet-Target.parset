@@ -65,7 +65,7 @@
 ! get_tgss_skymodel_script = /homea/htb00/htb001/prefactor/scripts/download_tgss_skymodel_target.py
 ! sortmap_script           = /homea/htb00/htb001/prefactor/scripts/sort_times_into_freqGroups.py
 ! check_flagged_script     = /homea/htb00/htb001/prefactor/scripts/check_unflagged_fraction.py
-! structurefunction_script = /cep3home/horneffer/Pre-Facet-Cal/bin/getStructure_from_phases.py
+! structurefunction_script = /homea/htb00/htb001/prefactor/scripts/getStructure_from_phases.py
 ! plotphases_script        = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
 ! losoto_executable        = /opt/cep/losoto/current/bin/losoto
 ! makesourcedb             = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
@@ -76,7 +76,7 @@
 # number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! num_proc_per_node_limit  = 4
 # number of threads per process for NDPPP
-! max_dppp_threads         =  8
+! max_dppp_threads         = 8
 
 # set this to True if you want the pipeline run to continue if single bands fail
 ! error_tolerance           =  False
@@ -122,7 +122,7 @@ trans.control.type              =  pythonplugin
 trans.control.executable        =  {{ transfer_script }}
 trans.control.max_per_node      =  {{ num_proc_per_node }}
 trans.control.error_tolerance   =  {{ error_tolerance }}
-trans.argument.flags            =  [createmap_target.output.mapfile]
+trans.argument.flags            =  [combine_data_target_map.output.mapfile] #in order to make transfer_script work on the whole ms at the same time #[createmap_target.output.mapfile]
 trans.argument.store_basename   =  caldata_transfer
 trans.argument.store_directory  =  {{ cal_values_directory }}
 trans.argument.newparmdbext     =  /instrument_amp_clock_offset
