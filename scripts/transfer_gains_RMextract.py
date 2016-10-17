@@ -248,7 +248,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a parmDB with values from the calibrator and rotaton values from RMextract.')
 
     parser.add_argument('MSfiles', type=str, nargs='+',
-                        help='One or more MSs for which the IONEX data should be downloaded.')
+                        help='One or more MSs for which the parmdb should be created.')
     parser.add_argument('--server', type=str, default='None',               
                         help='URL of the server to use. (default: None)')
     parser.add_argument('--prefix', type=str, default='CODG', 
