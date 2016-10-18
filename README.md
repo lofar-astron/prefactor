@@ -13,22 +13,22 @@ It includes:
 * speed and disk usage improvements by optimized usage of NDPPP
 * (optional) wide-band cleaning in Initial-Subtract 
 * diagnostic plots
-* at least some documentation
+* at least some documentation on the [wiki pages](https://github.com/lofar-astron/prefactor/wiki)
 
 The documentation can be found on the GitHub wiki pages: https://github.com/lofar-astron/prefactor/wiki
 
 There are several pipeline parsets in this repository:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline. 
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline. 
-* Pre-Facet-Cal.parset : The "standard" pipeline, calling first the calibrator and then the target pipelines.
+* Pre-Facet-Cal.parset : One parset calling first the calibrator and then the target pipelines. This is deprecated, please have a look at the [pipeline description](https://github.com/lofar-astron/prefactor/wiki/Documentation%3A-Pipelines#pre-facet-cal)
 * Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
 * Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
 
-Experimental or outdated and thus deprecated are:
-* Pre-Facet-Cal-RawData-Single.parset : Old version of a pre-facet pipeline to work on raw (non NDPPP'ed) data
-* Pre-Facet-Cal-RawData-PreAvg.parset : Old version of a pre-facet pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step. (To reduce the number of files on systems where this is a problem, e.g. JURECA)
+Experimental and thus deprecated for "normal" use are:
 * Pre-Facet-Calibrator-RawSingle.parset : A version of a pre-facet calibrator pipeline to work on raw (non NDPPP'ed) data
-* Pre-Facet-Calibrator-RawCombine.parset : A version of a pre-facet calibrator pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step.
+* Pre-Facet-Calibrator-RawCombine.parset : A version of a pre-facet calibrator pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step. (To reduce the number of files on systems where this is a problem, e.g. JURECA)
+* Pre-Facet-Target-RawSingle.parset : A version of a pre-facet target pipeline to work on raw (non NDPPP'ed) data
+* Pre-Facet-Target-RawCombine.parset : A version of a pre-facet target pipeline to work on raw (non NDPPP'ed) data that does the subband concatenating in the first NDPPP step.
 * Simple-Selfcal.parset : As the name says, an experimental selfcal pipeline.
 
 Software requirements:
