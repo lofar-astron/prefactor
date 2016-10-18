@@ -61,10 +61,10 @@
 
 ## pathes to the scripts etc.
 # #### ToDo: get the scripts onto CEP3 and adjust the pathes here!
+! calibrator_parset        = /homea/htb00/htb001/prefactor/Pre-Facet-Calibrator.parset
+! target_parset            = /homea/htb00/htb001/prefactor/Pre-Facet-Target.parset
 ! calib_cal_parset         = /homea/htb00/htb001/prefactor/parsets/calibcal.parset
 ! find_skymodel_cal_auto   = /homea/htb00/htb001/prefactor/scripts/find_skymodel_cal.py
-! ATeam_predict_parset     = /homea/htb00/htb001/prefactor/parsets/ateamclip.parset
-! gsm_cal_parset           = /homea/htb00/htb001/prefactor/parsets/gsmcal.parset
 ! ATeam_skymodel           = /homea/htb00/htb001/prefactor/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer          = /homea/htb00/htb001/prefactor/scripts/losotoImporter.py
 ! fitclock_script          = /homea/htb00/htb001/prefactor/scripts/fit_clocktec_initialguess_losoto.py
@@ -76,10 +76,12 @@
 ! get_tgss_skymodel_script = /homea/htb00/htb001/prefactor/scripts/download_tgss_skymodel_target.py
 ! sortmap_script           = /homea/htb00/htb001/prefactor/scripts/sort_times_into_freqGroups.py
 ! check_flagged_script     = /homea/htb00/htb001/prefactor/scripts/check_unflagged_fraction.py
-! structurefunction_script = /cep3home/horneffer/Pre-Facet-Cal/bin/getStructure_from_phases.py
+! structurefunction_script = /homea/htb00/htb001/prefactor/scripts/getStructure_from_phases.py
 ! plotphases_script        = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
 ! losoto_executable        = /opt/cep/losoto/current/bin/losoto
-! flagging_strategy        = /opt/cep/lofar/lofar_versions/LOFAR-Release-2_15_2/lofar_build/install/gnu_opt/share/rfistrategies/HBAdefault
+! flagging_strategy        = /homea/htb00/htb003/lofar_jureca_2.17_stack2016a/share/rfistrategies/HBAdefault
+! makesourcedb             = /homea/htb00/htb003/lofar_jureca_2.17_stack2016a/bin/makesourcedb
+
 
 # number of processes to use per step per node
 ! num_proc_per_node        = 10
@@ -97,7 +99,7 @@ pipeline.steps = [calibrator_pipeline, target_pipeline]
 
 # run the calibrator pipeline
 calibrator_pipeline.control.kind                      =  pipeline
-calibrator_pipeline.control.type                      =  Pre-Facet-Calibrator.parset
+calibrator_pipeline.control.type                      =  {{ calibrator_parset }}
 calibrator_pipeline.argument.avg_timestep             =  {{ avg_timestep }}
 calibrator_pipeline.argument.avg_freqstep             =  {{ avg_freqstep }}
 calibrator_pipeline.argument.cal_input_path           =  {{ cal_input_path }}
@@ -123,7 +125,7 @@ calibrator_pipeline.argument.error_tolerance          =  {{ error_tolerance }}
 
 # run the target pipeline
 target_pipeline.control.kind                      =  pipeline
-target_pipeline.control.type                      =  Pre-Facet-Target.parset
+target_pipeline.control.type                      =  {{ target_parset }}
 target_pipeline.argument.avg_timestep             =  {{ avg_timestep }}
 target_pipeline.argument.avg_freqstep             =  {{ avg_freqstep }}
 target_pipeline.argument.target_input_path        =  {{ target_input_path }}
@@ -140,8 +142,6 @@ target_pipeline.argument.ionex_path               =  {{ ionex_path }}
 target_pipeline.argument.flag_baselines           =  {{ flag_baselines }}
 target_pipeline.argument.min_unflagged_fraction   =  {{ min_unflagged_fraction }}
 target_pipeline.argument.reference_station        =  {{ reference_station }}
-target_pipeline.argument.ATeam_predict_parset     =  {{ ATeam_predict_parset }}
-target_pipeline.argument.gsm_cal_parset           =  {{ gsm_cal_parset }}
 target_pipeline.argument.ATeam_skymodel           =  {{ ATeam_skymodel }}
 target_pipeline.argument.losoto_importer          =  {{ losoto_importer }}
 target_pipeline.argument.transfer_script          =  {{ transfer_script }}
@@ -153,6 +153,7 @@ target_pipeline.argument.structurefunction_script =  {{ structurefunction_script
 target_pipeline.argument.plotphases_script        =  {{ plotphases_script }}
 target_pipeline.argument.losoto_executable        =  {{ losoto_executable }}
 target_pipeline.argument.flagging_strategy        =  {{ flagging_strategy }}
+target_pipeline.argument.makesourcedb             =  {{ makesourcedb }}
 target_pipeline.argument.num_proc_per_node        =  {{ num_proc_per_node }}
 target_pipeline.argument.num_proc_per_node_limit  =  {{ num_proc_per_node_limit }}
 target_pipeline.argument.max_dppp_threads         =  {{ max_dppp_threads }}

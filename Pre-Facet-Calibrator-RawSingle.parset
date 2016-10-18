@@ -2,6 +2,7 @@
 #
 # Calibrator part of the Pre-Facet calibration pipeline for raw data:
 # - Works on raw data, that has not been processed with NDPPP before.
+# - requires LOFAR software version >= 2.17
 # - Expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
@@ -20,7 +21,7 @@
 # where to put the files with the calibration values that are to be transferred to the target
 ! cal_values_directory = /media/scratch/test/username/WhereYouWantToStoreTheValuesFromTheCalibrator/
 
-# NDPPP-compatible pattern for baselines or stations to be flagged
+# NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! flag_baselines         = [ CS013HBA* ]
 # name of the station that will be used as a reference for the phase-plots
 ! reference_station      = CS001HBA0
@@ -34,7 +35,7 @@
 ! plotsols_script      = /homea/htb00/htb001/prefactor/scripts/examine_npys.py
 ! fit_XYoffset_script  = /homea/htb00/htb001/prefactor/scripts/find_cal_global_phaseoffset_losoto.py
 ! plotphases_script    = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
-! losoto_executable    = /opt/cep/losoto/current/bin/losoto
+! losoto_executable    = /homea/htb00/htb003/local_jureca/bin/losoto
 
 # number of processes to use per step per node
 ! num_proc_per_node        = 24
@@ -48,7 +49,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_pdfs, copy_cal_pdfs, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_txts, copy_cal_txts, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
@@ -96,7 +97,6 @@ calib_cal.control.type             =  python-calibrate-stand-alone
 calib_cal.control.max_per_node     =  {{ num_proc_per_node }}
 calib_cal.control.error_tolerance  =  {{ error_tolerance }}
 calib_cal.argument.force           =  True
-calib_cal.argument.numthreads      =  5
 calib_cal.argument.observation     =  ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
 calib_cal.argument.parset          =  {{ calib_cal_parset }}
 calib_cal.argument.catalog         =  {{ calibrator_skymodel }}
@@ -209,23 +209,23 @@ copy_cal_pngs.control.mapfile_in         =  createmap_cal_pngs.output.mapfile
 copy_cal_pngs.control.inputkey           =  source
 copy_cal_pngs.control.arguments          =  [source,{{ inspection_directory }}]
 
-# generate a mapfile of all the diagnostic pdfs
-createmap_cal_pdfs.control.kind            =   plugin
-createmap_cal_pdfs.control.type            =   createMapfile
-createmap_cal_pdfs.control.method          =   mapfile_from_folder
-createmap_cal_pdfs.control.mapfile_dir     =   input.output.mapfile_dir
-createmap_cal_pdfs.control.filename        =   diagnostic_pdfs.mapfile
-createmap_cal_pdfs.control.folder          =   input.output.working_directory/input.output.job_name
-createmap_cal_pdfs.control.pattern         =   *.pdf
+# generate a mapfile of all the diagnostic txts
+createmap_cal_txts.control.kind            =   plugin
+createmap_cal_txts.control.type            =   createMapfile
+createmap_cal_txts.control.method          =   mapfile_from_folder
+createmap_cal_txts.control.mapfile_dir     =   input.output.mapfile_dir
+createmap_cal_txts.control.filename        =   diagnostic_txts.mapfile
+createmap_cal_txts.control.folder          =   input.output.working_directory/input.output.job_name
+createmap_cal_txts.control.pattern         =   *.txt
 
-# copy the diagnostic pdfs to the inspection directory
-copy_cal_pdfs.control.kind               =  recipe
-copy_cal_pdfs.control.type               =  executable_args
-copy_cal_pdfs.control.executable         =  /bin/cp
-copy_cal_pdfs.control.max_per_node       =  {{ num_proc_per_node_limit }}
-copy_cal_pdfs.control.mapfile_in         =  createmap_cal_pdfs.output.mapfile
-copy_cal_pdfs.control.inputkey           =  source
-copy_cal_pdfs.control.arguments          =  [source,{{ inspection_directory }}]
+# copy the diagnostic txts to the inspection directory
+copy_cal_txts.control.kind               =  recipe
+copy_cal_txts.control.type               =  executable_args
+copy_cal_txts.control.executable         =  /bin/cp
+copy_cal_txts.control.max_per_node       =  {{ num_proc_per_node_limit }}
+copy_cal_txts.control.mapfile_in         =  createmap_cal_txts.output.mapfile
+copy_cal_txts.control.inputkey           =  source
+copy_cal_txts.control.arguments          =  [source,{{ inspection_directory }}]
 
 # create the cal_values_directory if needed
 mk_cal_values_dir.control.kind               =  plugin

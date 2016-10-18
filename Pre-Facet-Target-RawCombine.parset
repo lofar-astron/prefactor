@@ -1,6 +1,9 @@
 # Pre-Facet Target Calibration Pipeline
 #
-# Target part of the basic Pre-Facet calibration pipeline:
+# Target part of the basic Pre-Facet calibration pipeline
+# This version works on raw (non averaged) data, and combines the MSs in
+# the first NDPPP step
+#
 # - no demixing but A-team flagging,
 # - calibration transfer and averaging of target data in one go.
 # - checks frequncies in MSs to group files
@@ -12,8 +15,8 @@
 ### parameters you will need to adjust.
 # parameters you will need to adjust.
 # averaging for the target data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
+! avg_timestep         = 4   # averaging step needed to average the data to 4 seconds time resolution
+! avg_freqstep         = 16   # averaging step needed to average the data to 4 ch/SB frequency resolution
 # where to find the target data
 ! target_input_path    = /data/scratch/username/PathToYourTargetData/
 ! target_input_pattern = L*.MS
@@ -78,7 +81,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, get_ion_files, trans, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
+pipeline.steps=[mk_inspect_dir, createmap_target, combine_data_target_map, sortmap_target, do_sortmap_target_maps, get_ion_files, trans, ndppp_prep_target, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar, check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, gsmcal_solve, gsmcal_apply, h5_imp_gsmsol_map, h5imp_gsmsol, plot_gsm_phases, gsmcal_antmap, make_structurefunction, old_plot_gsmphases, createmap_plots, copy_plots, mk_results_dir, make_results_mapfile, move_results]
 
 # create the inspection_directory if needed
 mk_inspect_dir.control.kind               =  plugin
@@ -102,6 +105,25 @@ combine_data_target_map.control.mapfile_dir     =   input.output.mapfile_dir
 combine_data_target_map.control.filename        =   combine_data_tar_map.mapfile
 combine_data_target_map.control.mapfile_in      =   createmap_target.output.mapfile
 
+# sort the target data by frequency into groups so that NDPPP can concatenate them
+sortmap_target.control.type               =  pythonplugin  
+sortmap_target.control.executable         =  {{ sortmap_script }}
+sortmap_target.argument.flags             =  [combine_data_target_map.output.mapfile]
+sortmap_target.argument.filename          =  sortmap_target
+sortmap_target.argument.mapfile_dir       =  input.output.mapfile_dir
+sortmap_target.argument.target_path       =  input.output.working_directory/input.output.job_name
+sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
+sortmap_target.argument.NDPPPfill         =  True
+sortmap_target.argument.stepname          =  ndppp_prep_target
+sortmap_target.argument.truncateLastSBs   =  True     # This means that a excess subbands that don't make a full group get discarded
+
+# convert the output of sortmap_target into usable mapfiles
+do_sortmap_target_maps.control.kind              =  plugin
+do_sortmap_target_maps.control.type              =  mapfilenamesFromMapfiles
+do_sortmap_target_maps.control.mapfile_groupmap  =  sortmap_target.output.groupmapfile.mapfile
+do_sortmap_target_maps.control.mapfile_datamap   =  sortmap_target.output.mapfile.mapfile
+do_sortmap_target_maps.control.mapfile_flagmap   =  sortmap_target.output.flagmapfile.mapfile
+
 # get ionex files once for every day that is covered by one of the input MSs
 get_ion_files.control.type            = pythonplugin
 get_ion_files.control.executable      = {{ get_ion_script }}
@@ -117,7 +139,7 @@ trans.control.type              =  pythonplugin
 trans.control.executable        =  {{ transfer_script }}
 trans.control.max_per_node      =  {{ num_proc_per_node }}
 trans.control.error_tolerance   =  {{ error_tolerance }}
-trans.control.mapfile_in        =  createmap_target.output.mapfile
+trans.control.mapfile_in        =  do_sortmap_target_maps.output.datamap
 trans.control.inputkey          =  indata
 trans.argument.flags            =  [indata]
 trans.argument.store_basename   =  caldata_transfer
@@ -131,16 +153,24 @@ trans.argument.ionexPath        =  {{ ionex_path }}
 ndppp_prep_target.control.type                      = dppp
 ndppp_prep_target.control.max_per_node              = {{ num_proc_per_node_limit }}
 ndppp_prep_target.control.error_tolerance           = {{ error_tolerance }}
-ndppp_prep_target.control.mapfiles_in               = [createmap_target.output.mapfile, trans.output.transfer_parmDB.mapfile]
-ndppp_prep_target.control.inputkeys                 = [input_file, parmdb_file]
+ndppp_prep_target.control.mapfile_out               = do_sortmap_target_maps.output.groupmap  # specify the output filenames
+ndppp_prep_target.control.mapfiles_in               = [do_sortmap_target_maps.output.datamap, do_sortmap_target_maps.output.flagmap, trans.output.transfer_parmDB.mapfile]
+ndppp_prep_target.control.inputkeys                 = [input_file,channels_to_flag,parmdb_file]
 ndppp_prep_target.argument.numthreads               = {{ max_dppp_threads }}
 ndppp_prep_target.argument.msin                     = input_file
 ndppp_prep_target.argument.msin.datacolumn          = DATA
 ndppp_prep_target.argument.msin.baseline            = CS*&; RS*&; CS*&RS*
+ndppp_prep_target.argument.msin.missingdata         = True   #\ these two lines will make NDPPP generate dummy data when 
+ndppp_prep_target.argument.msin.orderms             = False  #/ concatenating data
+ndppp_prep_target.argument.msin.autoweight          = True   # recomended for processing raw input data 
 ndppp_prep_target.argument.msout.datacolumn         = DATA
 ndppp_prep_target.argument.msout.writefullresflag   = False
 ndppp_prep_target.argument.msout.overwrite          = True
-ndppp_prep_target.argument.steps                    = [flag1,filter,flagamp,applyclock,applygain,applybeam,applyrotate,count,flag2,count,avg]
+ndppp_prep_target.argument.steps                    = [autoflag,flagedge,flag1,filter,flagamp,aoflag,applyclock,applygain,applybeam,applyrotate,count,flag2,count,avg]
+ndppp_prep_target.argument.autoflag.type            = preflagger
+ndppp_prep_target.argument.autoflag.corrtype        = auto
+ndppp_prep_target.argument.flagedge.type            = preflagger
+ndppp_prep_target.argument.flagedge.chan            = channels_to_flag
 ndppp_prep_target.argument.flag1.type               = preflagger
 ndppp_prep_target.argument.flag1.baseline           = {{ flag_baselines }}
 ndppp_prep_target.argument.filter.type              = filter
@@ -148,16 +178,17 @@ ndppp_prep_target.argument.filter.baseline          = CS*, RS*&&
 ndppp_prep_target.argument.filter.remove            = true                     # fully kick out the international stations.
 ndppp_prep_target.argument.flagamp.type             = preflagger
 ndppp_prep_target.argument.flagamp.amplmin          = 1e-30
+ndppp_prep_target.argument.aoflag.type              = aoflagger
+ndppp_prep_target.argument.aoflag.memoryperc        = 10
+ndppp_prep_target.argument.aoflag.keepstatistics    = false
 ndppp_prep_target.argument.applyclock.type          = applycal
 ndppp_prep_target.argument.applyclock.parmdb        = parmdb_file
 ndppp_prep_target.argument.applyclock.correction    = clock
 ndppp_prep_target.argument.applygain.type           = applycal
 ndppp_prep_target.argument.applygain.parmdb         = parmdb_file
 ndppp_prep_target.argument.applygain.correction     = gain
-ndppp_prep_target.argument.applygain.updateweights  = True
 ndppp_prep_target.argument.applybeam.type           = applybeam
 ndppp_prep_target.argument.applybeam.usechannelfreq = True
-ndppp_prep_target.argument.applybeam.updateweights  = True
 ndppp_prep_target.argument.applyrotate.type         = applycal
 ndppp_prep_target.argument.applyrotate.parmdb       = parmdb_file
 ndppp_prep_target.argument.applyrotate.correction   = commonrotationangle
@@ -215,9 +246,9 @@ predict_ateam.argument.predict.operation         =  replace
 predict_ateam.argument.predict.sourcedb          =  sourcedb
 predict_ateam.argument.predict.sources           =  [VirA_4_patch,CygAGG,CasA_4_patch,TauAGG]
 predict_ateam.argument.predict.usebeammodel      =  True
-# This is run on single subbands, which means that it is ineed "more correct" 
-# to set usechannelfreq to false
-predict_ateam.argument.predict.usechannelfreq  =  false
+# This is run on concatenated subbands, which means that it is ineed needed
+# to set usechannelfreq to True
+predict_ateam.argument.predict.usechannelfreq    =  True
 
 # run the a-team clipper to flag data affected by the a-team
 ateamcliptar.control.kind               =  recipe
@@ -229,70 +260,25 @@ ateamcliptar.control.error_tolerance    =  {{ error_tolerance }}
 ateamcliptar.control.arguments          =  [allms]
 ateamcliptar.control.inputkey           =  allms
 
-# combine all entries into one mapfile, for the sortmap script
-combine_target_map.control.kind            =   plugin
-combine_target_map.control.type            =   createMapfile
-combine_target_map.control.method          =   mapfile_all_to_one
-combine_target_map.control.mapfile_dir     =   input.output.mapfile_dir
-combine_target_map.control.filename        =   combine_tar_map.mapfile
-combine_target_map.control.mapfile_in      =   ndppp_prep_target.output.mapfile
-
-# sort the target data by frequency into groups so that NDPPP can concatenate them
-sortmap_target.control.type               =  pythonplugin  
-sortmap_target.control.executable         =  {{ sortmap_script }}
-sortmap_target.argument.flags             =  [combine_target_map.output.mapfile]
-sortmap_target.argument.filename          =  sortmap_target
-sortmap_target.argument.mapfile_dir       =  input.output.mapfile_dir
-sortmap_target.argument.target_path       =  input.output.working_directory/input.output.job_name
-sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
-sortmap_target.argument.NDPPPfill         =  True
-sortmap_target.argument.stepname          =  dpppconcat
-sortmap_target.argument.truncateLastSBs   =  True     # This means that a excess subbands that don't make a full group get discarded
-
-# convert the output of sortmap_target into usable mapfiles
-do_sortmap_maps.control.kind                      =  plugin
-do_sortmap_maps.control.type                      =  mapfilenamesFromMapfiles
-do_sortmap_maps.control.mapfile_groupmap          =  sortmap_target.output.groupmapfile.mapfile
-do_sortmap_maps.control.mapfile_datamap           =  sortmap_target.output.mapfile.mapfile
-
-# run NDPPP to concatenate the target
-dpppconcat.control.type                   =  dppp
-dpppconcat.control.max_per_node           =  {{ num_proc_per_node_limit }}   
-dpppconcat.control.error_tolerance        =  {{ error_tolerance }}
-dpppconcat.control.mapfile_out            =  do_sortmap_maps.output.groupmap # tell the pipeline to give the output useful names
-dpppconcat.control.mapfiles_in            =  [do_sortmap_maps.output.datamap]
-dpppconcat.control.inputkey               =  msin
-dpppconcat.argument.msin.datacolumn       =  DATA
-dpppconcat.argument.msin.missingdata      =  True    #\ these two lines will make NDPPP generate dummy data when
-dpppconcat.argument.msin.orderms          =  False   #/ concatenating data
-dpppconcat.argument.msout.datacolumn      =  DATA
-dpppconcat.argumentmsout.writefullresflag =  False
-dpppconcat.argument.msout.overwrite       = True
-dpppconcat.argument.steps                 =  [flag]      # run the aoflagger (this used to be an extra step)
-dpppconcat.argument.flag.type             =  aoflagger
-dpppconcat.argument.flag.keepstatistics   =  false
-dpppconcat.argument.flag.memoryperc       =  10
-dpppconcat.argument.flag.strategy         =  {{ flagging_strategy }}
-
 # check all files for minimum unflagged fraction
 check_unflagged.control.type            =  pythonplugin
 check_unflagged.control.executable      =  {{ check_flagged_script }}
-check_unflagged.argument.flags          =  [dpppconcat.output.mapfile]
+check_unflagged.argument.flags          =  [ndppp_prep_target.output.mapfile]
 check_unflagged.argument.min_fraction   =  {{ min_unflagged_fraction }}
 # this step writes hostnames into "check_unflagged.flagged.mapfile" due to a "feature" of the pythonplugin
 
 # prune flagged files from mapfile
-check_unflagged_map.control.kind               =  plugin
-check_unflagged_map.control.type               =  pruneMapfile
-check_unflagged_map.control.mapfile_in         =  check_unflagged.output.flagged.mapfile
-check_unflagged_map.control.mapfile_dir        =  input.output.mapfile_dir
-check_unflagged_map.control.filename           =  check_unflagged_map.mapfile
-check_unflagged_map.control.prune_str          =  None
+check_unflagged_map.control.kind         =  plugin
+check_unflagged_map.control.type         =  pruneMapfile
+check_unflagged_map.control.mapfile_in   =  check_unflagged.output.flagged.mapfile
+check_unflagged_map.control.mapfile_dir  =  input.output.mapfile_dir
+check_unflagged_map.control.filename     =  check_unflagged_map.mapfile
+check_unflagged_map.control.prune_str    =  None
 
 # if wished, download the tgss skymodel for the target
 sky_tar.control.type               =  pythonplugin  
 sky_tar.control.executable         =  {{ get_tgss_skymodel_script }}
-sky_tar.argument.flags             =  [combine_target_map.output.mapfile]
+sky_tar.argument.flags             =  [combine_data_target_map.output.mapfile]
 sky_tar.argument.DoDownload        =  {{ use_tgss_target }}
 sky_tar.argument.SkymodelPath      =  {{ target_skymodel }}
 sky_tar.argument.Radius            =  5. #in degrees
@@ -424,7 +410,7 @@ plot_gsm_phases.argument.LoSoTo.Steps.plot.Prefix     =  {{ inspection_directory
 gsmcal_antmap.control.kind               =  plugin
 gsmcal_antmap.control.type               =  createMapfile
 gsmcal_antmap.control.method             =  add_suffix_to_file
-gsmcal_antmap.control.mapfile_in         =  dpppconcat.output.mapfile
+gsmcal_antmap.control.mapfile_in         =  check_unflagged_map.output.mapfile
 gsmcal_antmap.control.add_suffix_to_file =  /ANTENNA
 gsmcal_antmap.control.mapfile_dir        =  input.output.mapfile_dir
 gsmcal_antmap.control.filename           =  gsmcal_antmaps.mapfile

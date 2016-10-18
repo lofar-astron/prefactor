@@ -1,6 +1,9 @@
 # Pre-Facet Target Calibration Pipeline
 #
-# Target part of the basic Pre-Facet calibration pipeline:
+# Target part of the basic Pre-Facet calibration pipeline
+# This version works on raw (non averaged) data, and combines MSs only
+# after initial round of averaging, flagging and A-team clipping.
+#
 # - no demixing but A-team flagging,
 # - calibration transfer and averaging of target data in one go.
 # - checks frequncies in MSs to group files
@@ -12,8 +15,8 @@
 ### parameters you will need to adjust.
 # parameters you will need to adjust.
 # averaging for the target data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
+! avg_timestep         = 4   # averaging step needed to average the data to 4 seconds time resolution
+! avg_freqstep         = 16   # averaging step needed to average the data to 4 ch/SB frequency resolution
 # where to find the target data
 ! target_input_path    = /data/scratch/username/PathToYourTargetData/
 ! target_input_pattern = L*.MS
@@ -137,15 +140,23 @@ ndppp_prep_target.argument.numthreads               = {{ max_dppp_threads }}
 ndppp_prep_target.argument.msin                     = input_file
 ndppp_prep_target.argument.msin.datacolumn          = DATA
 ndppp_prep_target.argument.msin.baseline            = CS*&; RS*&; CS*&RS*
+ndppp_prep_target.argument.msin.autoweight          = True   # recomended for processing raw input data 
 ndppp_prep_target.argument.msout.datacolumn         = DATA
 ndppp_prep_target.argument.msout.writefullresflag   = False
 ndppp_prep_target.argument.msout.overwrite          = True
-ndppp_prep_target.argument.steps                    = [flag1,filter,flagamp,applyclock,applygain,applybeam,applyrotate,count,flag2,count,avg]
+ndppp_prep_target.argument.steps                    = [autoflag,flagedge,flag1,filter,aoflag,flagamp,applyclock,applygain,applybeam,applyrotate,count,flag2,count,avg]
+ndppp_prep_target.argument.autoflag.type            = preflagger
+ndppp_prep_target.argument.autoflag.corrtype        = auto
+ndppp_prep_target.argument.flagedge.type            = preflagger
+ndppp_prep_target.argument.flagedge.chan            = [0..nchan/32-1,31*nchan/32..nchan-1]  # we are running on a single subband
 ndppp_prep_target.argument.flag1.type               = preflagger
 ndppp_prep_target.argument.flag1.baseline           = {{ flag_baselines }}
 ndppp_prep_target.argument.filter.type              = filter
 ndppp_prep_target.argument.filter.baseline          = CS*, RS*&&
 ndppp_prep_target.argument.filter.remove            = true                     # fully kick out the international stations.
+ndppp_prep_target.argument.aoflag.type              = aoflagger
+ndppp_prep_target.argument.aoflag.memoryperc        = 10
+ndppp_prep_target.argument.aoflag.keepstatistics    = false
 ndppp_prep_target.argument.flagamp.type             = preflagger
 ndppp_prep_target.argument.flagamp.amplmin          = 1e-30
 ndppp_prep_target.argument.applyclock.type          = applycal
@@ -154,10 +165,8 @@ ndppp_prep_target.argument.applyclock.correction    = clock
 ndppp_prep_target.argument.applygain.type           = applycal
 ndppp_prep_target.argument.applygain.parmdb         = parmdb_file
 ndppp_prep_target.argument.applygain.correction     = gain
-ndppp_prep_target.argument.applygain.updateweights  = True
 ndppp_prep_target.argument.applybeam.type           = applybeam
 ndppp_prep_target.argument.applybeam.usechannelfreq = True
-ndppp_prep_target.argument.applybeam.updateweights  = True
 ndppp_prep_target.argument.applyrotate.type         = applycal
 ndppp_prep_target.argument.applyrotate.parmdb       = parmdb_file
 ndppp_prep_target.argument.applyrotate.correction   = commonrotationangle
@@ -166,8 +175,8 @@ ndppp_prep_target.argument.flag2.keepstatistics     = false
 ndppp_prep_target.argument.flag2.memoryperc         = 10
 ndppp_prep_target.argument.flag2.strategy           = {{ flagging_strategy }}
 ndppp_prep_target.argument.avg.type                 = average
-ndppp_prep_target.argument.avg.timestep             = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
-ndppp_prep_target.argument.avg.freqstep             = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+ndppp_prep_target.argument.avg.timestep             = {{ avg_timestep }}
+ndppp_prep_target.argument.avg.freqstep             = {{ avg_freqstep }}
 
 # create a mapfile with the A-Team skymodel, length = 1
 create_ateam_model_map.control.kind              =  plugin
