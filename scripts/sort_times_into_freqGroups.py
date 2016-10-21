@@ -30,6 +30,8 @@ def _calc_edge_chans(inmap, numch, edgeFactor=32):
     return outmap
 
 def input2bool(invar):
+    if invar == None:
+        return None
     if isinstance(invar, bool):
         return invar
     elif isinstance(invar, str):
@@ -43,9 +45,26 @@ def input2bool(invar):
         return bool(invar)
     else:
         raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+  
+def input2int(invar):
+    if invar == None:
+        return None
+    if isinstance(invar, int):
+        return invar
+    elif isinstance(invar, float):
+        return int(invar)
+    elif isinstance(invar, str):
+        if invar.strip().upper() == 'NONE' or invar == 'FALSE':
+            return None
+        else:
+            return int(invar)
+    else:
+        raise TypeError('input2int: Unsupported data type:'+str(type(invar)))
 
+
+    
 def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
-         mergeLastGroup=False, truncateLastSBs=True):
+         mergeLastGroup=False, truncateLastSBs=True, firstSB=None):
     """
     Check a list of MS files for missing frequencies
 
@@ -84,6 +103,10 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         mergeLastGroup = False, truncateLastSBs = False:
           keep inclomplete last group, or - with NDPPPfill=True - fill
           last group with dummies.      
+    firstSB : int, optional
+        If set, then reference the grouping of files to this station-subband. As if a file 
+        with this station-subband would be included in the input files.
+        (For HBA-low, i.e. 0 -> 100MHz, 55 -> 110.74MHz, 512 -> 200MHz)
 
     Returns
     -------
@@ -95,13 +118,15 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     NDPPPfill = input2bool(NDPPPfill)
     mergeLastGroup = input2bool(mergeLastGroup)
     truncateLastSBs = input2bool(truncateLastSBs)
+    firstSB = input2int(firstSB)
+    numSB = int(numSB)
 
     if not filename or not mapfile_dir:
         raise ValueError('sort_times_into_freqGroups: filename and mapfile_dir are needed!')
     if mergeLastGroup and truncateLastSBs:
         raise ValueError('sort_times_into_freqGroups: Can either merge the last partial group or truncate at last full group, not both!')
-    if mergeLastGroup:
-        raise ValueError('sort_times_into_freqGroups: mergeLastGroup is not (yet) implemented!')
+#    if mergeLastGroup:
+#        raise ValueError('sort_times_into_freqGroups: mergeLastGroup is not (yet) implemented!')
     if type(ms_input) is str:
         if ms_input.startswith('[') and ms_input.endswith(']'):
             ms_list = [f.strip(' \'\"') for f in ms_input.strip('[]').split(',')]
@@ -185,31 +210,41 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     filemap = MultiDataMap()
     groupmap = DataMap()
     maxfreq = np.max(freqliste)+freq_width/2.
-    minfreq = np.min(freqliste)-freq_width/2.
-    numFiles = round((maxfreq-minfreq)/freq_width)
-    numSB = int(numSB)
-    if numSB > 0:
-        if truncateLastSBs:
-            ngroups = int(np.floor(numFiles/numSB))
-        else:
-            ngroups = int(np.ceil(numFiles/numSB))
+    if firstSB != None:
+        minfreq = (float(firstSB)/512.*100e6)+100e6-freq_width/2.
+        if np.min(freqliste) < minfreq:
+            raise ValueError('sort_times_into_freqGroups: Frequency of lowest input data is lower than reference frequency!')
     else:
-        ngroups = 1
-        numSB = int(numFiles)
-    if ngroups < 1 :
+        minfreq = np.min(freqliste)-freq_width/2.
+    groupBW = freq_width*numSB
+    if groupBW < 1e6:
+        print 'sort_times_into_freqGroups: ***WARNING***: Bandwidth of concatenated MS is lower than 1 MHz. This may cause conflicts with the concatenated file names!'
+    freqborders = np.arange(minfreq,maxfreq,groupBW)
+    if mergeLastGroup:
+        freqborders[-1] = maxfreq
+    elif truncateLastSBs:
+        pass #nothing to do! # left to make the logic more clear!
+    elif not truncateLastSBs and NDPPPfill:
+        freqborders = np.append(freqborders,(freqborders[-1]+groupBW))
+    elif not truncateLastSBs and not NDPPPfill:
+        freqborders = np.append(freqborders,maxfreq)
+
+    freqborders = freqborders[freqborders>(np.min(freqliste)-groupBW)]
+    ngroups = len(freqborders)-1
+    if ngroups == 0:
         raise ValueError('sort_times_into_freqGroups: Not enough input subbands to create at least one full (frequency-)group!')
-    hostID = 0
+    
     print "sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each."
+
+    hostID = 0
     for time in timestamps:
         (freq,fname) = time_groups[time]['freq_names'].pop(0)
-        for fgroup in range(ngroups):
+        for groupIdx in xrange(ngroups):
             files = []
             skip_this = True
-            for fIdx in range(numSB):
-                if freq > (fIdx+fgroup*numSB+1)*freq_width+minfreq:
-                    if NDPPPfill:
-                        files.append('dummy.ms')
-                else:
+            filefreqs_low = np.arange(freqborders[groupIdx],freqborders[groupIdx+1],freq_width)
+            for lower_freq in filefreqs_low:
+                if freq > lower_freq and freq < lower_freq+freq_width:
                     assert freq!=1e12
                     files.append(fname)
                     if len(time_groups[time]['freq_names'])>0:
@@ -217,15 +252,22 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                     else:
                         (freq,fname) = (1e12,'This_shouldn\'t_show_up')
                     skip_this = False
-            filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
-            freqID = int(((numSB/2.+fgroup*numSB+1)*freq_width+minfreq)/1e6)
-            groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
-            if type(stepname) is str:
-                groupname += stepname
-            if type(target_path) is str:
-                groupname = os.path.join(target_path,os.path.basename(groupname))
-            groupmap.append(DataProduct(hosts[hostID%numhosts],groupname, skip_this))
-
+                elif NDPPPfill:
+                    files.append('dummy.ms')
+            if not skip_this:
+                filemap.append(MultiDataProduct(hosts[hostID%numhosts], files, skip_this))
+                freqID = int((freqborders[groupIdx]+freqborders[groupIdx+1])/2e6)
+                groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
+                if type(stepname) is str:
+                    groupname += stepname
+                if type(target_path) is str:
+                    groupname = os.path.join(target_path,os.path.basename(groupname))
+                groupmap.append(DataProduct(hosts[hostID%numhosts],groupname, skip_this))
+        orphan_files = len(time_groups[time]['freq_names'])
+        if freq < 1e12:
+            orphan_files += 1
+        if orphan_files > 0:
+            print "sort_times_into_freqGroups: Had %d unassigned files in time-group %xt."%(orphan_files, time)
     filemapname = os.path.join(mapfile_dir, filename)
     filemap.save(filemapname)
     groupmapname = os.path.join(mapfile_dir, filename+'_groups')
