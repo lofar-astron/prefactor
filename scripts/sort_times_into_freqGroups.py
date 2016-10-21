@@ -217,6 +217,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     else:
         minfreq = np.min(freqliste)-freq_width/2.
     groupBW = freq_width*numSB
+    if groupBW < 1e6:
+        print 'sort_times_into_freqGroups: ***WARNING***: Bandwidth of concatenated MS is lower than 1 MHz. This may cause conflicts with the concatenated file names!'
     freqborders = np.arange(minfreq,maxfreq,groupBW)
     if mergeLastGroup:
         freqborders[-1] = maxfreq
