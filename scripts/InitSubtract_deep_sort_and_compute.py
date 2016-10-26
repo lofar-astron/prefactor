@@ -286,8 +286,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     low_paddedsize_map = DataMap([])
     numfiles = 0
     nbands = len(bands)
-    if nbands > 4:
+    if nbands > 8:
         nchansout_clean1 = np.int(nbands/4)
+    elif nbands > 4:
+        nchansout_clean1 = np.int(nbands/2)
     else:
         nchansout_clean1 = np.int(nbands)
         
