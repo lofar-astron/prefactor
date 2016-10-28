@@ -61,7 +61,7 @@ def get_SIP_from_MSfile(path, verbose=False):
         if keyname[:strlen] == fileID:
             return sip_cache[keyname]
     if verbose:
-        print "Cannot fine SIP for %s in cache."%(filename)        
+        print "Cannot find SIP for %s in cache."%(filename)        
     obsID = get_obsID_from_filename(filename)
     projectID = get_projectID_from_MSfile(path)
     get_SIPs_from_obsID(obsID, projectID, verbose)
