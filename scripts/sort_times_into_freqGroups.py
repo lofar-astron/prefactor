@@ -64,7 +64,7 @@ def input2int(invar):
 
     
 def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
-         mergeLastGroup=False, truncateLastSBs=True, firstSB=None):
+         mergeLastGroup=False, truncateLastSBs=True, firstSB=None, raw_input=None):
     """
     Check a list of MS files for missing frequencies
 
@@ -277,6 +277,48 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     flagmapname = os.path.join(mapfile_dir, filename+'_flags')
     flagmap.save(flagmapname)
     result = {'mapfile': filemapname, 'groupmapfile': groupmapname, 'flagmapfile': flagmapname}
+
+    # Create a text file with the groupname and all input files that wound up in that file.
+    if raw_input != None and str(raw_input).strip().upper() != 'NONE':
+        if type(raw_input) is str:
+            if raw_input.startswith('[') and raw_input.endswith(']'):
+                raw_list = [f.strip(' \'\"') for f in raw_input.strip('[]').split(',')]
+            else:
+                map_in = DataMap.load(raw_input)
+                map_in.iterator = DataMap.SkipIterator
+                raw_list = []
+                for fname in map_in:
+                    if fname.startswith('[') and fname.endswith(']'):
+                        for f in fname.strip('[]').split(','):
+                            raw_list.append(f.strip(' \'\"'))
+                        else:
+                            raw_list.append(fname.strip(' \'\"'))  
+        elif type(raw_input) is list:
+            raw_list = [str(f).strip(' \'\"') for f in raw_input]
+        else:
+            raise TypeError('sort_times_into_freqGroups: type of "raw_input" unknown!')
+        raw_refstrings = [os.path.splitext(os.path.basename(rawfile))[0] for rawfile in raw_list]
+        textfilename = filename+'_resultmatch.txt'
+        if type(target_path) is str:
+            textfilename = os.path.join(target_path,textfilename)
+        textfile = open(textfilename,'w')
+        for groupidx in xrange(len(groupmap)):
+            textfile.write('%s '%(os.path.basename(groupmap[groupidx].file)))
+            reffiles = filemap[groupidx].file
+            for reffile in reffiles:
+                refstring = os.path.splitext(os.path.basename(reffile))[0]
+                found = False
+                for rawidx in xrange(len(raw_list)):
+                    if refstring == raw_refstrings[rawidx]:
+                        textfile.write('%s '%(raw_list[rawidx]))
+                        found = True
+                        break
+                if not found:
+                    print "sort_times_into_freqGroups: Could not fine matching raw-file for refstring \"%s\"!"%(refstring)
+            textfile.write('\n')
+        textfile.close()
+        result['matchfile'] = textfilename
+                
     return result
 
 class MultiDataProduct(DataProduct):
