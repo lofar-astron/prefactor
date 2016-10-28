@@ -22,6 +22,12 @@ def get_obsID_from_filename(path):
     obsID = obsmatch.group(0)[1:]
     return obsID
 
+def get_SIPs_from_dataID(dpid, projectID, verbose=False):
+    xml = query.getsip_fromlta_byprojectandltadataproductid(projectID, dpid)
+    new_sip = siplib.Sip.from_xml(xml)
+    filename = new_sip.sip.dataProduct.fileName
+    sip_cache[filename] = new_sip        
+
 def get_SIPs_from_obsID(obsID, projectID, verbose=False):
     if verbose:
         print "Downloading all SIPs for \"observation\" %s in project %s."%(obsID, projectID)
@@ -30,10 +36,7 @@ def get_SIPs_from_obsID(obsID, projectID, verbose=False):
         print "get_SIPs_from_obsID: failed to get dataproduct-IDs for obs %s in project %s!"%(obsID, projectID)
     starttime = time.time()
     for (num,input_dpid) in enumerate(dpids):
-        xml = query.getsip_fromlta_byprojectandltadataproductid('LC2_009',input_dpid)
-        new_sip = siplib.Sip.from_xml(xml)
-        filename = new_sip.sip.dataProduct.fileName
-        sip_cache[filename] = new_sip        
+        get_SIPs_from_dataID(input_dpid, projectID, verbose)
         if verbose and ((num+1)%10)==0:
             duration = time.time()-starttime
             ETA = duration/(num+1)*(len(dpids)-num-1)
@@ -46,6 +49,8 @@ def get_projectID_from_MSfile(path):
     return project
             
 def get_SIP_from_MSfile(path, verbose=False):
+    if path[-1] == '/':
+        path = path[:-1]
     filename = os.path.basename(path)
     nameparts = filename.split('.MS')
     if verbose and len(nameparts) < 2:
