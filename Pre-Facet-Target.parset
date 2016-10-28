@@ -248,7 +248,8 @@ sortmap_target.argument.numSB             =  {{ num_SBs_per_group }}
 sortmap_target.argument.NDPPPfill         =  True
 sortmap_target.argument.stepname          =  dpppconcat
 sortmap_target.argument.firstSB           =  None
-sortmap_target.argument.truncateLastSBs   =  True     # This means that a excess subbands that don't make a full group get discarded
+sortmap_target.argument.truncateLastSBs   =  True
+sortmap_target.argument.raw_input         =  combine_data_target_map.output.mapfile
 
 # convert the output of sortmap_target into usable mapfiles
 do_sortmap_maps.control.kind                      =  plugin
