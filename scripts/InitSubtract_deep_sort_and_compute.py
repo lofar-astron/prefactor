@@ -286,12 +286,15 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     low_paddedsize_map = DataMap([])
     numfiles = 0
     nbands = len(bands)
-    if nbands > 4:
+    if nbands > 8:
         nchansout_clean1 = np.int(nbands/4)
+    elif nbands > 4:
+        nchansout_clean1 = np.int(nbands/2)
     else:
         nchansout_clean1 = np.int(nbands)
         
     (freqstep, timestep) = bands[0].get_averaging_steps()
+    (nwavelengths_high, nwavelengths_low) = bands[0].nwavelengths(cellsize_highres_deg, cellsize_lowres_deg, timestep)
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
@@ -310,7 +313,6 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         imsize_low_pad = band.get_optimum_size(int(imsize_low_res*image_padding))
         imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch))
         low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
-        (nwavelengths_high, nwavelengths_low) = band.nwavelengths(cellsize_highres_deg, cellsize_lowres_deg, timestep)
         
         print band.freq/1e6, imsize_high_res, imsize_high_res_stretch, imsize_high_pad, imsize_high_pad_stretch, imsize_low_res, imsize_low_res_stretch, imsize_low_pad, imsize_low_pad_stretch, nwavelengths_high, nwavelengths_low
 

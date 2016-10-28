@@ -60,6 +60,7 @@ def make_empty_parmdb(outname):
     myParmdb.addDefValues("RotationMeasure",1e-6)
     return myParmdb
 
+
 def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     """
     Call getRM() from RMextract to get the RM values for the opbservation,
@@ -77,15 +78,27 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
        path where we can find or store the IONEX files
     """
     from RMextract import getRM
-    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath)
+    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
 
     return rmdict
 
-def main(msname, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
+
+########################################################################
+def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
          ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
 
+    mslist_unfiltered = input2strlist_nomapfile(MSfiles)
+
+    mslist = []
+    for ms in mslist_unfiltered:
+        if os.path.isdir(ms):
+            mslist.append(ms)
+
+    if len(mslist) == 0:
+        raise ValueError("Did not find any existing directory in input MS list!")
+
     # name (path) for parmdb to be written
-    newparmDB = msname+newparmdbext
+    newparmDB = mslist[0]+newparmdbext
 
     # load the numpy arrays written by the previous scripts
     # (filenames constructed in the same way as in these scripts)
@@ -101,13 +114,27 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
     #print "amps shape:",np.shape(amps_array)
     #print "clock shape:",np.shape(clock_array)
 
-    #for ms in mslist: #this script works only on one MS!
-    msinfo = ReadMs(msname)
+    msinfo = ReadMs(mslist[0]) # process first MS
     # this is the same for all antennas
     starttime = msinfo.timepara['start']
     endtime   = msinfo.timepara['end']
-    startfreqs = msinfo.msfreqvalues-msinfo.GetFreqpara('step')/2.
-    endfreqs   = msinfo.msfreqvalues+msinfo.GetFreqpara('step')/2.
+    freqstep  = msinfo.GetFreqpara('step')
+    minfreq   = np.min(msinfo.msfreqvalues)
+    maxfreq   = np.max(msinfo.msfreqvalues)
+
+    for ms in mslist[1:]: 
+        msinfo = ReadMs(ms)
+        # this is the same for all antennas
+        assert starttime == msinfo.timepara['start']
+        assert endtime   == msinfo.timepara['end']
+        assert freqstep  == msinfo.GetFreqpara('step')
+        minfreq   = min(np.min(msinfo.msfreqvalues),minfreq)
+        maxfreq   = max(np.max(msinfo.msfreqvalues),maxfreq)
+
+    freqvalues = np.arange(minfreq, stop=(maxfreq+freqstep), step=freqstep)
+    startfreqs = freqvalues - freqstep/2.
+    endfreqs   = freqvalues + freqstep/2.
+
     ntimes  = 1
     nfreqs  = len(startfreqs)
 
@@ -122,12 +149,11 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
             raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
 
     c = 299792458.0
-    lambdaSquared = (c/msinfo.msfreqvalues)**2
-    # get an array wwith the same size as rmdict['times'] but filled with rmdict['timestep']
+    lambdaSquared = (c/freqvalues)**2
+    # get an array with the same size as rmdict['times'] but filled with rmdict['timestep']
     timesteps = np.full_like(rmdict['times'],rmdict['timestep'])
     # same for frequencies
-    freqsteps = np.full_like(msinfo.msfreqvalues,msinfo.freqpara['step'])
-        
+    freqsteps = np.full_like(freqvalues,freqstep)
 
     outDB = make_empty_parmdb(newparmDB)
 
@@ -140,11 +166,11 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
         amp_cal_00_all = np.median(amps_array[antenna_id,:,:,0],axis=0)
         amp_cal_11_all = np.median(amps_array[antenna_id,:,:,1],axis=0)
         # interpolate to target frequencies
-        amp_cal_00 = np.interp(msinfo.msfreqvalues, freqs_ampl, amp_cal_00_all)
-        amp_cal_11 = np.interp(msinfo.msfreqvalues, freqs_ampl, amp_cal_11_all)
+        amp_cal_00 = np.interp(freqvalues, freqs_ampl, amp_cal_00_all)
+        amp_cal_11 = np.interp(freqvalues, freqs_ampl, amp_cal_11_all)
         # interpolate phases
         phase_cal_00   = 0.
-        phase_cal_11   = np.interp(msinfo.msfreqvalues, freqs_phase, phases_array[:,antenna_id])
+        phase_cal_11   = np.interp(freqvalues, freqs_phase, phases_array[:,antenna_id])
 
         # convert to real and imaginary
         real_00 = amp_cal_00*np.cos(phase_cal_00)
@@ -183,7 +209,7 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
         outDB.addValues('Clock:'+antenna,ValueHolder)
         
         rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
-        newValue = outDB.makeValue(values=rotation_angles, sfreq=msinfo.msfreqvalues, efreq=freqsteps, stime=rmdict['times'], etime=timesteps, asStartEnd=False)
+        newValue = outDB.makeValue(values=rotation_angles, sfreq=freqvalues, efreq=freqsteps, stime=rmdict['times'], etime=timesteps, asStartEnd=False)
         outDB.addValues('CommonRotationAngle:'+antenna,newValue)
 
 
@@ -192,12 +218,32 @@ def main(msname, store_basename='caldata_transfer', store_directory='.', newparm
     return {'transfer_parmDB': newparmDB }
 
 
+########################################################################
+def input2strlist_nomapfile(invar):
+   """ 
+   from bin/download_IONEX.py
+   give the list of MSs from the list provided as a string
+   """
+   str_list = None
+   if type(invar) is str:
+       if invar.startswith('[') and invar.endswith(']'):
+           str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
+       else:
+           str_list = [invar.strip(' \'\"')]
+   elif type(invar) is list:
+       str_list = [str(f).strip(' \'\"') for f in invar]
+   else:
+       raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
+   return str_list
+
+
+########################################################################
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Create a parmDB with values from the calibrator and rotaton values from RMextract.')
 
-    parser.add_argument('MSfile', type=str, nargs='+',
-                        help='One or more MSs for which the IONEX data should be downloaded.')
+    parser.add_argument('MSfiles', type=str, nargs='+',
+                        help='One or more MSs for which the parmdb should be created.')
     parser.add_argument('--server', type=str, default='None',               
                         help='URL of the server to use. (default: None)')
     parser.add_argument('--prefix', type=str, default='CODG', 
@@ -214,12 +260,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    for MS in args.MSfile:
-        print "Working on:", MS
-        #main(MS, args.basename, args.extension, server=args.server, prefix=args.prefix, ionexPath=args.ionexpath)
-        #msinfo = ReadMs(MS)
-        #newparmDB = MS+args.extension
-        #outDB = make_empty_parmdb(newparmDB)
-        #add_COMMONROTATION_vals(outDB, msinfo, args.server, args.prefix, args.ionexpath)
-        main(MS, store_basename=args.basename, store_directory=args.storedir, newparmdbext=args.extension, 
+    MS = args.MSfiles
+    print "Working on:", MS
+    main(MS, store_basename=args.basename, store_directory=args.storedir, newparmdbext=args.extension, 
          ionex_server=args.server, ionex_prefix=args.prefix, ionexPath=args.ionexpath)

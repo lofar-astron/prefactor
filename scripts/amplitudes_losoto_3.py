@@ -49,7 +49,7 @@ else:
 
 make_matrixplot = True
 source_id  = 0
-show_plot  = True
+show_plot  = False
 
 print "bad SBs:",bad_sblist
 
@@ -244,7 +244,7 @@ freqgrid = np.arange(nfreqs)
 SBgrid = np.floor(freqgrid/n_chan)
 SBvals = freqgrid/n_chan
 
-freqs_new  = np.arange(np.min(freqs)+1e3,np.max(freqs)-1e3, 195.3125e3)
+freqs_new  = np.arange(np.min(freqs),np.max(freqs)+100e3, 195.3125e3)
 amps_array_flagged = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 amps_array = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
 minscale = np.zeros( nants )
@@ -360,7 +360,7 @@ if make_matrixplot:
 
 # Smooth the data further
 ampsoutfile = open(calsource + '_amplitude_array.txt','w')
-ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp\n')
+ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
 for antenna_id in range(0,len(amptab.ant[:])):
     amp_xx = np.copy(amps_array_flagged[antenna_id,:,:,0])
     amp_yy = np.copy(amps_array_flagged[antenna_id,:,:,1])
@@ -390,7 +390,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
 
 
     for i in range(0,len(freqs_new)):
-        ampsoutfile.write('%s %s %s %s %s\n'%(amptab.ant[antenna_id], antenna_id,i, np.median(amp_xx[:,i], axis=0), np.median(amp_yy[:,i], axis=0)))
+        ampsoutfile.write('%s %s %s %s %s %s\n'%(amptab.ant[antenna_id], antenna_id, i, np.median(amp_xx[:,i], axis=0), np.median(amp_yy[:,i], axis=0), freqs_new[i]) )
 
     for time in range(0,len(amptab.time[:])):
         amps_array[antenna_id,time,:,0] = np.copy(savitzky_golay(amp_xx[time,:], 17, 2))
