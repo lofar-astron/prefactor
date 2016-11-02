@@ -64,7 +64,7 @@ def input2int(invar):
 
     
 def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPfill=True, target_path=None, stepname=None,
-         mergeLastGroup=False, truncateLastSBs=True, firstSB=None, raw_input=None):
+         mergeLastGroup=False, truncateLastSBs=True, firstSB=None, raw_input=None, results_suffix=None):
     """
     Check a list of MS files for missing frequencies
 
@@ -279,7 +279,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     result = {'mapfile': filemapname, 'groupmapfile': groupmapname, 'flagmapfile': flagmapname}
 
     # Create a text file with the groupname and all input files that wound up in that file.
-    if raw_input != None and str(raw_input).strip().upper() != 'NONE':
+    if raw_input != None and results_suffix != None and str(raw_input).strip().upper() != 'NONE' and str(results_suffix).strip().upper() != 'NONE':
         if type(raw_input) is str:
             if raw_input.startswith('[') and raw_input.endswith(']'):
                 raw_list = [f.strip(' \'\"') for f in raw_input.strip('[]').split(',')]
@@ -303,7 +303,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
             textfilename = os.path.join(target_path,textfilename)
         textfile = open(textfilename,'w')
         for groupidx in xrange(len(groupmap)):
-            textfile.write('%s '%(os.path.basename(groupmap[groupidx].file)))
+            resultsfile = os.path.splitext(os.path.basename(groupmap[groupidx].file))[0] + results_suffix
+            textfile.write('%s '%(resultsfile))
             reffiles = filemap[groupidx].file
             for reffile in reffiles:
                 refstring = os.path.splitext(os.path.basename(reffile))[0]

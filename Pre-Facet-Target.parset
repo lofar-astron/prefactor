@@ -250,6 +250,7 @@ sortmap_target.argument.stepname          =  dpppconcat
 sortmap_target.argument.firstSB           =  None
 sortmap_target.argument.truncateLastSBs   =  True
 sortmap_target.argument.raw_input         =  combine_data_target_map.output.mapfile
+sortmap_target.argument.results_suffix    =  .pre-cal.ms
 
 # convert the output of sortmap_target into usable mapfiles
 do_sortmap_maps.control.kind                      =  plugin
