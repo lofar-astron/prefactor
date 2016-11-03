@@ -5,12 +5,18 @@ import sys, os, time
 import siplib
 import query
 import re
+import cPickle
 
 import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 sip_cache = {}
+
+sip_cache_file = '/media/scratch/test/horneff/Pipeline-Test/feedback_test/sip_cache.pkl'
+if os.path.exists(sip_cache_file):
+    with open(sip_cache_file) as f:
+        sip_cache = cPickle.load(f)
 
 def get_obsID_from_filename(path):
     filename = os.path.basename(path)
@@ -59,16 +65,23 @@ def get_SIP_from_MSfile(path, verbose=False):
     strlen = len(fileID)
     for keyname in sip_cache.keys():
         if keyname[:strlen] == fileID:
+            if verbose:
+                print "Found SIP for %s in the cache"%(fileID)
             return sip_cache[keyname]
     if verbose:
         print "Cannot find SIP for %s in cache."%(filename)        
     obsID = get_obsID_from_filename(filename)
     projectID = get_projectID_from_MSfile(path)
     get_SIPs_from_obsID(obsID, projectID, verbose)
+    if os.path.isdir(os.path.dirname(sip_cache_file)) and os.access(os.path.dirname(sip_cache_file),os.W_OK):
+        with open(sip_cache_file,'w') as f:
+            cPickle.dump(sip_cache,f,2)
     for keyname in sip_cache.keys():
         if keyname[:strlen] == fileID:
+            if verbose:
+                print "Found SIP for %s in the updated cache"%(fileID)
             return sip_cache[keyname]
-    print "Cannot fine SIP for %s in cache after downloading SIPs for obs %s!"%(filename, obsID)
+    print "Cannot find SIP for %s in cache after downloading SIPs for obs %s!"%(filename, obsID)
     raise ValueError("Failed to download or identify SIP!")
 
     
