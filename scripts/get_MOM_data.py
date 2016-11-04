@@ -15,9 +15,27 @@ sip_cache = {}
 
 sip_cache_file = '/media/scratch/test/horneff/Pipeline-Test/feedback_test/sip_cache.pkl'
 if os.path.exists(sip_cache_file):
+    print "Reading in SIP-cache..."
     with open(sip_cache_file) as f:
         sip_cache = cPickle.load(f)
+    print "                    ...Finished"
 
+def get_dataID_from_filename(path, project, verbose=False):
+    from common.database.Context import context
+    from awlofar.config.startup import CorrelatedDataProduct,UnspecifiedDataProduct
+    filename = os.path.basename(path)
+    context.set_project(project)
+    query = CorrelatedDataProduct.dataProductIdentifierName == filename
+    for dprod in query:
+        if verbose:
+            print "Found dataID %s for file %s in Correlated-DataProducts"%(dprod.dataProductIdentifier,filename)
+        return dprod.dataProductIdentifier
+    query2 = UnspecifiedDataProduct.dataProductIdentifierName == filename
+    for dprod in query2:
+        if verbose:
+            print "Found dataID %s for file %s in Unspecified-DataProducts"%(dprod.dataProductIdentifier,filename)
+        return dprod.dataProductIdentifier    
+    
 def get_obsID_from_filename(path):
     filename = os.path.basename(path)
     obsReg = re.compile(r'L\d+')

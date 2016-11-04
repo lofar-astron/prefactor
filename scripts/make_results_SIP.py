@@ -48,6 +48,33 @@ def get_dataproducts_from_feedback(infile):
     return dataproducts
 
 
+def get_pipeline_out_of_my_ass(input_dpids):
+    new_pipeline = siplib.SimplePipeline(
+        siplib.PipelineMap(
+            name="prefactor",
+            version="2.0",
+            sourcedata_identifiers=input_dpids,
+            sourcedata_source="catalog",
+            process_map=siplib.ProcessMap(
+                strategyname="strategy1",
+                strategydescription="awesome strategy",
+                starttime="1980-03-23T10:20:15",
+                duration= "P6Y3M10DT15H",
+                observation_source="SAS",
+                observation_id="SAS VIC Tree Id",
+                process_source="Leiden",
+                process_id="prefactor_1",
+                relations=[
+                    siplib.ProcessRelation(
+                        identifier_source="source",
+                        identifier="whyisthismandatory?")]
+            )
+        )
+    )
+    return new_pipeline
+
+
+
 def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
     """
     Generate SIP files for all files mentioned in "results_feedback"
@@ -85,13 +112,19 @@ def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
             project_coinvestigators=mom_sip.sip.project.coInvestigator,
             dataproduct = product
         )
-        newsip.add_observation(mom_sip.sip.observation[0])
+        # the following a) doesn't work and b) doesn't seem to be neccessary because
+        # the obsevation is included in the SIPs we add
+        #newsip.add_observation(mom_sip.sip.observation[0])
         newsip.add_related_dataproduct_with_history(mom_sip)
+        input_dpids = [ mom_sip.sip.dataProduct.dataProductIdentifier.identifier ]
         for input in file_matching[product_name][1:]:
             mom_sip = MOM.get_SIP_from_MSfile(input, verbose=verbose)
             newsip.add_related_dataproduct_with_history(mom_sip)
+            input_dpids.append( mom_sip.sip.dataProduct.dataProductIdentifier.identifier )
+        newsip.add_pipelinerun(
+        )
         
-        newsip.getprettyxml()
+        print "Length of \"prettyxml\": %d"%( len(newsip.get_prettyxml()) )
         newsip.save_to_file('example-sip.xml')
         if verbose:
             import visualizer
@@ -116,43 +149,3 @@ if __name__ == '__main__':
     match_file = args.Matchfile
 
     main(match_file, results_file, verbose = True, fail_on_error = False)
-
-
-########################################## old stuff, that I don't want to remove yet. !!!
-
-
-def match_dataproducts(results_list, input_list):
-    """
-    Mates dataproducts from input_list to those in results_list.
-
-    An input dataproduct from matches an output dataproduct if:
-    - the centralFrequency of the input is within the bandwitdh on the result
-      (bandwidth = centralFrequency +/- channelsPerSubband * channelWidth / 2.)
-    - the startTime of the result is not before the startTime of the input and
-      before "startTime + duration" of the input 
-    """
-    print "Matching %d result files and %d input files"%(len(results_list), len(input_list))
-
-    input_freqs       = []
-    input_start_times = []
-    input_end_times   = []
-    for dataprod in input_list:
-        input_freqs.append( dataprod.get_pyxb_dataproduct().centralFrequency.value() )
-        input_start_times.append( time.mktime(dataprod.get_pyxb_dataproduct().startTime.timetuple()) )
-        input_end_times.append( time.mktime((dataprod.get_pyxb_dataproduct().startTime+dataprod.get_pyxb_dataproduct().duration).timetuple()) )
-    
-    matched_list = []
-    for result in results_list:
-        bw = result.get_pyxb_dataproduct().channelsPerSubband*result.get_pyxb_dataproduct().channelWidth.value()
-        start_freq = result.get_pyxb_dataproduct().centralFrequency.value() - bw/2.
-        end_freq = result.get_pyxb_dataproduct().centralFrequency.value() + bw/2.
-        start_time = time.mktime(result.get_pyxb_dataproduct().startTime.timetuple())
-        match_this = []
-        for idx in xrange(len(input_list)):
-            if (input_freqs[idx] >= start_freq and input_freqs[idx] < end_freq and 
-                input_start_times[idx] <= start_time and input_end_times[idx] > start_time ):
-                match_this.append(input_list[idx])
-        if len(match_this) == 0:
-            print 'Did not find matching input files for:',result.get_pyxb_dataproduct().fileName
-        matched_list.append(match_this)
-    return matched_list
