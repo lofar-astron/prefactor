@@ -5,6 +5,7 @@ import siplib
 import feedback
 import time
 import get_MOM_data as MOM
+import uuid
 
 def input2bool(invar):
     if invar == None:
@@ -48,13 +49,13 @@ def get_dataproducts_from_feedback(infile):
     return dataproducts
 
 
-def get_pipeline_out_of_my_ass(input_dpids):
+def get_pipeline_out_of_my_ass(pipeline_ID, input_dpids,input_dp_source):
     new_pipeline = siplib.SimplePipeline(
         siplib.PipelineMap(
             name="prefactor",
             version="2.0",
             sourcedata_identifiers=input_dpids,
-            sourcedata_source="catalog",
+            sourcedata_source=input_dp_source,
             process_map=siplib.ProcessMap(
                 strategyname="strategy1",
                 strategydescription="awesome strategy",
@@ -63,7 +64,7 @@ def get_pipeline_out_of_my_ass(input_dpids):
                 observation_source="SAS",
                 observation_id="SAS VIC Tree Id",
                 process_source="Leiden",
-                process_id="prefactor_1",
+                process_id=pipeline_ID,
                 relations=[
                     siplib.ProcessRelation(
                         identifier_source="source",
@@ -102,7 +103,12 @@ def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
                 raise ValueError("make_results_SIP: Could not find a file in matching list")
             else:
                 continue
-        mom_sip = MOM.get_SIP_from_MSfile(file_matching[product_name][0], verbose=verbose)        
+        # generate IDs for the objects we are going to create new
+        product_ID = "data"+str(uuid.uuid4())
+        pipeline_ID = "pipe"+str(uuid.uuid4())
+        product.get_pyxb_dataproduct().dataProductIdentifier.identifier = product_ID
+        product.get_pyxb_dataproduct().processIdentifier.identifier = pipeline_ID
+        mom_sip = MOM.get_SIP_from_MSfile(file_matching[product_name][0], verbose=verbose)
         newsip = siplib.Sip(
             project_code=mom_sip.sip.project.projectCode,
             project_primaryinvestigator=mom_sip.sip.project.primaryInvestigator,
@@ -117,18 +123,20 @@ def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
         #newsip.add_observation(mom_sip.sip.observation[0])
         newsip.add_related_dataproduct_with_history(mom_sip)
         input_dpids = [ mom_sip.sip.dataProduct.dataProductIdentifier.identifier ]
+        input_dp_source = mom_sip.sip.dataProduct.dataProductIdentifier.source
         for input in file_matching[product_name][1:]:
             mom_sip = MOM.get_SIP_from_MSfile(input, verbose=verbose)
             newsip.add_related_dataproduct_with_history(mom_sip)
             input_dpids.append( mom_sip.sip.dataProduct.dataProductIdentifier.identifier )
-        newsip.add_pipelinerun(
-        )
+        new_pipeline = get_pipeline_out_of_my_ass(pipeline_ID,input_dpids,input_dp_source)
+        newsip.add_pipelinerun(new_pipeline )
         
         print "Length of \"prettyxml\": %d"%( len(newsip.get_prettyxml()) )
         newsip.save_to_file('example-sip.xml')
         if verbose:
             import visualizer
             visualizer.visualize_sip(newsip, path="example-sip.visualization")
+    return newsip
 
 
 if __name__ == '__main__':
