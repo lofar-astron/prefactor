@@ -4,6 +4,7 @@ import os,sys
 import siplib
 import feedback
 import time
+import numpy as np
 import get_MOM_data as MOM
 import uuid
 
@@ -50,7 +51,7 @@ def get_dataproducts_from_feedback(infile):
 
 
 def get_pipeline_out_of_my_ass(pipeline_ID, input_dpids,input_dp_source):
-    new_pipeline = siplib.SimplePipeline(
+    new_pipeline = siplib.CalibrationPipeline(
         siplib.PipelineMap(
             name="prefactor",
             version="2.0",
@@ -68,13 +69,39 @@ def get_pipeline_out_of_my_ass(pipeline_ID, input_dpids,input_dp_source):
                 relations=[
                     siplib.ProcessRelation(
                         identifier_source="source",
-                        identifier="whyisthismandatory?")]
+                        identifier="whyisthismandatory?")],
+                parset_source=None,
+                parset_id=None
             )
-        )
+        ),
+        skymodeldatabase='prefactor Scaife&Heald',
+        numberofinstrumentmodels=1,
+        numberofcorrelateddataproducts=0,
+        frequencyintegrationstep=None,
+        timeintegrationstep=None,
+        flagautocorrelations=None,
+        demixing=None
     )
     return new_pipeline
 
 
+def get_LTA_frequency_in_Hz(LTAfreq):
+    frequency = LTAfreq.value()
+    if LTAfreq.units == 'kHz':
+        frequency *= 1000.
+    elif LTAfreq.units == 'MHz':
+        frequency *= 1e6
+    return frequency
+
+def get_LTA_Time_in_s(LTAtime):
+    timelength = LTAtime.value()
+    if LTAtime.units == 'ms':
+        timelength /= 1e3
+    elif LTAtime.units == 'us':
+        timelength /= 1e6
+    elif LTAtime.units == 'ns':
+        timelength /= 1e9
+    return timelength
 
 def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
     """
@@ -106,9 +133,14 @@ def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
         # generate IDs for the objects we are going to create new
         product_ID = "data"+str(uuid.uuid4())
         pipeline_ID = "pipe"+str(uuid.uuid4())
-        product.get_pyxb_dataproduct().dataProductIdentifier.identifier = product_ID
-        product.get_pyxb_dataproduct().processIdentifier.identifier = pipeline_ID
+        product.set_identifier('prefactor_test',product_ID)
+        product.set_process_identifier('prefactor_test',pipeline_ID)
+        # Take the SIP of the first input file and fill in needed values
         mom_sip = MOM.get_SIP_from_MSfile(file_matching[product_name][0], verbose=verbose)
+        product.set_subarraypointing_identifier(
+            mom_sip.sip.dataProduct.subArrayPointingIdentifier.source,
+            mom_sip.sip.dataProduct.subArrayPointingIdentifier.identifier
+        )
         newsip = siplib.Sip(
             project_code=mom_sip.sip.project.projectCode,
             project_primaryinvestigator=mom_sip.sip.project.primaryInvestigator,
@@ -128,6 +160,13 @@ def main(matchfile, results_feedback, verbose = False, fail_on_error = True):
             mom_sip = MOM.get_SIP_from_MSfile(input, verbose=verbose)
             newsip.add_related_dataproduct_with_history(mom_sip)
             input_dpids.append( mom_sip.sip.dataProduct.dataProductIdentifier.identifier )
+        # Compute values for the pipeline definition
+        input_chan = get_LTA_frequency_in_Hz(mom_sip.sip.dataProduct.channelWidth)
+        output_chan = get_LTA_frequency_in_Hz(product.get_pyxb_dataproduct().channelWidth)
+        freqstep = int(np.round(output_chan/input_chan))
+        input_int =  get_LTA_Time_in_s(mom_sip.sip.dataProduct.integrationInterval)
+        output_int = get_LTA_Time_in_s(product.get_pyxb_dataproduct().integrationInterval)
+        timestep = int(np.round(output_int/input_int))
         new_pipeline = get_pipeline_out_of_my_ass(pipeline_ID,input_dpids,input_dp_source)
         newsip.add_pipelinerun(new_pipeline )
         
