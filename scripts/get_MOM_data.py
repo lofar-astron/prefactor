@@ -13,12 +13,24 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 sip_cache = {}
 
-sip_cache_file = '/media/scratch/test/horneff/Pipeline-Test/feedback_test/sip_cache.pkl'
-if os.path.exists(sip_cache_file):
-    print "Reading in SIP-cache..."
-    with open(sip_cache_file) as f:
-        sip_cache = cPickle.load(f)
-    print "                    ...Finished"
+#sip_cache_file = '/media/scratch/test/horneff/Pipeline-Test/feedback_test/sip_cache.pkl'
+sip_cache_file = None
+
+def init_cache(cache_file, create_if_needed=False):
+    global sip_cache_file
+    global sip_cache
+    if os.path.exists(cache_file):
+        print "Reading in SIP-cache..."
+        with open(cache_file) as f:
+            sip_cache = cPickle.load(f)
+        print "Found %d SIPs in cache-file."%(len(sip_cache))
+        sip_cache_file = cache_file
+    elif (create_if_needed
+          and os.path.isdir(os.path.dirname(cache_file))
+          and os.access(os.path.dirname(cache_file),os.W_OK) ):
+        sip_cache_file = cache_file
+    else:
+        raise ValueError("init_cache: cache-file does not exist!")
 
 def get_dataID_from_filename(path, project, verbose=False):
     from common.database.Context import context
@@ -47,6 +59,7 @@ def get_obsID_from_filename(path):
     return obsID
 
 def get_SIPs_from_dataID(dpid, projectID, verbose=False):
+    global sip_cache
     xml = query.getsip_fromlta_byprojectandltadataproductid(projectID, dpid)
     new_sip = siplib.Sip.from_xml(xml)
     filename = new_sip.sip.dataProduct.fileName
@@ -72,7 +85,7 @@ def get_projectID_from_MSfile(path):
     project = t.getcell('PROJECT',0)
     return project
             
-def get_SIP_from_MSfile(path, verbose=False):
+def get_SIP_from_MSfile(path, download_if_needed=True, verbose=False):
     if path[-1] == '/':
         path = path[:-1]
     filename = os.path.basename(path)
@@ -87,11 +100,13 @@ def get_SIP_from_MSfile(path, verbose=False):
                 print "Found SIP for %s in the cache"%(fileID)
             return sip_cache[keyname]
     if verbose:
-        print "Cannot find SIP for %s in cache."%(filename)        
+        print "Cannot find SIP for %s in cache."%(filename)
+    if not download_if_needed:
+        raise ValueError("Cannot find SIP in cache and download is forbidden")
     obsID = get_obsID_from_filename(filename)
     projectID = get_projectID_from_MSfile(path)
     get_SIPs_from_obsID(obsID, projectID, verbose)
-    if os.path.isdir(os.path.dirname(sip_cache_file)) and os.access(os.path.dirname(sip_cache_file),os.W_OK):
+    if  sip_cache_file:
         with open(sip_cache_file,'w') as f:
             cPickle.dump(sip_cache,f,2)
     for keyname in sip_cache.keys():
