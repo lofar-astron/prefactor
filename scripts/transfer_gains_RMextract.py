@@ -79,6 +79,12 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     """
     from RMextract import getRM
     rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
+    if not rmdict:
+        if not ionex_server:
+            raise ValueError("One or more IONEX files is not found on disk and download is disabled!\n"
+                             "(You can run \"bin/download_IONEX.py\" outside the pipeline if needed.)")
+        else:
+            raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
 
     return rmdict
 
@@ -142,11 +148,6 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
     if ionex_server.strip(' []\'\"').lower() == 'none':
         ionex_server = None
     rmdict = get_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath)
-    if not rmdict:
-        if not ionex_server:
-            raise ValueError("One or more IONEX files is not found on disk and download is disabled!")
-        else:
-            raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
 
     c = 299792458.0
     lambdaSquared = (c/freqvalues)**2

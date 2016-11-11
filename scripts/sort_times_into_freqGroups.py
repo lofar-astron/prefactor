@@ -209,7 +209,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     #the new output map
     filemap = MultiDataMap()
     groupmap = DataMap()
-    maxfreq = np.max(freqliste)+freq_width/2.
+    # add 1% of the SB badwidth in case maxfreq might be "exactly" on a group-border
+    maxfreq = np.max(freqliste)+freq_width*0.51
     if firstSB != None:
         minfreq = (float(firstSB)/512.*100e6)+100e6-freq_width/2.
         if np.min(freqliste) < minfreq:
