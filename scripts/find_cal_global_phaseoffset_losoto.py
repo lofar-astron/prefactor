@@ -4,6 +4,7 @@
 #
 # Written by Wendy Williams, 9 Jan 2015     (original version)
 #         by Andreas Horneffer, 12 Oct 2015 (losoto, pythonplugin)
+#         by Andreas Horneffer, 14 Nov 2016 (flagging)
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -97,13 +98,19 @@ def smooth_array(x, axis=0,window_len=11,window='hanning'):
         y[:,i] = yi
     return y
 
-def main(losotoname, store_basename, refstationID=2, sourceID=0):
+def main(losotoname, store_basename, refstationID=2, sourceID=0, doFlagging=False):
     # station-ID 2 is more likely to be on the superterp
     # I don't imagine someone would use a sourceID != 0
     inh5parm = h5parm(losotoname ,readonly=True)
     phasetab = inh5parm.getSoltab('sol000','phase000')
     phases_tmp = np.copy(phasetab.val)
     freqs = np.copy(phasetab.freq)
+    if doFlagging:
+        # flag frequencies where all phases of all stations are identical to zero
+        phases_zero = phases_tmp == 0.
+        freq_mask = np.logical_not(np.all(phases_zero,(0,1,2,4)))
+        phases_tmp = phases_tmp[:,:,:,freq_mask,:]
+        freqs = freqs[freq_mask]
     stationsnames = [ stat for stat in phasetab.ant]
     # this gets the subband number to any given frequency in HBA-low
     subbands = np.unique(np.round(freqs/195.3125e3-512.))
