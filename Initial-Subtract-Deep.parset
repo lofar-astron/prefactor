@@ -243,7 +243,7 @@ createmap_high2_deep_image.control.kind              =   plugin
 createmap_high2_deep_image.control.type              =   createMapfile
 createmap_high2_deep_image.control.method            =   mapfile_from_folder
 createmap_high2_deep_image.control.mapfile_dir       =   input.output.mapfile_dir
-createmap_high2_deep_image.control.filename          =   wsclean_high1_deep_image.mapfile
+createmap_high2_deep_image.control.filename          =   wsclean_high2_deep_image.mapfile
 createmap_high2_deep_image.control.folder            =   input.output.working_directory/input.output.job_name
 createmap_high2_deep_image.control.pattern           =   *wsclean_high2_deep-MFS-image.fits
 
@@ -262,7 +262,7 @@ createmap_high2_deep_model_bands.control.kind                    =   plugin
 createmap_high2_deep_model_bands.control.type                    =   createMapfile
 createmap_high2_deep_model_bands.control.method                  =   mapfile_from_folder
 createmap_high2_deep_model_bands.control.mapfile_dir             =   input.output.mapfile_dir
-createmap_high2_deep_model_bands.control.filename                =   high2_deep_image_bands.mapfile
+createmap_high2_deep_model_bands.control.filename                =   high2_deep_model_bands.mapfile
 createmap_high2_deep_model_bands.control.folder                  =   input.output.working_directory/input.output.job_name
 createmap_high2_deep_model_bands.control.pattern                 =   *wsclean_high2_deep-0*-model.fits
 
@@ -465,7 +465,7 @@ createmap_low2_deep_image.control.kind              =   plugin
 createmap_low2_deep_image.control.type              =   createMapfile
 createmap_low2_deep_image.control.method            =   mapfile_from_folder
 createmap_low2_deep_image.control.mapfile_dir       =   input.output.mapfile_dir
-createmap_low2_deep_image.control.filename          =   wsclean_low1_deep_image.mapfile
+createmap_low2_deep_image.control.filename          =   wsclean_low2_deep_image.mapfile
 createmap_low2_deep_image.control.folder            =   input.output.working_directory/input.output.job_name
 createmap_low2_deep_image.control.pattern           =   *wsclean_low2_deep-MFS-image.fits
 
@@ -483,7 +483,7 @@ createmap_low2_deep_model_bands.control.kind                    =   plugin
 createmap_low2_deep_model_bands.control.type                    =   createMapfile
 createmap_low2_deep_model_bands.control.method                  =   mapfile_from_folder
 createmap_low2_deep_model_bands.control.mapfile_dir             =   input.output.mapfile_dir
-createmap_low2_deep_model_bands.control.filename                =   low2_deep_image_bands.mapfile
+createmap_low2_deep_model_bands.control.filename                =   low2_deep_model_bands.mapfile
 createmap_low2_deep_model_bands.control.folder                  =   input.output.working_directory/input.output.job_name
 createmap_low2_deep_model_bands.control.pattern                 =   *wsclean_low2_deep-0*-model.fits
 
