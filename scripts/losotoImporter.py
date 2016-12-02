@@ -313,7 +313,7 @@ def parmDBs2h5parm(h5parmName,parmDBs,antennaFile,fieldFile,skydbFile=None,compr
 
     dirs = []
     for tab in solset._v_children:
-        c = solset._f_getChild(tab)
+        c = solset._f_get_child(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
             dirs.extend(list(set(c.dir)))
     # remove duplicates
