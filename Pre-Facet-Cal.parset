@@ -67,6 +67,7 @@
 ! find_skymodel_cal_auto   = /homea/htb00/htb001/prefactor/scripts/find_skymodel_cal.py
 ! ATeam_skymodel           = /homea/htb00/htb001/prefactor/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer          = /homea/htb00/htb001/prefactor/scripts/losotoImporter.py
+! get_ion_script           = /homea/htb00/htb001/prefactor/bin/download_IONEX.py
 ! fitclock_script          = /homea/htb00/htb001/prefactor/scripts/fit_clocktec_initialguess_losoto.py
 ! fitamps_script           = /homea/htb00/htb001/prefactor/scripts/amplitudes_losoto_3.py
 ! plotsols_script          = /homea/htb00/htb001/prefactor/scripts/examine_npys.py
@@ -139,6 +140,7 @@ target_pipeline.argument.results_directory        =  {{ results_directory }}
 target_pipeline.argument.ionex_server             =  {{ ionex_server }}
 target_pipeline.argument.ionex_prefix             =  {{ ionex_prefix }}
 target_pipeline.argument.ionex_path               =  {{ ionex_path }}
+target_pipeline.argument.get_ion_script           =  {{ get_ion_script }}
 target_pipeline.argument.flag_baselines           =  {{ flag_baselines }}
 target_pipeline.argument.min_unflagged_fraction   =  {{ min_unflagged_fraction }}
 target_pipeline.argument.reference_station        =  {{ reference_station }}

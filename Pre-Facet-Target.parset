@@ -131,7 +131,7 @@ trans.argument.ionexPath        =  {{ ionex_path }}
 ndppp_prep_target.control.type                      = dppp
 ndppp_prep_target.control.max_per_node              = {{ num_proc_per_node_limit }}
 ndppp_prep_target.control.error_tolerance           = {{ error_tolerance }}
-ndppp_prep_target.control.mapfiles_in               = [createmap_target.output.mapfile, trans.output.transfer_parmDB.mapfile]
+ndppp_prep_target.control.mapfiles_in               = [createmap_target.output.mapfile,trans.output.transfer_parmDB.mapfile]
 ndppp_prep_target.control.inputkeys                 = [input_file, parmdb_file]
 ndppp_prep_target.argument.numthreads               = {{ max_dppp_threads }}
 ndppp_prep_target.argument.msin                     = input_file
@@ -200,7 +200,7 @@ expand_sourcedb_ateam.control.filename           =  expand_sourcedb_ateam.datama
 
 # Predict, corrupt, and predict the ateam-resolution model, length = nfiles
 predict_ateam.control.type                       =  dppp
-predict_ateam.control.mapfiles_in                =  [ndppp_prep_target.output.mapfile, expand_sourcedb_ateam.output.mapfile]
+predict_ateam.control.mapfiles_in                =  [ndppp_prep_target.output.mapfile,expand_sourcedb_ateam.output.mapfile]
 predict_ateam.control.inputkeys                  =  [msin,sourcedb]
 predict_ateam.control.inplace                    =  True
 predict_ateam.control.max_per_node               =  {{ num_proc_per_node_limit }}
