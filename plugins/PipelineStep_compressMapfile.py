@@ -1,21 +1,20 @@
 import os
-from lofarpipe.support.data_map import DataMap
-from lofarpipe.support.data_map import DataProduct
+from lofarpipe.support.data_map import DataMap, DataProduct
 
 
 def plugin_main(args, **kwargs):
     """
-    Copies each entry of mapfile_in as often as the the length of the corresponding
-    group into a new mapfile
+    Makes a multi-mapfile by compressing input mapfile items
 
     Parameters
     ----------
     mapfile_in : str
-        Name of the input mapfile to be expanded. (E.g. with the skymodels for the
-        different groups.)
-    mapfile_groups : str
-        Name of the multi-mapfile with the given groups. Number of groups need
-        to be the same as the number of files in mapfile_in.
+        Filename of datamap containing MS files
+    nitems_to_compress: int
+        Number of input items to compress into each output item. Set to zero or
+        negative number to compress all input items to a single output item
+        (default = -1). If greater than 0, the input map must have only one file
+        per group (i.e., it must be a normal DataMap)
     mapfile_dir : str
         Directory for output mapfile
     filename: str
@@ -24,29 +23,59 @@ def plugin_main(args, **kwargs):
     Returns
     -------
     result : dict
-        Output datamap filename
+        New parmdb datamap filename
 
     """
+    mapfile_in = kwargs['mapfile_in']
     mapfile_dir = kwargs['mapfile_dir']
     filename = kwargs['filename']
+    if 'nitems_to_compress' in kwargs:
+        nitems_to_compress = int(float(kwargs['nitems_to_compress']))
+    else:
+        nitems_to_compress = -1
 
-    inmap = DataMap.load(kwargs['mapfile_in'])
-    groupmap = MultiDataMap.load(kwargs['mapfile_groups'])
-
-    if len(inmap) != len(groupmap):
-        raise ValueError('PipelineStep_mapfileSingleToGroup: length of {0} and {1} differ'.format(kwargs['mapfile_in'],kwargs['mapfile_groups']))
-
-    map_out = DataMap([])
-    inindex = 0
-    for groupID in xrange(len(groupmap)):
-        for fileID in xrange(len(groupmap[groupID].file)):
-            map_out.data.append(DataProduct(inmap[groupID].host, inmap[groupID].file, (inmap[groupID].skip or groupmap[groupID].skip) ))
+    map_in = MultiDataMap.load(mapfile_in)
+    map_out = MultiDataMap([])
+    map_in.iterator = DataMap.SkipIterator
+    if nitems_to_compress > 0:
+        all_files = []
+        for item in map_in:
+            if type(item.file) is list:
+                all_files.extend(item.file)
+            else:
+                all_files.append(item.file)
+        file_groups = [all_files[i:i+nitems_to_compress] for i  in range(0, len(all_files), nitems_to_compress)]
+        all_hosts = [item.host for item in map_in]
+        host_groups = [all_hosts[i:i+nitems_to_compress] for i  in range(0, len(all_hosts), nitems_to_compress)]
+        for file_list, host_list in zip(file_groups, host_groups):
+            map_out.data.append(MultiDataProduct(host_list[0], file_list, False))
+    else:
+        file_list = []
+        for item in map_in:
+            if type(item.file) is list:
+                file_list.extend(item.file)
+            else:
+                file_list.append(item.file)
+        host_list = [item.host for item in map_in]
+        map_out.data.append(MultiDataProduct(host_list[0], file_list, False))
 
     fileid = os.path.join(mapfile_dir, filename)
     map_out.save(fileid)
     result = {'mapfile': fileid}
 
     return result
+
+
+def string2bool(instring):
+    if not isinstance(instring, basestring):
+        raise ValueError('string2bool: Input is not a basic string!')
+    if instring.upper() == 'TRUE' or instring == '1':
+        return True
+    elif instring.upper() == 'FALSE' or instring == '0':
+        return False
+    else:
+        raise ValueError('string2bool: Cannot convert string "'+instring+'" to boolean!')
+
 
 class MultiDataProduct(DataProduct):
     """
