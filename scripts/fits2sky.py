@@ -136,11 +136,6 @@ def main(fits_models, ms_file, skymodel, fits_masks, interp='linear'):
         for ind, (im, ma) in enumerate(zip(model_images, mask_images)):
             index = [nonzero_ind[j][i] for j in range(4)]
             if im[tuple(index)] != 0.0 and ma[tuple(index)] > 0:
-                index.reverse() # change to WCS coords
-                ras.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][0])
-                decs.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][1])
-                names.append('cc{}'.format(i))
-                index.reverse() # change back to image coords
                 flux_array.append(im[tuple(index)])
                 freq_array.append(freqs[ind])
 
