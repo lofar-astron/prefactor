@@ -50,7 +50,7 @@ def convert_radec_str(ra, dec):
     return sra, sdec
 
 
-def main(fits_models, ms_file, skymodel, fits_masks, interp='linear'):
+def main(fits_models, ms_file, skymodel, fits_masks, min_peak_flux_jy=0.005, interp='linear'):
     """
     Make a makesourcedb sky model for input MS from WSClean fits model images
 
@@ -68,11 +68,15 @@ def main(fits_models, ms_file, skymodel, fits_masks, interp='linear'):
     fits_masks : str
         Filename of FITS mask images. Can be a list of files (e.g.,
         '[msk1.fits,msk2.fits,...]')
+    min_peak_flux_jy : float, optional
+        Minimum value of flux in Jy of a source to include in output model
     interp : str, optional
         Interpolation method. Can be any supported by scipy.interpolate.interp1d:
             'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'
 
     """
+    min_peak_flux_jy = float(min_peak_flux_jy)
+
     # Get filenames of model images and masks
     if '[' in fits_models and ']' in fits_models:
         fits_models = fits_models.strip('[]').split(',')
@@ -152,11 +156,12 @@ def main(fits_models, ms_file, skymodel, fits_masks, interp='linear'):
                 else:
                     # Otherwise interpolate
                     flux = scipy.interpolate.interp1d(freq_array, flux_array, kind=interp)(ms_freq)
-                index.reverse() # change to WCS coords
-                ras.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][0])
-                decs.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][1])
-                names.append('cc{}'.format(i))
-                fluxes.append(flux)
+                if flux > min_peak_flux_jy:
+                    index.reverse() # change to WCS coords
+                    ras.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][0])
+                    decs.append(w.wcs_pix2world(np.array([index]), 0, ra_dec_order=True)[0][1])
+                    names.append('cc{}'.format(i))
+                    fluxes.append(flux)
 
     # Write sky model
     with open(skymodel, 'w') as outfile:
