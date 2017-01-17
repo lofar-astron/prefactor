@@ -13,19 +13,19 @@ def plugin_main(args, **kwargs):
     mapfile_in : str
         Name of the input mapfile to be re-grouped.
     mapfile_groups : str
-        Name of the multi-mapfile with the given groups. Total number of files needs 
-        to be the same as in mapfile_in. 
+        Name of the multi-mapfile with the given groups. Total number of files needs
+        to be the same as in mapfile_in.
     check_basename : Bool (str) , optional
         Check if the basenames (see os.path.basename()) minus extension match
         default = True
     join_groups : int (str), optional
-        If it is set, then join so many groups into one new group. (Gives fewer 
+        If it is set, then join so many groups into one new group. (Gives fewer
         groups but more files per group than in mapfile_groups.)
         default = keep same grouping as in mapfile_groups
     join_max_files : int (str), optional
-        If it is set, then try to join as many groups together before the number of 
-        files per group woud exceed "join_max_files". Similar to "join_groups", but 
-        the number of joind groups is not fixed but depends on the number of files 
+        If it is set, then try to join as many groups together before the number of
+        files per group woud exceed "join_max_files". Similar to "join_groups", but
+        the number of joind groups is not fixed but depends on the number of files
         per group. Mutaully exclusive with "join_groups"!
     mapfile_dir : str
         Directory for output mapfile
@@ -63,7 +63,7 @@ def plugin_main(args, **kwargs):
             if inmap[inindex].skip:
                 print 'PipelineStep_reGroupMapfile: Skipping full group for file:'+inmap[inindex].file
                 skip = True
-            inindex += 1            
+            inindex += 1
         map_out.data.append(MultiDataProduct(group.host, grouplist, skip))
     assert inindex == len(inmap)
 
@@ -113,7 +113,7 @@ def string2bool(instring):
         raise ValueError('string2bool: Input is not a basic string!')
     if instring.upper() == 'TRUE' or instring == '1':
         return True
-    elif instring.upper() == 'FALSE' or instring == '0': 
+    elif instring.upper() == 'FALSE' or instring == '0':
         return False
     else:
         raise ValueError('string2bool: Cannot convert string "'+instring+'" to boolean!')
@@ -132,7 +132,8 @@ class MultiDataProduct(DataProduct):
     def __repr__(self):
         """Represent an instance as a Python dict"""
         return (
-            "{{'host': '{0}', 'file': {1}, 'skip': {2}}}".format(self.host, self.file, str(self.skip))
+            "{{'host': '{0}', 'file': '{1}', 'skip': {2}}}".format(self.host,
+                '[{}]'.format(','.join(self.file)), str(self.skip))
         )
 
     def __str__(self):
@@ -176,6 +177,21 @@ class MultiDataMap(DataMap):
     Class representing a specialization of data-map, a collection of data
     products located on the same node, skippable as a set and individually
     """
+    def __init__(self, data=list(), iterator=iter):
+        super(MultiDataMap, self).__init__(data, iterator)
+
+    @classmethod
+    def load(cls, filename):
+        """Load a data map from file `filename`. Return a DataMap instance."""
+        with open(filename) as f:
+            datamap = eval(f.read())
+            for i, d in enumerate(datamap):
+                file_entry = d['file']
+                if file_entry.startswith('[') and file_entry.endswith(']'):
+                    file_list = [e.strip(' \'\"') for e in file_entry.strip('[]').split(',')]
+                    datamap[i] = {'host': d['host'], 'file': file_list, 'skip': d['skip']}
+            return cls(datamap)
+
     @DataMap.data.setter
     def data(self, data):
         if isinstance(data, DataMap):
@@ -203,4 +219,3 @@ class MultiDataMap(DataMap):
                 chunk = item.file[i:i+number]
                 mdplist.append(MultiDataProduct(item.host, chunk, item.skip))
         self._set_data(mdplist)
-
