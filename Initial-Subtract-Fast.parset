@@ -86,26 +86,24 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [update_mapfile_hosts, create_ms_map, combine_mapfile, do_magic, do_magic_maps, update_mapfile_hosts2, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_freqstep, select_timestep, correct_high, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
-
-update_mapfile_hosts.control.kind        = plugin
-update_mapfile_hosts.control.type        = updateHosts
-update_mapfile_hosts.control.mapfile_dir = input.output.mapfile_dir
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_freqstep, select_timestep, correct_high, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
-create_ms_map.control.kind            =   plugin
-create_ms_map.control.type            =   createMapfileFromFolder
-create_ms_map.control.mapfile_dir     =   input.output.mapfile_dir
-create_ms_map.control.filename        =   create_ms_map.mapfile
-create_ms_map.control.folder          =   {{ data_input_path }}
-create_ms_map.control.pattern         =   {{ data_input_pattern }}
+create_ms_map.control.kind                      =   plugin
+create_ms_map.control.type                      =   createMapfile
+create_ms_map.control.method                    =   mapfile_from_folder
+create_ms_map.control.mapfile_dir               =   input.output.mapfile_dir
+create_ms_map.control.filename                  =   create_ms_map.mapfile
+create_ms_map.control.folder                    =   {{ data_input_path }}
+create_ms_map.control.pattern                   =   {{ data_input_pattern }}
 
 # generate a mapfile with all files in a single entry, length = 1
-combine_mapfile.control.kind               =  plugin
-combine_mapfile.control.type               =  compressMapfile
-combine_mapfile.control.mapfile_in         =  create_ms_map.output.mapfile
-combine_mapfile.control.mapfile_dir        =  input.output.mapfile_dir
-combine_mapfile.control.filename           =  combine_mapfile.mapfile
+combine_mapfile.control.kind                    =  plugin
+combine_mapfile.control.type                    =  createMapfile
+combine_mapfile.control.method                  =  mapfile_all_to_one
+combine_mapfile.control.mapfile_in              =  create_ms_map.output.mapfile
+combine_mapfile.control.mapfile_dir             =  input.output.mapfile_dir
+combine_mapfile.control.filename                =  combine_mapfile.mapfile
 
 # compute frequency groupings, image sizes, averaging values, etc., len = different
 do_magic.control.type                           =  pythonplugin
@@ -133,11 +131,6 @@ do_magic_maps.control.mapfile_high_padsize_map       =  do_magic.output.high_pad
 do_magic_maps.control.mapfile_low_padsize_map        =  do_magic.output.low_padsize_mapfile.mapfile
 do_magic_maps.control.mapfile_nwavelengths_high_map  =  do_magic.output.nwavelengths_high_mapfile.mapfile
 do_magic_maps.control.mapfile_nwavelengths_low_map   =  do_magic.output.nwavelengths_low_mapfile.mapfile
-
-# update hosts, since do_magic step cannot access PBS-reserved node list
-update_mapfile_hosts2.control.kind        = plugin
-update_mapfile_hosts2.control.type        = updateHosts
-update_mapfile_hosts2.control.mapfile_dir = input.output.mapfile_dir
 
 # create a mapfile with the direction independent parmDBs, length = nfiles
 create_parmdb_map.control.kind                  =  plugin
