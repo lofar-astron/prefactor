@@ -177,13 +177,27 @@ class Band(object):
 
         return (initsubtract_freqstep, initsubtract_timestep)
         
-    def nwavelengths(self,cellsize_highres_deg, cellsize_lowres_deg, initsubtract_timestep):
-	int_time_sec = self.timestep_sec * initsubtract_timestep
-	max_baseline_in_nwavelenghts_h = 1.0/(cellsize_highres_deg*3.0*np.pi/180.0)
-	max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
-	self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)
-	self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)
-	return (self.nwavelengths_high, self.nwavelengths_low)
+
+    def get_nwavelengths(self, cellsize_deg, timestep_sec,):
+        """
+        Returns nwavelengths for WSClean BL-based averaging
+        The value depends on the integration time given the specified maximum
+        allowed smearing. We scale it from the imaging cell size assuming normal
+        sampling as:
+        max baseline in nwavelengths = 1 / theta_rad ~= 1 / (cellsize_deg * 3 * pi / 180)
+        nwavelengths = max baseline in nwavelengths * 2 * pi *
+            integration time in seconds / (24 * 60 * 60) / 4
+        Parameters
+        ----------
+        cellsize_deg : float
+            Pixel size of image in degrees
+        timestep_sec : float
+            Length of one timestep in seconds
+        """
+        max_baseline = 1 / (3 * cellsize_deg * np.pi / 180)
+        wsclean_nwavelengths_time = int(max_baseline * 2*np.pi * timestep_sec /
+            (24 * 60 * 60) / 4)
+        return wsclean_nwavelengths_time
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
          fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.):
@@ -294,7 +308,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         nchansout_clean1 = np.int(nbands)
         
     (freqstep, timestep) = bands[0].get_averaging_steps()
-    (nwavelengths_high, nwavelengths_low) = bands[0].nwavelengths(cellsize_highres_deg, cellsize_lowres_deg, timestep)
+    int_time_sec = self.timestep_sec * timestep
+    nwavelengths_high = bands[0].get_nwavelengths(cellsize_highres_deg, int_time_sec)
+    nwavelengths_low = bands[0].get_nwavelengths(cellsize_lowres_deg, int_time_sec)
+    
     for band in bands:
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
@@ -342,8 +359,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     # get mapfiles for freqstep and timestep with the length of single_map
     freqstep_map = DataMap([])
     timestep_map = DataMap([]) 
-    nwavelengths_high_map	= DataMap([])
-    nwavelengths_low_map 	= DataMap([])
+    nwavelengths_high_map        = DataMap([])
+    nwavelengths_low_map         = DataMap([])
     
     
     for index in xrange(numfiles):
