@@ -5,7 +5,7 @@ from lofarpipe.support.data_map import DataMap, DataProduct
 
 def get_distributed_indices(start, end, n):
     """Returns list of evenly distributed indices for given range and number"""
-    n = min(end, max(n, 2))
+    n = min(end+1, max(n, 2))
     step = (end-start)/float(n-1)
     return [int(round(start+x*step)) for x in xrange(n)]
 
