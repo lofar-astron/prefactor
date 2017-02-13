@@ -86,7 +86,7 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_freqstep, select_timestep, correct_high, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, correct_high, regroup_map, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -320,7 +320,7 @@ expand_mask_high.control.filename           =   expand_mask_high.datamap
 fits_to_bbs_high.control.type             =   pythonplugin
 fits_to_bbs_high.control.executable       =   {{ fits2sky_script }}
 fits_to_bbs_high.control.error_tolerance  =   {{ error_tolerance }}
-fits_to_bbs_high.control.max_per_node     =   4      # can use a lot of memory, so don't do too many at once
+fits_to_bbs_high.control.max_per_node     =   1      # can use a lot of memory, so don't do too many at once
 fits_to_bbs_high.control.mapfiles_in      =   [do_magic_maps.output.groupmap,expand_model_high.output.mapfile,expand_mask_high.output.mapfile]
 fits_to_bbs_high.control.inputkeys        =   [msfile,rootname,mask]
 fits_to_bbs_high.control.outputkey        =   skymodel
@@ -368,27 +368,44 @@ subtract_high.argument.subtract.sourcedb        =   sourcedb
 subtract_high.argument.subtract.operation       =   subtract
 subtract_high.argument.subtract.applycal.parmdb =   parmdb
 
-# adjust the freqstep mapfile to match the selected bands, length = nbands_image
+# select files spread over the full bandwidth for imaging, length = nbands_image * ntimes
+select_correct_high_files.control.kind        = plugin
+select_correct_high_files.control.type        = selectDistFreqs
+select_correct_high_files.control.mapfile_in  = do_magic_maps.output.single_map
+select_correct_high_files.control.num         = {{ nbands_image }}
+select_correct_high_files.control.mapfile_dir = input.output.mapfile_dir
+select_correct_high_files.control.filename    = select_correct_high_files.mapfile
+
+# adjust the dir-indep parmdb mapfile to match the selected bands, length = nbands_image * ntimes
+select_parmdb.control.kind         = plugin
+select_parmdb.control.type         = matchDistFreqs
+select_parmdb.control.mapfile_in   = create_parmdb_map.output.mapfile
+select_parmdb.control.mapfile_dist = select_correct_high_files.output.mapfile
+select_parmdb.control.mapfile_full = do_magic_maps.output.single_map
+select_parmdb.control.mapfile_dir  = input.output.mapfile_dir
+select_parmdb.control.filename     = parmdb.mapfile
+
+# adjust the freqstep mapfile to match the selected bands, length = nbands_image * ntimes
 select_freqstep.control.kind         = plugin
 select_freqstep.control.type         = matchDistFreqs
 select_freqstep.control.mapfile_in   = do_magic_maps.output.freqstep_map
-select_freqstep.control.mapfile_dist = select_imaging_bands.output.mapfile
-select_freqstep.control.mapfile_full = do_magic_maps.output.groupmap
+select_freqstep.control.mapfile_dist = select_correct_high_files.output.mapfile
+select_freqstep.control.mapfile_full = do_magic_maps.output.single_map
 select_freqstep.control.mapfile_dir  = input.output.mapfile_dir
 select_freqstep.control.filename     = avg_freqstep.mapfile
 
-# adjust the timestep mapfile to match the selected bands, length = nbands_image
+# adjust the timestep mapfile to match the selected bands, length = nbands_image * ntimes
 select_timestep.control.kind         = plugin
 select_timestep.control.type         = matchDistFreqs
 select_timestep.control.mapfile_in   = do_magic_maps.output.timestep_map
-select_timestep.control.mapfile_dist = select_imaging_bands.output.mapfile
-select_timestep.control.mapfile_full = do_magic_maps.output.groupmap
+select_timestep.control.mapfile_dist = select_correct_high_files.output.mapfile
+select_timestep.control.mapfile_full = do_magic_maps.output.single_map
 select_timestep.control.mapfile_dir  = input.output.mapfile_dir
 select_timestep.control.filename     = avg_timestep.mapfile
 
 # Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nbands_image
 correct_high.control.type                       =   dppp
-correct_high.control.mapfiles_in                =   [select_imaging_bands.output.mapfile,select_parmdb_map.output.mapfile,select_freqstep.output.mapfile,select_timestep.output.mapfile]
+correct_high.control.mapfiles_in                =   [select_correct_high_files.output.mapfile,select_parmdb.output.mapfile,select_freqstep.output.mapfile,select_timestep.output.mapfile]
 correct_high.control.inputkeys                  =   [msin,parmdb,avg.freqstep,avg.timestep]
 correct_high.control.max_per_node               =   {{ max_dppp_per_node }}
 correct_high.argument.numthreads                =   {{ max_dppp_threads }}
@@ -401,6 +418,14 @@ correct_high.argument.correct.type              =   applycal
 correct_high.argument.correct.parmdb            =   parmdb
 correct_high.argument.correct.invert            =   True
 correct_high.argument.avg.type                  =   squash
+
+# re-group mapfile to have one group per band, length = nbands
+regroup_map.control.kind                        =   plugin
+regroup_map.control.type                        =   reGroupMapfile
+regroup_map.control.mapfile_in                  =   correct_high.output.mapfile
+regroup_map.control.mapfile_groups              =   select_imaging_bands.output.mapfile
+regroup_map.control.mapfile_dir                 =   input.output.mapfile_dir
+regroup_map.control.filename                    =   re_grouped.datamap
 
 # adjust the low_padsize mapfile to match the selected bands, length = nbands_image
 select_low_padsize.control.kind         = plugin
@@ -438,7 +463,7 @@ wsclean_low.control.outputkey                  =   name
 wsclean_low.control.args_format                =   wsclean
 wsclean_low.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low.control.error_tolerance            =   {{ error_tolerance }}
-wsclean_low.control.mapfiles_in                =   [correct_high.output.mapfile,select_low_padsize.output.mapfile,select_low_size.output.mapfile,select_low_nwavelengths.output.mapfile]
+wsclean_low.control.mapfiles_in                =   [regroup_map.output.mapfile,select_low_padsize.output.mapfile,select_low_size.output.mapfile,select_low_nwavelengths.output.mapfile]
 wsclean_low.control.inputkeys                  =   [msfile,paddedsize,outputsize,nwavelengths]
 wsclean_low.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
 wsclean_low.argument.size                      =   paddedsize
@@ -554,7 +579,7 @@ fits_to_bbs_low.control.max_per_node     =   4      # can use a lot of memory, s
 fits_to_bbs_low.control.mapfiles_in      =   [do_magic_maps.output.groupmap,expand_model_low.output.mapfile,expand_mask_low.output.mapfile]
 fits_to_bbs_low.control.inputkeys        =   [msfile,rootname,mask]
 fits_to_bbs_low.control.outputkey        =   skymodel
-fits_to_bbs_low.argument.flags           =   [rootname,msfile,skymodel,mask]
+fits_to_bbs_low.argument.flags           =   [rootname,msfile,skymodel,mask,0.0]
 
 # make sourcedbs from the low-res skymodels, length = nbands
 # outtype = blob for the same reasons as for sourcedb_high
