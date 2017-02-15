@@ -271,7 +271,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
             msdict[msfreq] = [ms]
     bands = []
     bandfreqs = []
-    print "InitSubtract_sort_and_compute.py: Putting files into bands."
+    print "InitSubtract_deep_sort_and_compute.py: Putting files into bands."
     for MSkey in msdict.keys():
         bands.append( Band(msdict[MSkey]) )
         bandfreqs.append( Band(msdict[MSkey]).freq )
@@ -308,12 +308,12 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         nchansout_clean1 = np.int(nbands)
         
     (freqstep, timestep) = bands[0].get_averaging_steps()
-    int_time_sec = self.timestep_sec * timestep
+    int_time_sec = bands[0].timestep_sec * timestep   # timestep_sec gets added to band object in get_averaging_steps()
     nwavelengths_high = bands[0].get_nwavelengths(cellsize_highres_deg, int_time_sec)
     nwavelengths_low = bands[0].get_nwavelengths(cellsize_lowres_deg, int_time_sec)
     
     for band in bands:
-        print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
+        print "InitSubtract_deep_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
         numfiles += len(band.files)
         for filename in band.files:
@@ -354,7 +354,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     deep_low_paddedsize_map = DataMap([DataProduct('localhost', str(deep_imsize_low_pad)+" "+str(deep_imsize_low_pad_stretch), False)])
     nbands_map = DataMap([DataProduct('localhost', str(nbands), False)])
     nchansout_clean1_map = DataMap([DataProduct('localhost', str(nchansout_clean1), False)])
-    print "InitSubtract_sort_and_compute.py: Computing averaging steps."
+    print "InitSubtract_deep_sort_and_compute.py: Computing averaging steps."
     
     # get mapfiles for freqstep and timestep with the length of single_map
     freqstep_map = DataMap([])
