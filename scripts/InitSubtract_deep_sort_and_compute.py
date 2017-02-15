@@ -308,7 +308,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         nchansout_clean1 = np.int(nbands)
         
     (freqstep, timestep) = bands[0].get_averaging_steps()
-    int_time_sec = self.timestep_sec * timestep
+    int_time_sec = bands[0].timestep_sec * timestep   # timestep_sec gets added to band object in get_averaging_steps()
     nwavelengths_high = bands[0].get_nwavelengths(cellsize_highres_deg, int_time_sec)
     nwavelengths_low = bands[0].get_nwavelengths(cellsize_lowres_deg, int_time_sec)
     
