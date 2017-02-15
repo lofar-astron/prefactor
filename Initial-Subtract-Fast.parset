@@ -86,7 +86,7 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, correct_high, regroup_map, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_padsize, select_high_size, select_high_nwavelengths, select_parmdb_map, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, expand_freqstep, expand_timestep, correct_high, regroup_map, select_low_padsize, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -402,6 +402,22 @@ select_timestep.control.mapfile_dist = select_correct_high_files.output.mapfile
 select_timestep.control.mapfile_full = do_magic_maps.output.single_map
 select_timestep.control.mapfile_dir  = input.output.mapfile_dir
 select_timestep.control.filename     = avg_timestep.mapfile
+
+# expand the model_low mapfile so that there is one entry for every band, length = nbands
+expand_freqstep.control.kind               =   plugin
+expand_freqstep.control.type               =   expandMapfile
+expand_freqstep.control.mapfile_in         =   select_freqstep.output.mapfile
+expand_freqstep.control.mapfile_to_match   =   select_correct_high_files.output.mapfile
+expand_freqstep.control.mapfile_dir        =   input.output.mapfile_dir
+expand_freqstep.control.filename           =   expand_freqstep.datamap
+
+# expand the model_low mapfile so that there is one entry for every band, length = nbands
+expand_timestep.control.kind               =   plugin
+expand_timestep.control.type               =   expandMapfile
+expand_timestep.control.mapfile_in         =   select_timestep.output.mapfile
+expand_timestep.control.mapfile_to_match   =   select_correct_high_files.output.mapfile
+expand_timestep.control.mapfile_dir        =   input.output.mapfile_dir
+expand_timestep.control.filename           =   expand_timestep.datamap
 
 # Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nbands_image
 correct_high.control.type                       =   dppp
