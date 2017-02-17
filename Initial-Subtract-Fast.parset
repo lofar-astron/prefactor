@@ -421,7 +421,7 @@ expand_timestep.control.filename           =   expand_timestep.datamap
 
 # Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nbands_image
 correct_high.control.type                       =   dppp
-correct_high.control.mapfiles_in                =   [select_correct_high_files.output.mapfile,select_parmdb.output.mapfile,select_freqstep.output.mapfile,select_timestep.output.mapfile]
+correct_high.control.mapfiles_in                =   [select_correct_high_files.output.mapfile,select_parmdb.output.mapfile,expand_freqstep.output.mapfile,expand_timestep.output.mapfile]
 correct_high.control.inputkeys                  =   [msin,parmdb,avg.freqstep,avg.timestep]
 correct_high.control.max_per_node               =   {{ max_dppp_per_node }}
 correct_high.argument.numthreads                =   {{ max_dppp_threads }}
