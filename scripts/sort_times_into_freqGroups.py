@@ -212,7 +212,17 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     # add 1% of the SB badwidth in case maxfreq might be "exactly" on a group-border
     maxfreq = np.max(freqliste)+freq_width*0.51
     if firstSB != None:
-        minfreq = (float(firstSB)/512.*100e6)+100e6-freq_width/2.
+        if freqliste[0] < 100e6:
+            # LBA Data
+            minfreq = (float(firstSB)/512.*100e6)-freq_width/2.
+        elif freqliste[0] > 100e6 and freqliste[0] < 200e6:
+            # HBA-Low
+            minfreq = (float(firstSB)/512.*100e6)+100e6-freq_width/2.
+        elif freqliste[0] > 200e6 and freqliste[0] < 300e6:
+            # HBA-high
+            minfreq = (float(firstSB)/512.*100e6)+200e6-freq_width/2.
+        else:
+            raise ValueError('sort_times_into_freqGroups: Frequency of lowest input data is higher than 300MHz!')        
         if np.min(freqliste) < minfreq:
             raise ValueError('sort_times_into_freqGroups: Frequency of lowest input data is lower than reference frequency!')
     else:
