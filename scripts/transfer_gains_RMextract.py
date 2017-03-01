@@ -80,7 +80,7 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     from RMextract import getRM
     rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
     if not rmdict:
-        if not ionex_server:
+        if not server:
             raise ValueError("One or more IONEX files is not found on disk and download is disabled!\n"
                              "(You can run \"bin/download_IONEX.py\" outside the pipeline if needed.)")
         else:
