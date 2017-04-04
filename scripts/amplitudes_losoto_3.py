@@ -228,21 +228,11 @@ nants = len(amptab.ant[:])
 
 print "Number of Antennas:",len(amptab.ant[:]),  " of Frequnecies:",nfreqs ,  " of Times:", ntimes
 
-# Convert all frequencies to subband-frequencies 
-SBfreqs = rebin(np.copy(amptab.freq[:]),( len(amptab.freq[:])/n_chan ,))
-
-
-
-
-
-
-  
 freqidx = np.arange(n_chan/2,nfreqs,n_chan)
 freqs = amptab.freq[freqidx]
 timeidx = np.arange(ntimes)
-freqgrid = np.arange(nfreqs)
-SBgrid = np.floor(freqgrid/n_chan)
-SBvals = freqgrid/n_chan
+
+SBgrid = np.floor((amptab.freq[:]-np.min(amptab.freq[:]))/195.3125e3)
 
 freqs_new  = np.arange(np.min(freqs),np.max(freqs)+100e3, 195.3125e3)
 amps_array_flagged = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
