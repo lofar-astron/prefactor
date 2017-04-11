@@ -77,6 +77,10 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
     path : str
        path where we can find or store the IONEX files
     """
+    if ionexPath[-1] != '/':
+        print "get_COMMONROTATION_vals: ionexPath doesn't end in \"/\", adding that character."
+        ionexPath += '/'
+
     from RMextract import getRM
     rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=300.)
     if not rmdict:

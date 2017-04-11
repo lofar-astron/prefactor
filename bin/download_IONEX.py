@@ -38,6 +38,10 @@ def download_IONEX(ms_input,server="ftp://ftp.unibe.ch/aiub/CODE/",prefix='CODG'
         directory where to store the IONEX files
     """
     mslist = input2strlist_nomapfile(ms_input)
+
+    if ionexPath[-1] != '/':
+        print "download_IONEX: ionexPath doesn't end in \"/\", adding that character."
+        ionexPath += '/'
     
     dates_done = []
     numfiles = len(mslist)
