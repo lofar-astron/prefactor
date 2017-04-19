@@ -12,7 +12,18 @@ import pickle
 import numpy as np
 import sys
 import os
+
+# I copy&pasted that into this file
 #from factor.lib.polygon import Polygon
+
+# workaround for a bug / ugly behavior in matplotlib / pybdsm
+# (some installtaions of matplotlib.pyplot fail if there is no X-Server available
+# which is not caught in pybdsm.)
+try:
+    import matplotlib 
+    matplotlib.use('Agg') 
+except (RuntimeError, ImportError):
+    pass
 
 class Polygon:
     """
