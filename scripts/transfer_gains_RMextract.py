@@ -6,6 +6,23 @@ import glob
 import pyrap.tables as pt
 import lofar.parmdb as pdb
 
+def input2bool(invar):
+    if invar == None:
+        return None
+    if isinstance(invar, bool):
+        return invar
+    elif isinstance(invar, str):
+        if invar.upper() == 'TRUE' or invar == '1':
+            return True
+        elif invar.upper() == 'FALSE' or invar == '0':
+            return False
+        else:
+            raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
+    elif isinstance(invar, int) or isinstance(invar, float):
+        return bool(invar)
+    else:
+        raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+
 ###Reading in the the parameters of target data with PYRAP and putting them into directories for further use###############
 class ReadMs:
     def __init__(self, ms):
@@ -95,9 +112,10 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath):
 
 ########################################################################
 def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newparmdbext='-instrument_amp_clock_offset', 
-         ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
+         ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/", zeroCSclock=False):
 
     mslist_unfiltered = input2strlist_nomapfile(MSfiles)
+    zeroCSclock = input2bool(zeroCSclock)
 
     mslist = []
     for ms in mslist_unfiltered:
@@ -208,6 +226,8 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
 
         #now handle the clock-value (no fancy interpolating needed)
         clock_pdb = np.array( np.median(clock_array[:,antenna_id]) ,ndmin=2)
+        if zeroCSclock and antenna[0:1] == 'CS':
+            clock_pdb *= 0.
         ValueHolder = outDB.makeValue(values=clock_pdb,
                                       sfreq=startfreqs[0], efreq=endfreqs[-1],
                                       stime=starttime, etime=endtime, asStartEnd=True)

@@ -130,6 +130,7 @@ trans.argument.newparmdbext     =  /instrument_amp_clock_offset
 trans.argument.ionex_server     =  {{ ionex_server }}
 trans.argument.ionex_prefix     =  {{ ionex_prefix }}
 trans.argument.ionexPath        =  {{ ionex_path }}
+trans.argument.zeroCSclock      =  False
 
 # run NDPPP on the target data to flag, transfer calibrator values, and average
 ndppp_prep_target.control.type                      = dppp
