@@ -60,12 +60,17 @@ def download_IONEX(ms_input,server="ftp://ftp.unibe.ch/aiub/CODE/",prefix='CODG'
             if datestr not in dates_done:
                 print "Downloading IONEX file for:",datestr
                 ionexf=ionex.getIONEXfile(time=date_parms,server=server,prefix=prefix,outpath=ionexPath)
+                if type(ionexf) != str or not os.path.isfile(ionexf):
+                    print "Failed to download IONEX file for date:",datestr
+                    raise EnvironmentError
                 dates_done.append(datestr)
 
 def main(msname, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_prefix='CODG', ionexPath="IONEXdata/"):
     # no download if ionex_server == None
-    if ionex_server.strip(' []\'\"').lower() != 'none':
-        download_IONEX(msname,server=ionex_server,prefix=ionex_prefix,ionexPath=ionexPath)
+    # but still check if all files are available
+    if ionex_server.strip(' []\'\"').lower() == 'none':
+        ionex_server = None
+    download_IONEX(msname,server=ionex_server,prefix=ionex_prefix,ionexPath=ionexPath)
     
 
 if __name__ == '__main__':
