@@ -7,9 +7,6 @@
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
 
 ### parameters you will need to adjust.
-# averaging for the calibrator data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
 # where to find the calibrator data
 ! cal_input_path       = /data/scratch/username/PathToYourCalibratorData/
 ! cal_input_pattern    = L*.MS
@@ -79,8 +76,8 @@ ndppp_prep_cal.argument.filter.type            = filter
 ndppp_prep_cal.argument.filter.baseline        = CS*, RS*&&
 ndppp_prep_cal.argument.filter.remove          = true                     # fully kick out the international stations.
 ndppp_prep_cal.argument.avg.type               = average
-ndppp_prep_cal.argument.avg.timestep           = {{ avg_timestep }}       # average to 4 second intervals , PLEASE ADJUST!
-ndppp_prep_cal.argument.avg.freqstep           = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+ndppp_prep_cal.argument.avg.timeresolution     = 4.        # average to ca. 4 seconds integration time.
+ndppp_prep_cal.argument.avg.freqresolution     = 48.82kHz  # average to 4 ch/SB frequency resolution
 ndppp_prep_cal.argument.flagamp.type           = preflagger
 ndppp_prep_cal.argument.flagamp.amplmin        = 1e-30
 
