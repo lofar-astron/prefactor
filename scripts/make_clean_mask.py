@@ -4,7 +4,6 @@ Script to make a clean mask
 """
 import argparse
 from argparse import RawTextHelpFormatter
-from lofar import bdsm
 import casacore.images as pim
 from astropy.io import fits as pyfits
 from astropy.coordinates import Angle
@@ -24,6 +23,7 @@ try:
     matplotlib.use('Agg') 
 except (RuntimeError, ImportError):
     pass
+from lofar import bdsm
 
 class Polygon:
     """
