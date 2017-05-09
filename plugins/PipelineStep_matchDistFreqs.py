@@ -48,15 +48,20 @@ def plugin_main(args, **kwargs):
 
     # do not re-run if we already ran, and input files are deleted.
     if os.path.exists(fileid) and not os.path.exists(map_in[0].file):
-        print 'PipelineStep_matchDistFreqs: Not re-running because output file exists, but input files don\'t!'
+        print('PipelineStep_matchDistFreqs: Not re-running because output '
+            'file exists, but input files don\'t!')
         return  {'mapfile': fileid}
 
     # find matches
-    all_files_hosts = [(item.file, item.host) for item in map_full]
-    dist_files = [item.file for item in map_dist]
-    for i, (f, h) in enumerate(all_files_hosts):
-        if f in dist_files:
-            map_out.append(DataProduct(h, map_in[i].file, False))
+    all_files = [item.file for item in map_full]
+    dist_files_and_hosts = [(item.file, item.host) for item in map_dist]
+    for f, h in dist_files_and_hosts:
+        if f in all_files:
+            indx = all_files.index(f)
+            map_out.append(DataProduct(h, map_in[indx].file, False))
+        else:
+            raise ValueError('PipelineStep_matchDistFreqs: Full mapfile does not contain one '
+                'or more of the files in the distributed mapfile!')
 
     map_out.save(fileid)
     del(map_in)

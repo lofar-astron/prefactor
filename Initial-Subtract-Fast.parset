@@ -51,7 +51,7 @@
 # cellsize in degrees, 0.00208 deg is about 7.5 arcsec
 ! cellsize_highres_deg = 0.00208
 ! cellsize_lowres_deg  = 0.00694
-# size of the image is this value times the FWHM of the station beam
+# size of the image is this value times the FWHM of mean semi-major axis of the station beam
 ! fieldsize_highres    = 2.5
 ! fieldsize_lowres     = 6.5
 # maximum uv-distance in lambda that will be used for imaging
@@ -63,8 +63,13 @@
 # How much shall the y-axis be stretched or compressed?
 # Used to get rectangular images. Use at your own risk!
 ! axis_stretch         = 1.
-# Number of bands to image (spread over the full bandwidth)
+# Number of bands to image (spread over the full bandwidth). Larger values
+# result in better subtraction but longer runtimes
 ! nbands_image         = 6
+# Minimum flux density in Jy of clean components to include in subtract steps.
+# Clean components below this flux density will not be subtracted. Lower values
+# result in better subtraction but longer runtimes
+! min_flux_jy          = 0.005
 
 ##### performance parameters
 ! max_imagers_per_node      =  2
@@ -325,6 +330,7 @@ fits_to_bbs_high.control.mapfiles_in      =   [do_magic_maps.output.groupmap,exp
 fits_to_bbs_high.control.inputkeys        =   [msfile,rootname,mask]
 fits_to_bbs_high.control.outputkey        =   skymodel
 fits_to_bbs_high.argument.flags           =   [rootname,msfile,skymodel,mask]
+fits_to_bbs_high.argument.min_flux_jy     =   {{ min_flux_jy }}
 
 # make sourcedbs from the high-res skymodels, length = nbands
 # can use outtype=blob because we'll use NDPPP
@@ -596,6 +602,7 @@ fits_to_bbs_low.control.mapfiles_in      =   [do_magic_maps.output.groupmap,expa
 fits_to_bbs_low.control.inputkeys        =   [msfile,rootname,mask]
 fits_to_bbs_low.control.outputkey        =   skymodel
 fits_to_bbs_low.argument.flags           =   [rootname,msfile,skymodel,mask,0.0]
+fits_to_bbs_low.argument.min_flux_jy     =   {{ min_flux_jy }}
 
 # make sourcedbs from the low-res skymodels, length = nbands
 # outtype = blob for the same reasons as for sourcedb_high
