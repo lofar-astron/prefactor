@@ -61,7 +61,8 @@ With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> fo
 genericpipeline.
 
 The procedure is also mostly described in these papers:
-* van Weeren et al. ApJ submitted
-* Williams et al. MNRAS submitted
+* van Weeren, R. J., Williams, W. L., Hardcastle, M. J., et al. 2016, ApJS, 223, 2
+* Williams, W. L., van Weeren, R. J., Röttgering, H. J. A., et al. 2016, MNRAS,
+460, 2385
 
 
