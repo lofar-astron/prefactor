@@ -16,7 +16,7 @@ def main(infile, xypadsize):
 
     hdu = pyfits.open(infile)
     imdata = hdu[0].data[0, 0]
-    (xsize, ysize) = imdata.shape
+    (ysize, xsize) = imdata.shape
     if xsize > pad_xsize or ysize > pad_ysize:
         raise ValueError('pad_image: padded size is smaller than current size!')
     if xsize == pad_xsize and ysize == pad_ysize:
@@ -24,12 +24,12 @@ def main(infile, xypadsize):
 
     xoffset = (pad_xsize - xsize) / 2
     yoffset = (pad_ysize - ysize) / 2
-    newdata=np.zeros((1, 1, pad_xsize, pad_ysize))
+    newdata=np.zeros((1, 1, pad_ysize, pad_xsize))
 
-    newdata[0, 0, xoffset:xoffset+xsize, yoffset:yoffset+ysize] = imdata
+    newdata[0, 0, yoffset:yoffset+ysize, xoffset:xoffset+xsize] = imdata
     hdu[0].data = newdata
-    hdu[0].header['CRPIX1'] += xoffset
-    hdu[0].header['CRPIX2'] += yoffset
+    hdu[0].header['CRPIX1'] += yoffset
+    hdu[0].header['CRPIX2'] += xoffset
     hdu.writeto(infile, clobber=True)
 
 
