@@ -1,32 +1,20 @@
 import os
-from lofarpipe.support.data_map import DataMap
-from lofarpipe.support.data_map import DataProduct
+from lofarpipe.support.data_map import DataMap, DataProduct
 
 
 def plugin_main(args, **kwargs):
     """
-    Re-groups a simple (flat) mapfile into a multi-mapfile that has the same shape
-    as a given multi-mapfile.
+    Makes a multi-mapfile by compressing input mapfile items
 
     Parameters
     ----------
     mapfile_in : str
-        Name of the input mapfile to be re-grouped.
-    mapfile_groups : str
-        Name of the multi-mapfile with the given groups. Total number of files needs
-        to be the same as in mapfile_in.
-    check_basename : Bool (str) , optional
-        Check if the basenames (see os.path.basename()) minus extension match
-        default = True
-    join_groups : int (str), optional
-        If it is set, then join so many groups into one new group. (Gives fewer
-        groups but more files per group than in mapfile_groups.)
-        default = keep same grouping as in mapfile_groups
-    join_max_files : int (str), optional
-        If it is set, then try to join as many groups together before the number of
-        files per group woud exceed "join_max_files". Similar to "join_groups", but
-        the number of joind groups is not fixed but depends on the number of files
-        per group. Mutaully exclusive with "join_groups"!
+        Filename of datamap containing MS files
+    nitems_to_compress: int
+        Number of input items to compress into each output item. Set to zero or
+        negative number to compress all input items to a single output item
+        (default = -1). If greater than 0, the input map must have only one file
+        per group (i.e., it must be a normal DataMap)
     mapfile_dir : str
         Directory for output mapfile
     filename: str
@@ -35,78 +23,48 @@ def plugin_main(args, **kwargs):
     Returns
     -------
     result : dict
-        Output datamap filename
+        New parmdb datamap filename
 
     """
+    mapfile_in = kwargs['mapfile_in']
     mapfile_dir = kwargs['mapfile_dir']
     filename = kwargs['filename']
-    check_names = True
-    if 'check_basename' in kwargs:
-        check_names =  string2bool(kwargs['check_basename'])
+    if 'nitems_to_compress' in kwargs:
+        nitems_to_compress = int(float(kwargs['nitems_to_compress']))
+    else:
+        nitems_to_compress = -1
 
-    inmap = DataMap.load(kwargs['mapfile_in'])
-    groupmap = MultiDataMap.load(kwargs['mapfile_groups'])
-
-
+    map_in = MultiDataMap.load(mapfile_in)
     map_out = MultiDataMap([])
-    inindex = 0
-    for group in groupmap:
-        grouplist = []
-        skip = False
-        for fname in group.file:
-            if check_names:
-                refbase = os.path.splitext(os.path.basename(fname))[0]
-                newbase = os.path.splitext(os.path.basename(inmap[inindex].file))[0]
-                if refbase != newbase:
-                    raise ValueError('PipelineStep_reGroupMapfile: basenames {0} and {1} differ'.format(refbase,newbase))
-            grouplist.append(inmap[inindex].file)
-            if inmap[inindex].skip:
-                print 'PipelineStep_reGroupMapfile: Skipping full group for file:'+inmap[inindex].file
-                skip = True
-            inindex += 1
-        map_out.data.append(MultiDataProduct(group.host, grouplist, skip))
-    assert inindex == len(inmap)
-
-    if 'join_groups' in kwargs:
-        if 'join_max_files' in kwargs:
-            raise ValueError("PipelineStep_reGroupMapfile: \"join_groups\" and \"join_max_files\" are mutually exclusive!")
-        groups_to_join =  int(kwargs['join_groups'])
-        if groups_to_join > 1:
-            newmap = MultiDataMap([])
-            for start_idx in xrange(0,len(map_out),groups_to_join):
-                end_idx = min((start_idx+groups_to_join),len(map_out))
-                grouplist = []
-                for group in map_out[start_idx:end_idx]:
-                    grouplist.extend(group.file)
-                    if group.skip:
-                        raise ValueError("PipelineStep_reGroupMapfile: Found group that should be skipped! "
-                                         "(I.e. there is probably something wrong with your data!)")
-                newmap.data.append(MultiDataProduct(map_out[start_idx].host, grouplist, False))
-            map_out = newmap
-    elif 'join_max_files' in kwargs:
-        max_files =  int(kwargs['join_max_files'])
-        newmap = MultiDataMap([])
-        grouplist = map_out[0].file
-        grouphost = map_out[0].host
-        for gindex in xrange(1,len(map_out)):
-            if map_out[gindex].skip:
-                raise ValueError("PipelineStep_reGroupMapfile: Found group that should be skipped! "
-                                 "(I.e. there is probably something wrong with your data!)")
-            if (len(grouplist)+len(map_out[gindex].file)) > max_files:
-                newmap.data.append(MultiDataProduct(grouphost, grouplist, False))
-                grouplist = map_out[gindex].file
-                grouphost = map_out[gindex].host
+    map_in.iterator = DataMap.SkipIterator
+    if nitems_to_compress > 0:
+        all_files = []
+        for item in map_in:
+            if type(item.file) is list:
+                all_files.extend(item.file)
             else:
-               grouplist.extend(map_out[gindex].file)
-        # add the final (partial?) group to the map
-        newmap.data.append(MultiDataProduct(grouphost, grouplist, False))
-        map_out = newmap
+                all_files.append(item.file)
+        file_groups = [all_files[i:i+nitems_to_compress] for i  in range(0, len(all_files), nitems_to_compress)]
+        all_hosts = [item.host for item in map_in]
+        host_groups = [all_hosts[i:i+nitems_to_compress] for i  in range(0, len(all_hosts), nitems_to_compress)]
+        for file_list, host_list in zip(file_groups, host_groups):
+            map_out.data.append(MultiDataProduct(host_list[0], file_list, False))
+    else:
+        file_list = []
+        for item in map_in:
+            if type(item.file) is list:
+                file_list.extend(item.file)
+            else:
+                file_list.append(item.file)
+        host_list = [item.host for item in map_in]
+        map_out.data.append(MultiDataProduct(host_list[0], file_list, False))
 
     fileid = os.path.join(mapfile_dir, filename)
     map_out.save(fileid)
     result = {'mapfile': fileid}
 
     return result
+
 
 def string2bool(instring):
     if not isinstance(instring, basestring):
@@ -117,6 +75,7 @@ def string2bool(instring):
         return False
     else:
         raise ValueError('string2bool: Cannot convert string "'+instring+'" to boolean!')
+
 
 class MultiDataProduct(DataProduct):
     """
@@ -219,3 +178,4 @@ class MultiDataMap(DataMap):
                 chunk = item.file[i:i+number]
                 mdplist.append(MultiDataProduct(item.host, chunk, item.skip))
         self._set_data(mdplist)
+

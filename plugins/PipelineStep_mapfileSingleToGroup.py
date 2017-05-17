@@ -5,17 +5,17 @@ from lofarpipe.support.data_map import DataProduct
 
 def plugin_main(args, **kwargs):
     """
-    Copies each entry of mapfile_in as often as the the length of the corresponding 
+    Copies each entry of mapfile_in as often as the the length of the corresponding
     group into a new mapfile
 
     Parameters
     ----------
     mapfile_in : str
-        Name of the input mapfile to be expanded. (E.g. with the skymodels for the 
+        Name of the input mapfile to be expanded. (E.g. with the skymodels for the
         different groups.)
     mapfile_groups : str
         Name of the multi-mapfile with the given groups. Number of groups need
-        to be the same as the number of files in mapfile_in. 
+        to be the same as the number of files in mapfile_in.
     mapfile_dir : str
         Directory for output mapfile
     filename: str
@@ -62,7 +62,8 @@ class MultiDataProduct(DataProduct):
     def __repr__(self):
         """Represent an instance as a Python dict"""
         return (
-            "{{'host': '{0}', 'file': {1}, 'skip': {2}}}".format(self.host, self.file, str(self.skip))
+            "{{'host': '{0}', 'file': '{1}', 'skip': {2}}}".format(self.host,
+                '[{}]'.format(','.join(self.file)), str(self.skip))
         )
 
     def __str__(self):
@@ -106,6 +107,21 @@ class MultiDataMap(DataMap):
     Class representing a specialization of data-map, a collection of data
     products located on the same node, skippable as a set and individually
     """
+    def __init__(self, data=list(), iterator=iter):
+        super(MultiDataMap, self).__init__(data, iterator)
+
+    @classmethod
+    def load(cls, filename):
+        """Load a data map from file `filename`. Return a DataMap instance."""
+        with open(filename) as f:
+            datamap = eval(f.read())
+            for i, d in enumerate(datamap):
+                file_entry = d['file']
+                if file_entry.startswith('[') and file_entry.endswith(']'):
+                    file_list = [e.strip(' \'\"') for e in file_entry.strip('[]').split(',')]
+                    datamap[i] = {'host': d['host'], 'file': file_list, 'skip': d['skip']}
+            return cls(datamap)
+
     @DataMap.data.setter
     def data(self, data):
         if isinstance(data, DataMap):

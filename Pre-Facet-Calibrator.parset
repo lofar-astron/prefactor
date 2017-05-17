@@ -7,9 +7,6 @@
 #   doesn't work on multiple nodes on CEP-2 or CEP3.)
 
 ### parameters you will need to adjust.
-# averaging for the calibrator data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
 # where to find the calibrator data
 ! cal_input_path       = /data/scratch/username/PathToYourCalibratorData/
 ! cal_input_pattern    = L*.MS
@@ -50,7 +47,7 @@
 
 ### Stuff that you probably don't need to modify
 # which steps to run 
-pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, sky_cal_path, calib_cal, h5_imp_cal_map, h5imp_cal, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_txts, copy_cal_txts, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, sky_cal_path, calib_cal, h5_imp_cal_map, h5imp_cal, process_losoto, mk_inspect_dir, copy_h5imp_cal, fitclock, ampl, plots, phase, plot_cal_phases, createmap_cal_pngs, copy_cal_pngs, createmap_cal_txts, copy_cal_txts, mk_cal_values_dir, createmap_cal_npys, copy_cal_npys]
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind            =   plugin
@@ -79,8 +76,8 @@ ndppp_prep_cal.argument.filter.type            = filter
 ndppp_prep_cal.argument.filter.baseline        = CS*, RS*&&
 ndppp_prep_cal.argument.filter.remove          = true                     # fully kick out the international stations.
 ndppp_prep_cal.argument.avg.type               = average
-ndppp_prep_cal.argument.avg.timestep           = {{ avg_timestep }}       # average to 4 second intervals , PLEASE ADJUST!
-ndppp_prep_cal.argument.avg.freqstep           = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+ndppp_prep_cal.argument.avg.timeresolution     = 4.        # average to ca. 4 seconds integration time.
+ndppp_prep_cal.argument.avg.freqresolution     = 48.82kHz  # average to 4 ch/SB frequency resolution
 ndppp_prep_cal.argument.flagamp.type           = preflagger
 ndppp_prep_cal.argument.flagamp.amplmin        = 1e-30
 
@@ -129,6 +126,43 @@ h5imp_cal.argument.flags          =  [h5_imp_cal_map.output.mapfile,h5imp_cal_lo
 h5imp_cal.argument.instrument     =  /instrument
 h5imp_cal.argument.solsetName     =  sol000
 h5imp_cal.argument.compression    =  7
+
+# do some processing on the LoSoTo file
+# fit clock/TEC etc
+process_losoto.control.kind                                    =  recipe
+process_losoto.control.type                                    =  executable_args
+process_losoto.control.executable                              =  {{ losoto_executable }}
+process_losoto.control.max_per_node                            =  {{ num_proc_per_node }}
+process_losoto.control.parsetasfile                            =  True
+process_losoto.control.args_format                             =  losoto
+process_losoto.control.mapfiles_in                             =  [h5imp_cal.output.h5parm.mapfile]
+process_losoto.control.inputkeys                               =  [hdf5file]
+process_losoto.argument.flags                                  =  [hdf5file]
+process_losoto.argument.LoSoTo.Steps                           =  [ClockTec,plotCLOCK,plotTEC]
+process_losoto.argument.LoSoTo.Solset                          =  [sol000]
+process_losoto.argument.LoSoTo.Soltab                          =  []
+process_losoto.argument.LoSoTo.SolType                         =  []
+process_losoto.argument.LoSoTo.ant                             =  []
+process_losoto.argument.LoSoTo.pol                             =  []
+process_losoto.argument.LoSoTo.dir                             =  []
+process_losoto.argument.LoSoTo.Steps.ClockTec.Operation        =  CLOCKTEC
+process_losoto.argument.LoSoTo.Steps.ClockTec.Soltab           =  [sol000/phase000]
+process_losoto.argument.LoSoTo.Steps.ClockTec.CombinePol       =  True
+process_losoto.argument.LoSoTo.Steps.ClockTec.FlagBadChannels  =  False
+process_losoto.argument.LoSoTo.Steps.ClockTec.Fit3rdOrder      =  False
+process_losoto.argument.LoSoTo.Steps.ClockTec.Circular         =  False
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.Operation       =  PLOT
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.Soltab          =  [sol000/clock000]
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.Axes            =  [time]
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.TableAxis       =  ant
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.Prefix          =  {{ inspection_directory }}/losoto_clock
+process_losoto.argument.LoSoTo.Steps.plotCLOCK.PlotFlag        =  False
+process_losoto.argument.LoSoTo.Steps.plotTEC.Operation         =  PLOT
+process_losoto.argument.LoSoTo.Steps.plotTEC.Soltab            =  [sol000/tec000]
+process_losoto.argument.LoSoTo.Steps.plotTEC.Axes              =  [time]
+process_losoto.argument.LoSoTo.Steps.plotTEC.TableAxis         =  ant
+process_losoto.argument.LoSoTo.Steps.plotTEC.Prefix            =  {{ inspection_directory }}/losoto_tec
+process_losoto.argument.LoSoTo.Steps.plotTEC.PlotFlag          =  False
 
 # create the inspection_directory if needed
 mk_inspect_dir.control.kind               =  plugin

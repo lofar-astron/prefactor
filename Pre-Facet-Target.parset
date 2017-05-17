@@ -12,8 +12,8 @@
 ### parameters you will need to adjust.
 # parameters you will need to adjust.
 # averaging for the target data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
+! avg_timeresolution   = 4.        # target resolution is 4 seconds time resolution
+! avg_freqresolution   = 48.82kHz  # target resolution is 4 ch/SB frequency resolution
 # where to find the target data
 ! target_input_path    = /data/scratch/username/PathToYourTargetData/
 ! target_input_pattern = L*.MS
@@ -130,6 +130,7 @@ trans.argument.newparmdbext     =  /instrument_amp_clock_offset
 trans.argument.ionex_server     =  {{ ionex_server }}
 trans.argument.ionex_prefix     =  {{ ionex_prefix }}
 trans.argument.ionexPath        =  {{ ionex_path }}
+trans.argument.zeroCSclock      =  False
 
 # run NDPPP on the target data to flag, transfer calibrator values, and average
 ndppp_prep_target.control.type                      = dppp
@@ -170,8 +171,8 @@ ndppp_prep_target.argument.flag2.keepstatistics     = false
 ndppp_prep_target.argument.flag2.memoryperc         = 10
 ndppp_prep_target.argument.flag2.strategy           = {{ flagging_strategy }}
 ndppp_prep_target.argument.avg.type                 = average
-ndppp_prep_target.argument.avg.timestep             = {{ avg_timestep }}       # average to 8 second intervals , PLEASE ADJUST!
-ndppp_prep_target.argument.avg.freqstep             = {{ avg_freqstep }}       # average to 2 ch/SB , PLEASE ADJUST!
+ndppp_prep_target.argument.avg.timeresolution       = {{ avg_timeresolution }}
+ndppp_prep_target.argument.avg.freqresolution       = {{ avg_freqresolution }}
 
 # create a mapfile with the A-Team skymodel, length = 1
 create_ateam_model_map.control.kind              =  plugin

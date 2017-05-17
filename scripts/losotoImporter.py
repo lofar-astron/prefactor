@@ -12,7 +12,9 @@ from lofarpipe.support.data_map import DataProduct
 import numpy as np
 import pyrap.tables as pt
 import lofar.parmdb as pdb
-from losoto.h5parm import h5parm, solWriter
+#from losoto.h5parm import h5parm, solWriter
+from losoto.importer import create_h5parm
+from losoto.h5parm import h5parm
 
 import logging
 
@@ -56,17 +58,19 @@ def plugin_main(args, **kwargs):
     #generate list of parmDB-filenames
     parmDBnames = [ MS.file+instrument for MS in datamap ]
 
-    #create and fill the hdf5-file:
-    solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    ##create and fill the hdf5-file:
+    #solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    # call the create_h5parm function from losoto (will put a stupid create message in the h5parm file)
+    create_h5parm(parmDBnames, antennaFile, fieldFile, skydbFile, hdf5File, compression, solsetName)
 
-    # Add CREATE entry to history 
-    h5parmDB = h5parm(hdf5File, readonly = False)
-    soltabs = h5parmDB.getSoltabs(solset=solset)
-    for st in soltabs:
-        sw = solWriter(soltabs[st])
-        sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
-                                   os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    h5parmDB.close()
+    ## Add CREATE entry to history 
+    #h5parmDB = h5parm(hdf5File, readonly = False)
+    #soltabs = h5parmDB.getSoltabs(solset=solset)
+    #for st in soltabs:
+    #    sw = solWriter(soltabs[st])
+    #    sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
+    #                               os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
+    #h5parmDB.close()
 
     #generate mapfile and wrap up
     mapfileentry = {}
@@ -106,17 +110,20 @@ def main(msfileslist, hdf5fileName, hdf5_dir='.', instrument='/instrument', sols
     #generate list of parmDB-filenames
     parmDBnames = [ MS+instrument for MS in msfiles ]
 
-    #create and fill the hdf5-file:
-    solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    ##create and fill the hdf5-file:
+    #solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    # call the create_h5parm function from losoto (will put a stupid create message in the h5parm file)
+    create_h5parm(parmDBnames, antennaFile, fieldFile, skydbFile, hdf5File, compression, solsetName)
 
-    # Add CREATE entry to history 
-    h5parmDB = h5parm(hdf5File, readonly = False)
-    soltabs = h5parmDB.getSoltabs(solset=solset)
-    for st in soltabs:
-        sw = solWriter(soltabs[st])
-        sw.addHistory('CREATE (by losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
-                                   os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    h5parmDB.close()
+
+    ## Add CREATE entry to history 
+    #h5parmDB = h5parm(hdf5File, readonly = False)
+    #soltabs = h5parmDB.getSoltabs(solset=solset)
+    #for st in soltabs:
+    #    sw = solWriter(soltabs[st])
+    #    sw.addHistory('CREATE (by losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
+    #                               os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
+    #h5parmDB.close()
 
     result = {}
     result['h5parm'] = hdf5File
@@ -520,15 +527,17 @@ if __name__=='__main__':
     #generate list of parmDB-filenames
     parmDBnames = [ MS.rstrip('/')+instrument for MS in inMSs ]
 
-    #create and fill the hdf5-file:
-    solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    ##create and fill the hdf5-file:
+    #solset = parmDBs2h5parm(hdf5File, parmDBnames, antennaFile, fieldFile, skydbFile, compression=compression, solsetName=solsetName)
+    # call the create_h5parm function from losoto (will put a stupid create message in the h5parm file)
+    create_h5parm(parmDBnames, antennaFile, fieldFile, skydbFile, hdf5File, compression, solsetName)
 
-    # Add CREATE entry to history 
-    h5parmDB = h5parm(hdf5File, readonly = False)
-    soltabs = h5parmDB.getSoltabs(solset=solset)
-    for st in soltabs:
-        sw = solWriter(soltabs[st])
-        sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
-                                   os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
-    h5parmDB.close()
+    ## Add CREATE entry to history 
+    #h5parmDB = h5parm(hdf5File, readonly = False)
+    #soltabs = h5parmDB.getSoltabs(solset=solset)
+    #for st in soltabs:
+    #    sw = solWriter(soltabs[st])
+    #    sw.addHistory('CREATE (by PipelineStep_losotoImporter from %s / %s - %s)' % (os.path.abspath(''), 
+    #                               os.path.basename(parmDBnames[0]), os.path.basename(parmDBnames[-1]) ) )
+    #h5parmDB.close()
 
