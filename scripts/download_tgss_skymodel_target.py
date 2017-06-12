@@ -6,7 +6,7 @@ import numpy as np
 
 
 ########################################################################
-def grab_coo_MS(MS):
+def grab_coord_MS(MS):
     """
     Read the coordinates of a field from one MS corresponding to the selection given in the parameters
 
@@ -106,11 +106,14 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True"):
     print "DOWNLOADING TGSS Skymodel for the target into "+ SkymodelPath
     
     # Reading a MS to find the coordinate (pyrap)
-    [RATar,DECTar]=grab_coo_MS(input2strlist_nomapfile(ms_input)[0])
+    [RATar,DECTar]=grab_coord_MS(input2strlist_nomapfile(ms_input)[0])
         
     # Downloading the skymodel
     os.system("wget -O "+SkymodelPath+ " \'http://tgssadr.strw.leidenuniv.nl/cgi-bin/gsmv2.cgi?coord="+str(RATar)+","+str(DECTar)+"&radius="+Radius+"&unit=deg&deconv=y\' ")
 
+    if not os.path.isfile(SkymodelPath):
+        raise IOError("download_tgss_skymodel_target: Path: \"%s\" does not exist after trying to download TGSS skymodel."%(SkymodelPath))
+    
     return
             
     
