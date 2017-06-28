@@ -15,15 +15,18 @@ import os
 # I copy&pasted that into this file
 #from factor.lib.polygon import Polygon
 
-# workaround for a bug / ugly behavior in matplotlib / pybdsm
+# workaround for a bug / ugly behavior in matplotlib / pybdsf
 # (some installtaions of matplotlib.pyplot fail if there is no X-Server available
-# which is not caught in pybdsm.)
+# which is not caught in pybdsf.)
 try:
-    import matplotlib 
-    matplotlib.use('Agg') 
+    import matplotlib
+    matplotlib.use('Agg')
 except (RuntimeError, ImportError):
     pass
-from lofar import bdsm
+try:
+    import bdsf
+except ImportError:
+    from lofar import bdsm as bdsf
 
 class Polygon:
     """
@@ -405,20 +408,20 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
     mask_name : str
         Filename of output mask image
     atrous_do : bool, optional
-        Use wavelet module of PyBDSM?
+        Use wavelet module of PyBDSF?
     threshisl : float, optional
-        Value of thresh_isl PyBDSM parameter
+        Value of thresh_isl PyBDSF parameter
     threshpix : float, optional
-        Value of thresh_pix PyBDSM parameter
+        Value of thresh_pix PyBDSF parameter
     rmsbox : tuple of floats, optional
-        Value of rms_box PyBDSM parameter
+        Value of rms_box PyBDSF parameter
     rmsbox_bright : tuple of floats, optional
-        Value of rms_box_bright PyBDSM parameter
+        Value of rms_box_bright PyBDSF parameter
     iterate_threshold : bool, optional
         If True, threshold will be lower in 20% steps until
         at least one island is found
     adaptive_rmsbox : tuple of floats, optional
-        Value of adaptive_rms_box PyBDSM parameter
+        Value of adaptive_rms_box PyBDSF parameter
     img_format : str, optional
         Format of output mask image (one of 'fits' or 'casa')
     threshold_format : str, optional
@@ -430,7 +433,7 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
         Filename of file with vertices (must be a pickle file containing
         a dictionary with the vertices in the 'vertices' entry)
     atrous_jmax : int, optional
-        Value of atrous_jmax PyBDSM parameter
+        Value of atrous_jmax PyBDSF parameter
     pad_to_size : int, optional
         Pad output mask image to a size of pad_to_size x pad_to_size
     skip_source_detection : bool, optional
@@ -560,7 +563,7 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
 
         if use_adaptive_threshold:
             # Get an estimate of the rms
-            img = bdsm.process_image(image_name, mean_map='zero', rms_box=rmsbox,
+            img = bdsf.process_image(image_name, mean_map='zero', rms_box=rmsbox,
                                      thresh_pix=threshpix, thresh_isl=threshisl,
                                      atrous_do=atrous_do, ini_method='curvature', thresh='hard',
                                      adaptive_rms_box=adaptive_rmsbox, adaptive_thresh=adaptive_thresh,
@@ -588,7 +591,7 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
             # Start with given threshold and lower it until we get at least one island
             nisl = 0
             while nisl == 0:
-                img = bdsm.process_image(image_name, mean_map='zero', rms_box=rmsbox,
+                img = bdsf.process_image(image_name, mean_map='zero', rms_box=rmsbox,
                                          thresh_pix=threshpix, thresh_isl=threshisl,
                                          atrous_do=atrous_do, ini_method='curvature', thresh='hard',
                                          adaptive_rms_box=adaptive_rmsbox, adaptive_thresh=adaptive_thresh,
@@ -600,7 +603,7 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
                 if threshpix < 5.0:
                     break
         else:
-            img = bdsm.process_image(image_name, mean_map='zero', rms_box=rmsbox,
+            img = bdsf.process_image(image_name, mean_map='zero', rms_box=rmsbox,
                                      thresh_pix=threshpix, thresh_isl=threshisl,
                                      atrous_do=atrous_do, ini_method='curvature', thresh='hard',
                                      adaptive_rms_box=adaptive_rmsbox, adaptive_thresh=adaptive_thresh,
@@ -646,7 +649,7 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
             # Read the image
             mask_im = pim.image(image_name)
         else:
-            # Read the PyBDSM mask
+            # Read the PyBDSF mask
             mask_im = pim.image(mask_name)
         data = mask_im.getdata()
         coordsys = mask_im.coordinates()
