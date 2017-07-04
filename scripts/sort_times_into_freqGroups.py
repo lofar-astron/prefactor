@@ -204,8 +204,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     freq_width = np.min(freqliste[1:]-freqliste[:-1])
     if file_bandwidth > freq_width:
         raise ValueError("Bandwidth of files is larger than minimum frequency step between two files!")
-    if file_bandwidth < (freq_width/2.):
-        raise ValueError("Bandwidth of files is smaller than half the minimum frequency step between two files! (More than half the data is missing.)")
+    if file_bandwidth < (freq_width*0.51):
+        raise ValueError("Bandwidth of files is smaller than 51% of the minimum frequency step between two files! (More than about half the data is missing.)")
     #the new output map
     filemap = MultiDataMap()
     groupmap = DataMap()
