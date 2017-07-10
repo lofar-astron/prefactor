@@ -184,6 +184,24 @@ class Band(object):
         return (self.nwavelengths_high, self.nwavelengths_low)
 
 
+def input2bool(invar):
+    if invar == None:
+        return None
+    if isinstance(invar, bool):
+        return invar
+    elif isinstance(invar, str):
+        if invar.upper() == 'TRUE' or invar == '1':
+            return True
+        elif invar.upper() == 'FALSE' or invar == '0':
+            return False
+        else:
+            raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
+    elif isinstance(invar, int) or isinstance(invar, float):
+        return bool(invar)
+    else:
+        raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+
+
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
          fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.,
          calc_y_axis_stretch=False):
@@ -246,6 +264,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     fieldsize_lowres = float(fieldsize_lowres)
     image_padding = float(image_padding)
     y_axis_stretch = float(y_axis_stretch)
+    calc_y_axis_stretch = input2bool(calc_y_axis_stretch)
 
     msdict = {}
     for ms in ms_list:
