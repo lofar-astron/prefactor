@@ -60,9 +60,6 @@
 ! maxlambda_lowres     = 2000
 # How much padding shall we add during the imaging?
 ! image_padding        = 1.4
-# How much shall the y-axis be stretched or compressed?
-# Used to get rectangular images. Use at your own risk!
-! axis_stretch         = 1.
 # Number of bands to image (spread over the full bandwidth). Larger values
 # result in better subtraction but longer runtimes
 ! nbands_image         = 6
@@ -123,7 +120,7 @@ do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_lowres_deg }}
 do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
 do_magic.argument.image_padding                 =  {{ image_padding }}
-do_magic.argument.y_axis_stretch                =  {{ axis_stretch }}
+do_magic.argument.calc_y_axis_stretch           =  True
 
 # convert the output of do_magic into usable mapfiles, len = 1 / different
 do_magic_maps.control.kind                           =  plugin
