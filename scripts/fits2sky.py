@@ -79,21 +79,21 @@ def main(fits_models, ms_file, skymodel, fits_masks, min_flux_jy=0.005, interp='
 
     # Get filenames of model images and masks
     if '[' in fits_models and ']' in fits_models:
-        fits_models = fits_models.strip('[]').split(',')
-        fits_models = [f.strip() for f in fits_models]
+        fits_models = fits_models.strip('[] ').split(',')
+        fits_models = [f.strip('\'\" ') for f in fits_models]
     else:
-        fits_models = [fits_models]
+        fits_models = [fits_models.strip('\'\" ')]
     if '[' in fits_masks and ']' in fits_masks:
         fits_masks = fits_masks.strip('[]').split(',')
-        fits_masks = [f.strip() for f in fits_masks]
+        fits_masks = [f.strip('\'\" ') for f in fits_masks]
     else:
-        fits_masks = [fits_masks]
+        fits_masks = [fits_masks.strip('\'\" ')]
 
     # Read (first) MS file and get the frequency info
     if '[' in ms_file and ']' in ms_file:
-        files = ms_file.strip('[]').split(',')
-        files = [f.strip() for f in files]
-        ms_file = files[0]
+        files = ms_file.strip('[] ').split(',')
+        #files = [f.strip() for f in files]
+        ms_file = files[0].strip('\'\" ')
     sw = pt.table(ms_file+'::SPECTRAL_WINDOW', ack=False)
     ms_freq = sw.col('REF_FREQUENCY')[0]
     sw.close()
