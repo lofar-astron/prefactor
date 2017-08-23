@@ -3,7 +3,6 @@
 Flag MS if unflagged fraction is too low.
 """
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import numpy as np
 
@@ -31,7 +30,7 @@ def find_unflagged_fraction(ms_file):
 
     return unflagged_fraction
 
-def main(ms_file, min_fraction=0.01):
+def main(ms_file, min_fraction=0.01, print_fraction=False):
     """
     Flag MS if unflagged fraction is too low.
 
@@ -41,6 +40,8 @@ def main(ms_file, min_fraction=0.01):
         Name (path) of input MS
     min_fraction : float , optional
         minimum fraction of unflagged data needed to keep this MS
+    print_fraction : bool, optional
+        print the actual fration of unflagged data
     
     Returns
     -------
@@ -50,6 +51,8 @@ def main(ms_file, min_fraction=0.01):
     """
     min_fraction = float(min_fraction)
     unflagged_fraction = find_unflagged_fraction(ms_file)
+    if print_fraction:
+        print "File %s has %.2f%% unflagged data."%(os.path.basename(ms_file),unflagged_fraction*100.)
     if unflagged_fraction < min_fraction:
         print 'check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, ' \
               'removing file.'.format(os.path.basename(ms_file),str(unflagged_fraction))
@@ -60,11 +63,11 @@ def main(ms_file, min_fraction=0.01):
 if __name__ == '__main__':
     descriptiontext = "Check a MS for a minimum fraction of unflagged data.\n"
 
-    parser = argparse.ArgumentParser(description=descriptiontext, formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=descriptiontext, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('inputms', help='name of the input MS')
     parser.add_argument('-f', '--min_fraction', help='Minimum fraction of unflagged data needed to keep this MS '
-                        '(default 0.01 = "keep if at least 1% is not flagged")', type=float, default=0.01)
+                        '(default 0.01 = "keep if at least 1%% is not flagged")',  type=float, default=0.01)
     args = parser.parse_args()
 
-    erg = main(args.inputms, args.min_fraction)
+    erg = main(args.inputms, args.min_fraction,print_fraction=True)
     print erg
