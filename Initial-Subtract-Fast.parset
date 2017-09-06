@@ -1,9 +1,7 @@
 # Initial Subtract Fast Pipeline
 #
-#   Adapted from (and shamelesly copied from) Factor
 #
 # Pipeline to do the initial subtraction of all sources
-# - external version of the initsubtract step of Factor
 # - will change the input-MSs (adds SUBTRACTED_DATA_HIGH and
 #   SUBTRACTED_DATA_ALL columns)
 # - copies merged skymodels into folder with input data: "data_input_path"
@@ -11,8 +9,8 @@
 #   (included in LOFAR since release 2.15)
 # - in addition to the standard LOFAR software it requires wsclean
 # - expects shared filesystem, that all nodes can reach all files!
-#   (E.g. a single workstation or compute cluster with shared filesystem
-#   doesn't work on multiple nodes on CEP-2 or CEP3.)
+#   (E.g. a single workstation or compute cluster with shared filesystem;
+#   doesn't work on multiple nodes on CEP3.)
 
 ##### For this pipeline to work the data must have:
 # - in the DATA column:
@@ -29,10 +27,18 @@
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.
 
 #### Fast version
+# - ~ 6 times faster than the normal Initial-Subtract pipeline with default
+#   parameters
 # - only a part of the full bandwidth is imaged and model components are
 #   interpolated to all frequencies
-# - only one high-res and one low-res image is made, with a mask used to filter
-#   the clean components so that they are (mostly) real sources
+# - only one high-res and one low-res image is made for each band imaged, with
+#   a mask used to filter the clean components so that they are (mostly) real
+#   sources
+# - WSClean's baseline-dependent averaging is used to speed up imaging
+# - WSClean's auto masking is used to reduce the number of artifacts included
+#   in the subtracted model
+# - Rectangular images are made to speed up imaging at lower declinations (where
+#   the primary beam is elongated N-S)
 
 
 ##### parameters you will need to adjust.
@@ -60,9 +66,6 @@
 ! maxlambda_lowres     = 2000
 # How much padding shall we add during the imaging?
 ! image_padding        = 1.4
-# How much shall the y-axis be stretched or compressed?
-# Used to get rectangular images. Use at your own risk!
-! axis_stretch         = 1.
 # Number of bands to image (spread over the full bandwidth). Larger values
 # result in better subtraction but longer runtimes
 ! nbands_image         = 6
@@ -123,7 +126,7 @@ do_magic.argument.cellsize_lowres_deg           =  {{ cellsize_lowres_deg }}
 do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
 do_magic.argument.image_padding                 =  {{ image_padding }}
-do_magic.argument.y_axis_stretch                =  {{ axis_stretch }}
+do_magic.argument.calc_y_axis_stretch           =  True
 
 # convert the output of do_magic into usable mapfiles, len = 1 / different
 do_magic_maps.control.kind                           =  plugin
@@ -194,22 +197,25 @@ wsclean_high.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high.control.error_tolerance           =   {{ error_tolerance }}
 wsclean_high.control.mapfiles_in               =   [select_imaging_bands.output.mapfile,select_high_padsize.output.mapfile,select_high_size.output.mapfile,select_high_nwavelengths.output.mapfile]
 wsclean_high.control.inputkeys                 =   [msfile,paddedsize,outputsize,nwavelengths]
-wsclean_high.argument.flags                    =   [-no-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_high.argument.flags                    =   [-no-update-model-required,-reorder,-local-rms,-fitbeam,msfile]
 wsclean_high.argument.size                     =   paddedsize
 wsclean_high.argument.trim                     =   outputsize
 wsclean_high.argument.niter                    =   50000
 wsclean_high.argument.threshold                =   0.0
 wsclean_high.argument.pol                      =   I
 wsclean_high.argument.weight                   =   briggs 0.0
-wsclean_high.argument.mgain                    =   0.65
+wsclean_high.argument.mgain                    =   0.8
 wsclean_high.argument.baseline-averaging       =   nwavelengths
-wsclean_high.argument.minuv-l                  =   80
 wsclean_high.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high.argument.mem                      =   {{ max_percent_mem_per_img }}
 wsclean_high.argument.j                        =   {{ max_cpus_per_img }}
 wsclean_high.argument.tempdir                  =   {{ local_scratch_dir }}
 wsclean_high.argument.weighting-rank-filter    =   3
+wsclean_high.argument.auto-mask                =   3.3
+wsclean_high.argument.auto-threshold           =   0.5
+wsclean_high.argument.local-rms-window         =   50
+wsclean_high.argument.local-rms-method         =   rms-with-min
 
 # make masks for the high-res images, length = nbands_image
 mask_high.control.type                          =   pythonplugin
@@ -464,22 +470,25 @@ wsclean_low.control.max_per_node               =   {{ max_imagers_per_node }}
 wsclean_low.control.error_tolerance            =   {{ error_tolerance }}
 wsclean_low.control.mapfiles_in                =   [regroup_map.output.mapfile,select_low_padsize.output.mapfile,select_low_size.output.mapfile,select_low_nwavelengths.output.mapfile]
 wsclean_low.control.inputkeys                  =   [msfile,paddedsize,outputsize,nwavelengths]
-wsclean_low.argument.flags                     =   [-no-update-model-required,-reorder,-fitbeam,msfile]
+wsclean_low.argument.flags                     =   [-no-update-model-required,-reorder,-local-rms,-fitbeam,msfile]
 wsclean_low.argument.size                      =   paddedsize
 wsclean_low.argument.trim                      =   outputsize
 wsclean_low.argument.niter                     =   25000
 wsclean_low.argument.threshold                 =   0.0
 wsclean_low.argument.pol                       =   I
 wsclean_low.argument.weight                    =   briggs 0.0
-wsclean_low.argument.mgain                     =   0.65
+wsclean_low.argument.mgain                     =   0.8
 wsclean_low.argument.baseline-averaging        =   nwavelengths
-wsclean_low.argument.minuv-l                   =   80
 wsclean_low.argument.maxuv-l                   =   {{ maxlambda_lowres }}
 wsclean_low.argument.scale                     =   {{ cellsize_lowres_deg }}
 wsclean_low.argument.mem                       =   {{ max_percent_mem_per_img }}
 wsclean_low.argument.j                         =   {{ max_cpus_per_img }}
 wsclean_low.argument.tempdir                   =   {{ local_scratch_dir }}
 wsclean_low.argument.weighting-rank-filter     =   3
+wsclean_low.argument.auto-mask                 =   3.3
+wsclean_low.argument.auto-threshold            =   0.5
+wsclean_low.argument.local-rms-window          =   50
+wsclean_low.argument.local-rms-method          =   rms-with-min
 
 # make masks for the low-res images, length = nbands_image
 mask_low.control.type                           =   pythonplugin

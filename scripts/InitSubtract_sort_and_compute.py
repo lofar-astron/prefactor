@@ -184,8 +184,27 @@ class Band(object):
         return (self.nwavelengths_high, self.nwavelengths_low)
 
 
+def input2bool(invar):
+    if invar == None:
+        return None
+    if isinstance(invar, bool):
+        return invar
+    elif isinstance(invar, str):
+        if invar.upper() == 'TRUE' or invar == '1':
+            return True
+        elif invar.upper() == 'FALSE' or invar == '0':
+            return False
+        else:
+            raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
+    elif isinstance(invar, int) or isinstance(invar, float):
+        return bool(invar)
+    else:
+        raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+
+
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
-         fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.):
+         fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.,
+         calc_y_axis_stretch=False):
     """
     Check a list of MS files for missing frequencies
 
@@ -209,6 +228,9 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         How much padding shall we add to the padded image sizes.
     y_axis_stretch : float, optional
         How much shall the y-axis be stretched or compressed.
+    calc_y_axis_stretch : bool, optional
+        Adjust the image sizes returned by this script for the mean elevation.
+        If True, the value of y_axis_stretch above is ignored.
 
     Returns
     -------
@@ -242,6 +264,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     fieldsize_lowres = float(fieldsize_lowres)
     image_padding = float(image_padding)
     y_axis_stretch = float(y_axis_stretch)
+    calc_y_axis_stretch = input2bool(calc_y_axis_stretch)
 
     msdict = {}
     for ms in ms_list:
@@ -265,7 +288,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     high_paddedsize_map = DataMap([])
     low_paddedsize_map = DataMap([])
     numfiles = 0
-    for band in bands:
+    for i, band in enumerate(bands):
         print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
         group_map.append(MultiDataProduct('localhost', band.files, False))
         numfiles += len(band.files)
@@ -273,13 +296,29 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
             file_single_map.append(DataProduct('localhost', filename, False))
         (imsize_high_res, imsize_low_res) = band.get_image_sizes(cellsize_highres_deg, cellsize_lowres_deg,
                                                                  fieldsize_highres, fieldsize_lowres)
+
+        # Calculate y_axis_stretch if desired
+        if calc_y_axis_stretch:
+            if i == 0:
+                y_axis_stretch = 1.0 / np.sin(band.mean_el_rad)
+                print "InitSubtract_sort_and_compute.py: Using y-axis stretch of:",y_axis_stretch
+
+            # Adjust sizes so that we get the correct ones below
+            imsize_high_res /= y_axis_stretch
+            imsize_low_res /= y_axis_stretch
+
+        imsize_high_res = band.get_optimum_size(int(imsize_high_res))
         imsize_high_res_stretch = band.get_optimum_size(int(imsize_high_res*y_axis_stretch))
         high_size_map.append(DataProduct('localhost', str(imsize_high_res)+" "+str(imsize_high_res_stretch), False))
+
+        imsize_low_res = band.get_optimum_size(int(imsize_low_res))
         imsize_low_res_stretch = band.get_optimum_size(int(imsize_low_res*y_axis_stretch))
         low_size_map.append(DataProduct('localhost', str(imsize_low_res)+" "+str(imsize_low_res_stretch), False))
+
         imsize_high_pad = band.get_optimum_size(int(imsize_high_res*image_padding))
         imsize_high_pad_stretch = band.get_optimum_size(int(imsize_high_res*image_padding*y_axis_stretch))
         high_paddedsize_map.append(DataProduct('localhost', str(imsize_high_pad)+" "+str(imsize_high_pad_stretch), False))
+
         imsize_low_pad = band.get_optimum_size(int(imsize_low_res*image_padding))
         imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch))
         low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
