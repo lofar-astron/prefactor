@@ -2,28 +2,17 @@
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib
-import lofar.parmdb
 import sys
 import os
 import scipy
 import time
 import numpy
 import math
-import pyrap.tables
 import pp
 import scipy.signal
 from pylab import *
-import sys, os, glob, re
 import numpy as np
-import shutil
-import progressbar
-import logging
-import pyrap.tables as pt
-import lofar.parmdb
-import losoto._version
-import losoto._logging
 from losoto.h5parm import h5parm, solWriter, solFetcher
-import multiprocessing as mp
 #import lofar.expion.fitting as fitting
 
 args = sys.argv
