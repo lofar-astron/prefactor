@@ -28,8 +28,8 @@ def main(infile, xypadsize):
 
     newdata[0, 0, yoffset:yoffset+ysize, xoffset:xoffset+xsize] = imdata
     hdu[0].data = newdata
-    hdu[0].header['CRPIX1'] += yoffset
-    hdu[0].header['CRPIX2'] += xoffset
+    hdu[0].header['CRPIX1'] += xoffset
+    hdu[0].header['CRPIX2'] += yoffset
     hdu.writeto(infile, clobber=True)
 
 
