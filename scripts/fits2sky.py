@@ -96,6 +96,8 @@ def main(fits_models, ms_file, skymodel, fits_masks, min_flux_jy=0.005, interp='
         ms_file = files[0].strip('\'\" ')
     sw = pt.table(ms_file+'::SPECTRAL_WINDOW', ack=False)
     ms_freq = sw.col('REF_FREQUENCY')[0]
+    ms_freq_low = sw.col('CHAN_FREQ')[0][0]
+    ms_freq_high = sw.col('CHAN_FREQ')[0][-1]
     sw.close()
 
     # Get frequencies and data of model images and masks
@@ -115,6 +117,14 @@ def main(fits_models, ms_file, skymodel, fits_masks, min_flux_jy=0.005, interp='
     fits_models = np.array(fits_models)[sorted_ind]
     model_images = np.array(model_images)[sorted_ind]
     mask_images = np.array(mask_images)[sorted_ind]
+
+    # Check if there is a model at the ms frequency. If so, just use that one
+    ind = np.where( np.logical_and(freq >= ms_freq_low, freq <= ms_freq_high) )
+    if len(ind[0]) == 1:
+        freqs = freqs[ind]
+        fits_models = fits_models[ind]
+        model_images = model_images[ind]
+        mask_images = mask_images[ind]
 
     # Set the WCS reference
     hdr = fits.getheader(fits_models[0], 0)
@@ -139,7 +149,7 @@ def main(fits_models, ms_file, skymodel, fits_masks, min_flux_jy=0.005, interp='
         freq_array = []
         for ind, (im, ma) in enumerate(zip(model_images, mask_images)):
             index = [nonzero_ind[j][i] for j in range(4)]
-            if im[tuple(index)] != 0.0 and ma[tuple(index)] > 0:
+            if ma[tuple(index)] > 0:
                 flux_array.append(im[tuple(index)])
                 freq_array.append(freqs[ind])
 
