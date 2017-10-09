@@ -180,10 +180,17 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
 
     outDB = make_empty_parmdb(newparmDB)
 
+    # check if we have data for all target stations
+    for antenna in msinfo.stations:
+        if antenna not in station_names:
+            print "Station %s not found in list of calibrator data!"%(antenna)
+            raise ValueError("Station "+antenna+" missing in calibrator data!")
+    
     # Now do the interpolating
     for antenna_id, antenna in enumerate(station_names):
         if antenna not in msinfo.stations:
-            pass
+            print "Station %s not found in target observation, skipping generation of calibration values."%(antenna)
+            continue
 
         # form median of amplitudes along the time axis, for both polarizations
         amp_cal_00_all = np.median(amps_array[antenna_id,:,:,0],axis=0)
