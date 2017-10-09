@@ -119,7 +119,7 @@ def main(fits_models, ms_file, skymodel, fits_masks, min_flux_jy=0.005, interp='
     mask_images = np.array(mask_images)[sorted_ind]
 
     # Check if there is a model at the ms frequency. If so, just use that one
-    ind = np.where( np.logical_and(freq >= ms_freq_low, freq <= ms_freq_high) )
+    ind = np.where( np.logical_and(freqs >= ms_freq_low, freqs <= ms_freq_high) )
     if len(ind[0]) == 1:
         freqs = freqs[ind]
         fits_models = fits_models[ind]
