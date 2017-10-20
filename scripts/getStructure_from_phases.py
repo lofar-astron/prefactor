@@ -74,7 +74,7 @@ def getStructure(pdname,antennas,nr_grid=1,doplot=True,outbasename='ionosphere',
     S0s=[]
     betas=[]
     for itime in xrange(nr_grid+1):
-        tm=[0,1e9]
+        tm=[0,int(1e9)]
         if itime<nr_grid:
             tm[0]=itime*timestep
             tm[1]=tm[0]+timestep
