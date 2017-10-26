@@ -183,8 +183,13 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
     # check if we have data for all target stations
     for antenna in msinfo.stations:
         if antenna not in station_names:
-            print "Station %s not found in list of calibrator data!"%(antenna)
-            raise ValueError("Station "+antenna+" missing in calibrator data!")
+            if antenna[:2] == 'CS' orantenna[:2] == 'RS':
+                # fail if it is a Dutch station
+                print "Station %s not found in list of calibrator data!"%(antenna)
+                raise ValueError("Station "+antenna+" missing in calibrator data!")
+            else:
+                # just print a warning for international stations
+                print  "No calibratior data for station %s, but international stations will be flagged anyhow."%(antenna)
     
     # Now do the interpolating
     for antenna_id, antenna in enumerate(station_names):
