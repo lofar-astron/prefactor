@@ -183,7 +183,7 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
     # check if we have data for all target stations
     for antenna in msinfo.stations:
         if antenna not in station_names:
-            if antenna[:2] == 'CS' orantenna[:2] == 'RS':
+            if antenna[:2] == 'CS' or antenna[:2] == 'RS':
                 # fail if it is a Dutch station
                 print "Station %s not found in list of calibrator data!"%(antenna)
                 raise ValueError("Station "+antenna+" missing in calibrator data!")
