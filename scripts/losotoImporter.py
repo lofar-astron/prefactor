@@ -481,7 +481,7 @@ if __name__=='__main__':
 
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <MSPattern> \n'
                                 '  <H5parm>    = (Path)name of the (new) H5parm file to be written.\n'
-                                '  <MSPattern> = Search pattern for the measurement sets with instrument tables.\n'
+                                '  <MSPattern> = One or more search patterns for the measurement sets with instrument tables.\n'
                                 '                (e.g. \"/data/scratch/MyObs/calibrator/L*.dppp\")\n'
                                 '                Probably needs to be put in quotes when called from a shell!')
     opt.add_option('-i', '--instrument', dest="Instrument", type='string', default='/instrument',
@@ -496,14 +496,16 @@ if __name__=='__main__':
     (options, args) = opt.parse_args()
 
     # Check options
-    if len(args) != 2:
+    if len(args) < 2:
         opt.print_help()
         sys.exit()
 
     # first argument: H5parm file name
     hdf5File = args[0]
     # second argument: pattern for measurement-sets
-    inMSs = glob.glob(args[1])
+    inMSs = []
+    for entry in args[1:]:
+        inMSs.extend(glob.glob(entry))
 
     # options with default values
     instrument = options.Instrument
