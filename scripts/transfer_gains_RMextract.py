@@ -238,7 +238,7 @@ def main(MSfiles, store_basename='caldata_transfer', store_directory='.', newpar
 
         #now handle the clock-value (no fancy interpolating needed)
         clock_pdb = np.array( np.median(clock_array[:,antenna_id]) ,ndmin=2)
-        if zeroCSclock and antenna[0:1] == 'CS':
+        if zeroCSclock and antenna[0:2] == 'CS':
             clock_pdb *= 0.
         ValueHolder = outDB.makeValue(values=clock_pdb,
                                       sfreq=startfreqs[0], efreq=endfreqs[-1],
