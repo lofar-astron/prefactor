@@ -1,8 +1,8 @@
 # prefactor
 ## The LOFAR pre-facet calibration pipeline.
 
-Parsets for the genericpipeline that do the first calibration of LOFAR data. Originally in order 
-to prepare said data for the Factor facet calibration (https://github.com/lofar-astron/factor), but 
+Parsets for the genericpipeline that do the first calibration of LOFAR data. Originally in order
+to prepare said data for the Factor facet calibration (https://github.com/lofar-astron/factor), but
 also useful if you don't plan to run Factor.
 
 It includes:
@@ -11,15 +11,15 @@ It includes:
 * some flagging and averaging of amplitude solutions
 * grouping of subbands by actual frequency
 * speed and disk usage improvements by optimized usage of NDPPP
-* (optional) wide-band cleaning in Initial-Subtract 
+* (optional) wide-band cleaning in Initial-Subtract
 * diagnostic plots
 * at least some documentation on the [wiki pages](https://github.com/lofar-astron/prefactor/wiki)
 
 The documentation can be found on the GitHub wiki pages: https://github.com/lofar-astron/prefactor/wiki
 
 There are several pipeline parsets in this repository:
-* Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline. 
-* Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline. 
+* Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
+* Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
 * Pre-Facet-Cal.parset : One parset calling first the calibrator and then the target pipelines. This is deprecated, please have a look at the [pipeline description](https://github.com/lofar-astron/prefactor/wiki/Documentation%3A-Pipelines#pre-facet-cal)
 * Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
 * Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
@@ -38,9 +38,8 @@ Software requirements:
 * Python-PP (see http://www.parallelpython.com/ or https://pypi.python.org/pypi/pp )
 * RMextract (see https://github.com/maaijke/RMextract)
 * Python matplotlib
-* WSClean 
-  * for Initial-Subtract.parset : version >=1.12
-  * for Initial-Subtract-Deep.parset : version >=2.0 (not yet released)
+* WSClean
+  * for Initial-Subtract-Fast.parset : version >= 2.5
   * see https://sourceforge.net/projects/wsclean/
 * APLpy (for Initial-Subtract)
 
@@ -57,7 +56,7 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Reinout van Weeren <rvanweeren somewhere cfa.harvard.edu>
 * Wendy Williams <wwilliams somewhere strw.leidenuniv.nl>
 
-With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> for developing the 
+With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> for developing the
 genericpipeline.
 
 The procedure is also mostly described in these papers:
