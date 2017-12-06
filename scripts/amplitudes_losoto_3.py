@@ -22,7 +22,7 @@ from scipy.interpolate import Rbf, InterpolatedUnivariateSpline
 import sys, os, glob, re
 import numpy as np
 import shutil
-import progressbar
+import losoto.progressbar as progressbar
 import logging
 import pyrap.tables as pt
 import lofar.parmdb
@@ -38,13 +38,13 @@ args = sys.argv
 
 globaldbname = args[1] # input h5 parm file
 calsource    = args[2] # name for writing outputfiles
-n_chan       = args[3] # number of channels solved for per subband (i.e., the number of solutions along the frequencies axis of the MS) 
+n_chan       = args[3] # number of channels solved for per subband (i.e., the number of solutions along the frequencies axis of the MS)
 if len(args) > 4:
     bad_sblist_str = args[4]
     bad_sblist = [int(SB) for SB in bad_sblist_str.strip('\"\'').split(';')]
 else:
-    bad_sblist   = [] # run first with all subbands, 
-                      # then determine which subbands are bad based on the plots and set "bad_sblist" 
+    bad_sblist   = [] # run first with all subbands,
+                      # then determine which subbands are bad based on the plots and set "bad_sblist"
                       # accordingly and re-run (some trial and error will be needed)
 
 make_matrixplot = True
@@ -62,7 +62,7 @@ def rebin( a, newshape ):
     '''Rebin an array to a new shape.
     '''
     assert len(a.shape) == len(newshape)
-    
+
     slices = [ slice(0,old, float(old)/new) for old,new in zip(a.shape,newshape) ]
     coordinates = mgrid[slices]
     indices = coordinates.astype('i')   #choose the biggest smaller integer index
@@ -119,7 +119,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """
     import numpy as np
     from math import factorial
-    
+
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
@@ -140,19 +140,19 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')
-    
+
 def median_window_filter(ampl, half_window, threshold):
     ampl_tot_copy = np.copy(ampl)
     ndata = len(ampl)
     flags = np.zeros(ndata, dtype=bool)
     sol = np.zeros(ndata+2*half_window)
     sol[half_window:half_window+ndata] = ampl
-    
+
     for i in range(0, half_window):
         # Mirror at left edge.
         idx = min(ndata-1, half_window-i)
         sol[i] = ampl[idx]
-        
+
         # Mirror at right edge
         idx = max(0, ndata-2-i)
         sol[ndata+half_window+i] = ampl[idx]
@@ -187,12 +187,12 @@ def median_window_filter(ampl, half_window, threshold):
         if mask[i]:
             ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
-    
-    
+
+
 def running_median(ampl,half_window) :
 
     ampl_tot_copy = np.copy(ampl)
-    
+
     ndata = len(ampl)
     flags = np.zeros(ndata, dtype=bool)
     sol = np.zeros(ndata+2*half_window)
@@ -207,10 +207,10 @@ def running_median(ampl,half_window) :
         # Mirror at right edge
         idx = max(0, ndata-2-i)
         sol[ndata+half_window+i] = ampl[idx]
-    
+
     for i in range(len(ampl)):
         #print i, i+half_window
-        std[i] =  np.median(sol[i:i+(2*half_window)])  
+        std[i] =  np.median(sol[i:i+(2*half_window)])
 
     return std
 
@@ -242,7 +242,7 @@ maxscale = np.zeros( nants )
 
 if len(freqs_new) < 20:
     print "Frequency span is less than 20 subbands! The filtering will not work!"
-    print "Please run the calibrator pipeline on the full calibrator bandwidth." 
+    print "Please run the calibrator pipeline on the full calibrator bandwidth."
     raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
 
 # remove the badd subbands given by the user
@@ -280,7 +280,7 @@ if show_plot:
         matplotlib.pyplot.cla()
 
 # Flag bad data
-# I'm too lazy right now to think up a more time-efficient way 
+# I'm too lazy right now to think up a more time-efficient way
 # The way I read and write the amplitudes transposes the time-frequency matrix.
 for antenna_id in range(0,len(amptab.ant[:])):
     for time in range(0,len(amptab.time[:])):
@@ -320,8 +320,8 @@ if make_matrixplot:
     axsp_xx = axp_xx.reshape((Nr*Nc,1))
     fp_yy,axp_yy = matplotlib.pyplot.subplots(Nr,Nc,sharex=True,sharey=True,figsize=(16,12))
     fp_yy.subplots_adjust(hspace = 0.4)
-    axsp_yy = axp_yy.reshape((Nr*Nc,1))   
-    for antenna_id in range(0,len(amptab.ant[:])):        
+    axsp_yy = axp_yy.reshape((Nr*Nc,1))
+    for antenna_id in range(0,len(amptab.ant[:])):
         amp_xx = amps_array_flagged[antenna_id,:,:,0]
         amp_yy = amps_array_flagged[antenna_id,:,:,1]
         try:
@@ -346,7 +346,7 @@ if make_matrixplot:
     fp_yy.savefig('matrix_yy.png')
     fp_xx.clf()
     fp_yy.clf()
-  
+
 
 # Smooth the data further
 ampsoutfile = open(calsource + '_amplitude_array.txt','w')
@@ -363,7 +363,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
         matplotlib.pyplot.savefig('%s_flaggedXX.pdf'%(amptab.ant[antenna_id]))
         matplotlib.pyplot.close()
         matplotlib.pyplot.cla()
-        
+
         matplotlib.pyplot.plot(np.median(amp_yy, axis=0),'b+')
         matplotlib.pyplot.grid(b=True,which='major',axis='x')
         matplotlib.pyplot.xlabel('Subband')
@@ -385,7 +385,7 @@ for antenna_id in range(0,len(amptab.ant[:])):
     for time in range(0,len(amptab.time[:])):
         amps_array[antenna_id,time,:,0] = np.copy(savitzky_golay(amp_xx[time,:], 17, 2))
         amps_array[antenna_id,time,:,1] = np.copy(savitzky_golay(amp_yy[time,:], 17, 2))
-    
+
     if show_plot:
         subplots_adjust(wspace = 0.6)
         matplotlib.pyplot.subplot(121)
