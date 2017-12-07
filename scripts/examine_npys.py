@@ -16,9 +16,10 @@ calsource    = args[1] # name for writing outputfiles
 
 
 amparray   = np.load(calsource + '_amplitude_array.npy')
-clockarray = np.load('fitted_data_dclock_' + calsource + '_1st.sm.npy')
-dtecarray  = np.load('fitted_data_dTEC_'   + calsource + '_1st.sm.npy')
-numants = len(dtecarray[0,:])
+#clockarray = np.load('fitted_data_dclock_' + calsource + '_1st.sm.npy')
+#dtecarray  = np.load('fitted_data_dTEC_'   + calsource + '_1st.sm.npy')
+#numants = len(dtecarray[0,:])
+numants = len(amparray)
 #numfreqs = 242
 #numtimes = 75
 
@@ -28,21 +29,21 @@ numants = len(dtecarray[0,:])
 #sys.exit()
 
 
-for i in range(0,numants):
-    pylab.plot(dtecarray[:,i])
-pylab.xlabel('Time')
-pylab.ylabel('dTEC [$10^{16}$ m$^{-2}$]')
-pylab.savefig('dtec_allsols.png')
-pylab.close()
-pylab.cla()
+#for i in range(0,numants):
+    #pylab.plot(dtecarray[:,i])
+#pylab.xlabel('Time')
+#pylab.ylabel('dTEC [$10^{16}$ m$^{-2}$]')
+#pylab.savefig('dtec_allsols.png')
+#pylab.close()
+#pylab.cla()
 
-for i in range(0,numants):
-    pylab.plot(1e9*clockarray[:,i])
-pylab.xlabel('Time')
-pylab.ylabel('dClock [ns]')
-pylab.savefig('dclock_allsols.png')
-pylab.close()
-pylab.cla()
+#for i in range(0,numants):
+    #pylab.plot(1e9*clockarray[:,i])
+#pylab.xlabel('Time')
+#pylab.ylabel('dClock [ns]')
+#pylab.savefig('dclock_allsols.png')
+#pylab.close()
+#pylab.cla()
 
 
 for i in range(0,numants):
