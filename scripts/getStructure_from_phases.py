@@ -20,7 +20,7 @@ import argparse
 def mad(arr):
     """ Median Absolute Deviation: a "Robust" version of standard deviation.
         Indices variabililty of the sample.
-        https://en.wikipedia.org/wiki/Median_absolute_deviation 
+        https://en.wikipedia.org/wiki/Median_absolute_deviation
     """
     arr = np.ma.array(arr).compressed() # should be faster to not use masked arrays.
     med = np.median(arr)
@@ -74,7 +74,7 @@ def getStructure(pdname,antennas,nr_grid=1,doplot=True,outbasename='ionosphere',
     S0s=[]
     betas=[]
     for itime in xrange(nr_grid+1):
-        tm=[0,1e9]
+        tm=[0,int(1e9)]
         if itime<nr_grid:
             tm[0]=itime*timestep
             tm[1]=tm[0]+timestep
@@ -90,9 +90,9 @@ def getStructure(pdname,antennas,nr_grid=1,doplot=True,outbasename='ionosphere',
             y=dvarx[myselect]
             # Seems like real values dont occur above 1.0
             flagselect = np.where(y > 1.0)
-            xplot = np.delete(x,flagselect) 
+            xplot = np.delete(x,flagselect)
             yplot = np.delete(y,flagselect)
-            
+
             bins = np.logspace(np.log10(np.min(xplot)),np.log10(np.max(xplot)),10)
             binys = []
             binxs = []
@@ -139,7 +139,7 @@ def getStructure(pdname,antennas,nr_grid=1,doplot=True,outbasename='ionosphere',
             y=dvary[myselect]
             # seems like real values dont occur above 1.0
             flagselect = np.where(y > 1.0)
-            xplot = np.delete(x,flagselect) 
+            xplot = np.delete(x,flagselect)
             yplot = np.delete(y,flagselect)
             bins = np.logspace(np.log10(np.min(xplot)),np.log10(np.max(xplot)),20)
             binys = []
@@ -207,5 +207,5 @@ if __name__ == "__main__":
     outbasename = args.outbasename
     nr_grid = args.nr_grid
     print parmdb,anttab,dofilter,doplot,outbasename
-    
+
     getStructure(parmdb,anttab,nr_grid,doplot,outbasename,dofilter)
