@@ -45,9 +45,9 @@
 ### Values needed for RMextract
 # the URL of the server where  the IONEX files can be downloaded
 # leave it at "None" to disable downloads, or set it to:
-#   ftp://ftp.unibe.ch/aiub/CODE/
+#   ftp://ftp.aiub.unibe.ch/CODE/
 # to download from the "standard" server
-! ionex_server  = "ftp://ftp.unibe.ch/aiub/CODE/"
+! ionex_server  = "ftp://ftp.aiub.unibe.ch/CODE/"
 # the prefix of the IONEX files
 ! ionex_prefix  = CODG
 # path where the IONEX files can be stored or are already stored
