@@ -13,7 +13,7 @@ import numpy as np
 import pyrap.tables as pt
 import lofar.parmdb as pdb
 #from losoto.h5parm import h5parm, solWriter
-from losoto.importer import create_h5parm
+from losoto._importer import create_h5parm
 from losoto.h5parm import h5parm
 
 import logging
