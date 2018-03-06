@@ -3,7 +3,7 @@
 Script to sort a list of MSs into frequency-bands, and compute additional values needed for initsubtract
 """
 import pyrap.tables as pt
-import sys, os
+import os
 import numpy as np
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
@@ -185,7 +185,7 @@ class Band(object):
 
 
 def input2bool(invar):
-    if invar == None:
+    if invar is None:
         return None
     if isinstance(invar, bool):
         return invar
@@ -204,7 +204,7 @@ def input2bool(invar):
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
          fieldsize_highres=2.5, fieldsize_lowres=6.5, image_padding=1., y_axis_stretch=1.,
-         calc_y_axis_stretch=False):
+         calc_y_axis_stretch=False, apply_y_axis_stretch_highres=True, apply_y_axis_stretch_lowres=True):
     """
     Check a list of MS files for missing frequencies
 
@@ -230,7 +230,11 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         How much shall the y-axis be stretched or compressed.
     calc_y_axis_stretch : bool, optional
         Adjust the image sizes returned by this script for the mean elevation.
-        If True, the value of y_axis_stretch above is ignored.
+        If True, the value of y_axis_stretch above is ignored
+    apply_y_axis_stretch_highres : bool, optional
+        Apply the y-axis stretch to the high-res image sizes
+    apply_y_axis_stretch_lowres : bool, optional
+        Apply the y-axis stretch to the low-res image sizes
 
     Returns
     -------
@@ -265,6 +269,8 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     image_padding = float(image_padding)
     y_axis_stretch = float(y_axis_stretch)
     calc_y_axis_stretch = input2bool(calc_y_axis_stretch)
+    apply_y_axis_stretch_highres = input2bool(apply_y_axis_stretch_highres)
+    apply_y_axis_stretch_lowres = input2bool(apply_y_axis_stretch_lowres)
 
     msdict = {}
     for ms in ms_list:
@@ -303,8 +309,10 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
                 y_axis_stretch = 1.0 / np.sin(band.mean_el_rad)
                 print "InitSubtract_sort_and_compute.py: Using y-axis stretch of:",y_axis_stretch
 
-            # Adjust sizes so that we get the correct ones below
+        # Adjust sizes so that we get the correct ones below
+        if apply_y_axis_stretch_highres:
             imsize_high_res /= y_axis_stretch
+        if apply_y_axis_stretch_lowres:
             imsize_low_res /= y_axis_stretch
 
         imsize_high_res = band.get_optimum_size(int(imsize_high_res))

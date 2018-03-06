@@ -22,7 +22,8 @@ There are several pipeline parsets in this repository:
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
 * Pre-Facet-Cal.parset : One parset calling first the calibrator and then the target pipelines. This is deprecated, please have a look at the [pipeline description](https://github.com/lofar-astron/prefactor/wiki/Documentation%3A-Pipelines#pre-facet-cal)
 * Initial-Subtract-Fast.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
-* Initial-Subtract-IDG.parset : Same as Initial-Subtract.parset, but supports the image domain gridder (IDG) in WSClean
+* Initial-Subtract-IDG.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean
+* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
 * Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
 
 Experimental and thus deprecated for "normal" use are:
@@ -41,7 +42,7 @@ Software requirements:
 * Python matplotlib
 * WSClean
   * for Initial-Subtract-Fast.parset : version >= 2.5
-  + for Initial-Subtract-IDG.parset, WSClean must be compiled with IDG support
+  * for Initial-Subtract-IDG(-LowMemory).parset, WSClean must be compiled with IDG support
   * see https://sourceforge.net/projects/wsclean/
 * APLpy (for Initial-Subtract)
 
