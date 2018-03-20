@@ -10,6 +10,9 @@
 ##########################################################################
 
 ### parameters you will need to adjust.
+# averaging for the calibrator data
+! avg_timeresolution       = 4.        # average to 4 sec/timeslot
+! avg_freqresolution       = 48.82kHz  # average to 48.82 kHz/ch (= 4 ch/SB)
 # where to find the calibrator data
 ! cal_input_path           = /data/scratch/drabent
 ! cal_input_pattern        = L217455*.MS
@@ -42,7 +45,6 @@ pipeline.pluginpath        = {{ prefactor }}/plugins
 ! max_dppp_threads         = 8
 
 ## parameters for deriving the bandpass
-! nchan                    = 4
 ! bad_SB_list              = "307;308;309;310;311;312;313;314;315"
 # set this to True if you want the pipeline run to continue if single bands fail
 ! error_tolerance          = False
@@ -79,8 +81,8 @@ ndppp_prep_cal.argument.filter.type                  =   filter
 ndppp_prep_cal.argument.filter.baseline              =   CS*, RS*&&
 ndppp_prep_cal.argument.filter.remove                =   true                     # fully kick out the international stations.
 ndppp_prep_cal.argument.avg.type                     =   average
-ndppp_prep_cal.argument.avg.timeresolution           =   4.        # average to ca. 4 seconds integration time.
-ndppp_prep_cal.argument.avg.freqresolution           =   48.82kHz  # average to 4 ch/SB frequency resolution
+ndppp_prep_cal.argument.avg.timeresolution           =   {{ avg_timeresolution }}
+ndppp_prep_cal.argument.avg.freqresolution           =   {{ avg_freqresolution }}
 ndppp_prep_cal.argument.flagamp.type                 =   preflagger
 ndppp_prep_cal.argument.flagamp.amplmin              =   1e-30
 
@@ -149,9 +151,10 @@ prepare_losoto.control.clock_smooth.mode             =   median
 prepare_losoto.control.clock_smooth.replace          =   True
 prepare_losoto.control.bandpass.soltab               =   [sol000/amplitude000]
 prepare_losoto.control.bandpass.operation            =   PREFACTOR_BANDPASS
+prepare_losoto.control.bandpass.chanWidth            =   {{ avg_freqresolution }}
 prepare_losoto.control.bandpass.BadSBList            =   {{ bad_SB_list }}
-prepare_losoto.control.bandpass.nchan                =   {{ nchan }}
 prepare_losoto.control.xyoffset.soltab               =   [sol000/phase000]
+prepare_losoto.control.xyoffset.chanWidth            =   {{ avg_freqresolution }}
 prepare_losoto.control.xyoffset.operation            =   PREFACTOR_XYOFFSET
 prepare_losoto.control.plot_phases.Operation         =   PLOT
 prepare_losoto.control.plot_phases.Soltab            =   [sol000/phase000]
@@ -180,13 +183,13 @@ prepare_losoto.control.plot_TEC.axisInTable          =   ant
 prepare_losoto.control.plot_TEC.PlotFlag             =   False
 prepare_losoto.control.plot_TEC.prefix               =   {{ inspection_directory }}/losoto_tec
 prepare_losoto.control.plot_bandpass.Operation       =   PLOT
-prepare_losoto.control.plot_bandpass.Soltab          =   [sol000/bandpass000]
+prepare_losoto.control.plot_bandpass.Soltab          =   [sol000/bandpass]
 prepare_losoto.control.plot_bandpass.axesInPlot      =   [freq]
 prepare_losoto.control.plot_bandpass.axisInCol       =   ant
 prepare_losoto.control.plot_bandpass.PlotFlag        =   False
 prepare_losoto.control.plot_bandpass.prefix          =   {{ inspection_directory }}/losoto_bandpass
 prepare_losoto.control.plot_xyoffset.Operation       =   PLOT
-prepare_losoto.control.plot_xyoffset.Soltab          =   [sol000/XYoffset000]
+prepare_losoto.control.plot_xyoffset.Soltab          =   [sol000/XYoffset]
 prepare_losoto.control.plot_xyoffset.pol             =   YY
 prepare_losoto.control.plot_xyoffset.axesInPlot      =   [freq]
 prepare_losoto.control.plot_xyoffset.axisInTable     =   ant

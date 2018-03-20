@@ -12,8 +12,8 @@
 ### parameters you will need to adjust.
 # parameters you will need to adjust.
 # averaging for the target data
-! avg_timeresolution     = 4.        # target resolution is 4 seconds time resolution
-! avg_freqresolution     = 48.82kHz  # target resolution is 4 ch/SB frequency resolution
+! avg_timeresolution     = 4.        # average to 4 sec/timeslot
+! avg_freqresolution     = 48.82kHz  # average to 48.82 kHz/ch (= 4 ch/SB)
 # where to find the target data
 ! target_input_path      = /data/scratch/drabent/
 ! target_input_pattern   = L217457*SB00*.MS
@@ -56,11 +56,11 @@
 !prefactor                  = /home/drabent/prefactor
 # pathes to the scripts etc.
 # #### ToDo: get the scripts onto CEP3 and adjust the pathes here!
-! h5parm                   = {{ cal_values_directory }}//h5imp_cal_losoto.h5
+! h5parm                   = {{ cal_values_directory }}/h5imp_cal_losoto.h5
 ! ATeam_skymodel           = {{ prefactor }}/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer          = {{ prefactor }}/scripts/losotoImporter.py
 ! get_ion_script           = {{ prefactor }}/bin/download_IONEX.py
-! transfer_script          = {{ prefactor }}/scripts/add_RMextract_to_H5parm.py
+! transfer_script          = {{ prefactor }}/scripts/add_RMextract_and_times_to_H5parm.py
 ! ATeam_Clipper            = {{ prefactor }}/scripts/Ateamclipper.py
 ! get_tgss_skymodel_script = {{ prefactor }}/scripts/download_tgss_skymodel_target.py
 ! sortmap_script           = {{ prefactor }}/scripts/sort_times_into_freqGroups.py
@@ -117,7 +117,7 @@ get_ion_files.argument.ionex_server   = {{ ionex_server }}
 get_ion_files.argument.ionex_prefix   = {{ ionex_prefix }}
 get_ion_files.argument.ionexPath      = {{ ionex_path }}
 
-# generate parmDB with the interpolated calibrator data to apply to the traget
+# generate h5parm with the interpolated calibrator data to apply to the traget
 trans.control.type              =  pythonplugin
 trans.control.executable        =  {{ transfer_script }}
 trans.control.max_per_node      =  {{ num_proc_per_node }}
@@ -152,7 +152,7 @@ ndppp_prep_target.argument.flagamp.type                = preflagger
 ndppp_prep_target.argument.flagamp.amplmin             = 1e-30
 ndppp_prep_target.argument.applyclock.type             = applycal
 ndppp_prep_target.argument.applyclock.parmdb           = {{ h5parm }}
-ndppp_prep_target.argument.applyclock.correction       = clock000
+ndppp_prep_target.argument.applyclock.correction       = clock
 ndppp_prep_target.argument.applybandpass.type          = applycal
 ndppp_prep_target.argument.applybandpass.parmdb        = {{ h5parm }}
 ndppp_prep_target.argument.applybandpass.correction    = bandpass
