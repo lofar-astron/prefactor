@@ -32,10 +32,11 @@
 ! prefactor                = /home/drabent/prefactor
 ! calib_cal_parset         = {{ prefactor }}/parsets/calibcal.parset
 ! find_skymodel_cal_auto   = {{ prefactor }}/scripts/find_skymodel_cal.py
-! losoto_importer          = {{ prefactor }}/scripts/losotoImporter.py
 pipeline.pluginpath        = {{ prefactor }}/plugins
 # pathes to the executables
 ! losoto_executable        = /home/drabent/losoto/bin/losoto
+! losoto_collector         = /home/drabent/losoto/bin/H5parm_collector.py
+! makesourcedb             = /opt/cep/lofar/lofar_versions/LOFAR-Release-3_0_0/lofar_build/install/gnucxx11_opt/bin/makesourcedb
 
 # number of processes to use per step per node
 ! num_proc_per_node        = 24
@@ -51,7 +52,7 @@ pipeline.pluginpath        = {{ prefactor }}/plugins
 
 ### Stuff that you probably don't need to modify
 # which steps to run
-pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, sky_cal_path, calib_cal, h5_imp_cal_map, h5imp_cal, prepare_losoto, process_losoto, mk_cal_values_dir, copy_cal_h5]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, calib_cal, cal_apply, h5_imp_cal_map, h5imp_cal, prepare_losoto, process_losoto, mk_cal_values_dir, copy_cal_h5]
 
 
 # generate a mapfile of all the calibrator data
@@ -101,37 +102,93 @@ sky_cal.control.error_tolerance                      =   {{ error_tolerance }}
 sky_cal.argument.flags                               =   [combine_data_cal_map.output.mapfile]
 sky_cal.argument.DirSkymodelCal                      =   {{ calibrator_path_skymodel }}
 
-## extract from the mapfile from sky_cal, the path to the skymodel (used by calib_cal)
-sky_cal_path.control.kind                            =   plugin
-sky_cal_path.control.type                            =   mapfilenamesFromMapfiles
-sky_cal_path.control.mapfile_FilePath                =   sky_cal.output.SkymodelCal.mapfile
+# make the sourcedb
+make_sourcedb.control.kind                           =   recipe
+make_sourcedb.control.type                           =   executable_args
+make_sourcedb.control.executable                     =   {{ makesourcedb }}
+make_sourcedb.control.error_tolerance                =   {{ error_tolerance }}
+make_sourcedb.control.args_format                    =   lofar
+make_sourcedb.control.outputkey                      =   out
+make_sourcedb.control.mapfile_in                     =   sky_cal.output.SkymodelCal.mapfile
+make_sourcedb.control.inputkey                       =   in
+make_sourcedb.argument.format                        =   <
+make_sourcedb.argument.outtype                       =   blob
 
-# now run BBS on the NDPPP-ed calibrator data.
-calib_cal.control.type                               =   python-calibrate-stand-alone
-calib_cal.control.max_per_node                       =   {{ num_proc_per_node }}
+# expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
+expand_sourcedb.control.kind                         =   plugin
+expand_sourcedb.control.type                         =   expandMapfile
+expand_sourcedb.control.mapfile_in                   =   make_sourcedb.output.mapfile
+expand_sourcedb.control.mapfile_to_match             =   ndppp_prep_cal.output.mapfile
+expand_sourcedb.control.mapfile_dir                  =   input.output.mapfile_dir
+expand_sourcedb.control.filename                     =   expand_sourcedb.mapfile
+
+# generate mapfile with the parmDB names to be used in the calib_cal steps
+calib_cal_parmmap.control.kind                       =   plugin
+calib_cal_parmmap.control.type                       =   createMapfile
+calib_cal_parmmap.control.method                     =   add_suffix_to_file
+calib_cal_parmmap.control.mapfile_in                 =   ndppp_prep_cal.output.mapfile
+calib_cal_parmmap.control.add_suffix_to_file         =   /instrument.h5
+calib_cal_parmmap.control.mapfile_dir                =   input.output.mapfile_dir
+calib_cal_parmmap.control.filename                   =   calib_cal_h5parms.mapfile
+
+# now run NDPPP on the averaged calibrator data
+calib_cal.control.type                               =   dppp
+calib_cal.control.max_per_node                       =   {{ num_proc_per_node_limit }}
+calib_cal.control.inplace                            =   True
 calib_cal.control.error_tolerance                    =   {{ error_tolerance }}
-calib_cal.argument.force                             =   True
-calib_cal.argument.observation                       =   ndppp_prep_cal.output.mapfile  # mapfile for the NDPPP-ed calibrator data
-calib_cal.argument.parset                            =   {{ calib_cal_parset }}
-calib_cal.argument.catalog                           =   sky_cal_path.output.FilePath
-calib_cal.argument.numthreads                        =   {{ num_proc_per_node }}
+calib_cal.argument.numthreads                        =   {{ max_dppp_threads }}
+calib_cal.argument.msin                              =   ndppp_prep_cal.output.mapfile    # The input data.
+calib_cal.argument.msin.datacolumn                   =   DATA
+calib_cal.argument.msin.baseline                     =   CS*&; RS*&; CS*&RS*
+calib_cal.argument.msout.datacolumn                  =   CORRECTED_DATA
+calib_cal.argument.steps                             =   [solve]
+calib_cal.argument.solve.type                        =   ddecal
+calib_cal.argument.solve.mode                        =   rotation+diagonal
+calib_cal.argument.solve.maxiter                     =   100
+calib_cal.argument.solve.nchan                       =   1
+calib_cal.argument.solve.solint                      =   1
+calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.mapfile
+calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.output.mapfile
+calib_cal.argument.solve.usebeammodel                =   True
+calib_cal.argument.solve.uvlambdamin                 =   160
+
+# apply the phase-only calibration solutions
+# solve and apply are separate to allow to solve on a subset of baselines but apply to all
+# Note: this step is not run by default -- to do so, add it to pipeline.steps
+cal_apply.control.type                               =   dppp
+cal_apply.control.error_tolerance                    =   {{ error_tolerance }}
+cal_apply.control.inplace                            =   True
+cal_apply.control.max_per_node                       =   {{ num_proc_per_node_limit }}
+cal_apply.argument.numthreads                        =   {{ max_dppp_threads }}
+cal_apply.argument.msin                              =   ndppp_prep_cal.output.mapfile
+cal_apply.argument.msin.datacolumn                   =   DATA
+cal_apply.argument.msout.datacolumn                  =   CORRECTED_DATA
+cal_apply.argument.steps                             =   [applycal1,applycal2,applycal3]
+cal_apply.argument.applycal1.type                    =   applycal
+cal_apply.argument.applycal1.correction              =   amplitude000
+cal_apply.argument.applycal1.parmdb                  =   calib_cal_parmmap.output.mapfile
+cal_apply.argument.applycal2.type                    =   applycal
+cal_apply.argument.applycal2.correction              =   phase000
+cal_apply.argument.applycal2.parmdb                  =   calib_cal_parmmap.output.mapfile
+cal_apply.argument.applycal3.type                    =   applycal
+cal_apply.argument.applycal3.correction              =   rotation000
+cal_apply.argument.applycal3.parmdb                  =   calib_cal_parmmap.output.mapfile
 
 # generate a mapfile with all files in a single entry
 h5_imp_cal_map.control.kind                          =   plugin
-h5_imp_cal_map.control.type                          =   createMapfile
-h5_imp_cal_map.control.method                        =   mapfile_all_to_one
-h5_imp_cal_map.control.mapfile_in                    =   ndppp_prep_cal.output.mapfile
+h5_imp_cal_map.control.type                          =   compressMapfile
+h5_imp_cal_map.control.mapfile_in                    =   calib_cal_parmmap.output.mapfile
 h5_imp_cal_map.control.mapfile_dir                   =   input.output.mapfile_dir
 h5_imp_cal_map.control.filename                      =   h5_imp_cal_map.mapfile
 
-# import all instrument tables into one LoSoTo file
-h5imp_cal.control.type                               =   pythonplugin
-h5imp_cal.control.executable                         =   {{ losoto_importer }}
+# collect all instrument tables into one LoSoTo file
+h5imp_cal.control.kind                               =   recipe
+h5imp_cal.control.type                               =   executable_args
+h5imp_cal.control.executable                         =   {{ losoto_collector }}
 h5imp_cal.control.error_tolerance                    =   {{ error_tolerance }}
-h5imp_cal.argument.flags                             =   [h5_imp_cal_map.output.mapfile,h5imp_cal_losoto.h5]
-h5imp_cal.argument.instrument                        =   /instrument
-h5imp_cal.argument.solsetName                        =   sol000
-h5imp_cal.argument.compression                       =   7
+h5imp_cal.control.outputkey                          =   outh5parm
+h5imp_cal.argument.flags                             =   [h5_imp_cal_map.output.mapfile]
+h5imp_cal.argument.outh5parm                         =   outh5parm
 
 # create losoto v2 parset file
 prepare_losoto.control.kind                          =   plugin
@@ -201,18 +258,18 @@ process_losoto.control.kind                          =   recipe
 process_losoto.control.type                          =   executable_args
 process_losoto.control.executable                    =   {{ losoto_executable }}
 process_losoto.control.max_per_node                  =   {{ num_proc_per_node }}
-process_losoto.argument.flags                        =   [h5imp_cal.output.h5parm.mapfile, input.output.job_directory/losoto.parset]
+process_losoto.argument.flags                        =   [h5imp_cal.output.mapfile, input.output.job_directory/losoto.parset]
 
 # create the cal_values_directory if needed
 mk_cal_values_dir.control.kind                       =   plugin
 mk_cal_values_dir.control.type                       =   makeDirectory
 mk_cal_values_dir.control.directory                  =   {{ cal_values_directory }}
 
-# copy the cal-value npys to the cal-values directory
+# copy the cal h5parm to the cal-values directory
 copy_cal_h5.control.kind                             =   recipe
 copy_cal_h5.control.type                             =   executable_args
 copy_cal_h5.control.executable                       =   /bin/cp
 copy_cal_h5.control.max_per_node                     =   {{ num_proc_per_node_limit }}
-copy_cal_h5.control.mapfile_in                       =   h5imp_cal.output.h5parm.mapfile
+copy_cal_h5.control.mapfile_in                       =   h5imp_cal.output.mapfile
 copy_cal_h5.control.inputkey                         =   source
 copy_cal_h5.control.arguments                        =   [source,{{ cal_values_directory }}]
