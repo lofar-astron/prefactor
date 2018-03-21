@@ -2,11 +2,11 @@
 # Pre-Facet Calibrator Calibration Pipeline                              #
 #                                                                        #
 # Calibrator part of the basic Pre-Facet calibration pipeline:           #
-# - requires LOFAR software version  >= 3.0.0                            #
+# - requires LOFAR software version  >= 3.1.0                            #
 # - requires losoto software version >= 2.0.0                            #
 # - expects shared filesystem, that all nodes can reach all files!       #
 #   (E.g. a single workstation or compute cluster with shared filesystem #
-#   doesn't work on multiple nodes on CEP-2 or CEP3.)                    #
+#   doesn't work on multiple nodes on CEP3.)                             #
 ##########################################################################
 
 ### parameters you will need to adjust.
@@ -33,6 +33,7 @@
 ! calib_cal_parset         = {{ prefactor }}/parsets/calibcal.parset
 ! find_skymodel_cal_auto   = {{ prefactor }}/scripts/find_skymodel_cal.py
 pipeline.pluginpath        = {{ prefactor }}/plugins
+
 # pathes to the executables
 ! losoto_executable        = /home/drabent/losoto/bin/losoto
 ! losoto_collector         = /home/drabent/losoto/bin/H5parm_collector.py
@@ -95,7 +96,7 @@ combine_data_cal_map.control.mapfile_dir             =   input.output.mapfile_di
 combine_data_cal_map.control.filename                =   combine_data_cal_map.mapfile
 combine_data_cal_map.control.mapfile_in              =   createmap_cal.output.mapfile
 
-# find automatically the calibrator used and update the BBS calibration parset
+# find automatically the calibrator sky model
 sky_cal.control.type                                 =   pythonplugin
 sky_cal.control.executable                           =   {{ find_skymodel_cal_auto }}
 sky_cal.control.error_tolerance                      =   {{ error_tolerance }}
@@ -122,7 +123,7 @@ expand_sourcedb.control.mapfile_to_match             =   ndppp_prep_cal.output.m
 expand_sourcedb.control.mapfile_dir                  =   input.output.mapfile_dir
 expand_sourcedb.control.filename                     =   expand_sourcedb.mapfile
 
-# generate mapfile with the parmDB names to be used in the calib_cal steps
+# generate mapfile with the h5parm names to be used in the calib_cal steps
 calib_cal_parmmap.control.kind                       =   plugin
 calib_cal_parmmap.control.type                       =   createMapfile
 calib_cal_parmmap.control.method                     =   add_suffix_to_file
@@ -152,8 +153,7 @@ calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.outpu
 calib_cal.argument.solve.usebeammodel                =   True
 calib_cal.argument.solve.uvlambdamin                 =   160
 
-# apply the phase-only calibration solutions
-# solve and apply are separate to allow to solve on a subset of baselines but apply to all
+# apply the calibration solutions
 # Note: this step is not run by default -- to do so, add it to pipeline.steps
 cal_apply.control.type                               =   dppp
 cal_apply.control.error_tolerance                    =   {{ error_tolerance }}
@@ -181,7 +181,7 @@ h5_imp_cal_map.control.mapfile_in                    =   calib_cal_parmmap.outpu
 h5_imp_cal_map.control.mapfile_dir                   =   input.output.mapfile_dir
 h5_imp_cal_map.control.filename                      =   h5_imp_cal_map.mapfile
 
-# collect all instrument tables into one LoSoTo file
+# collect all instrument tables into one h5parm
 h5imp_cal.control.kind                               =   recipe
 h5imp_cal.control.type                               =   executable_args
 h5imp_cal.control.executable                         =   {{ losoto_collector }}
