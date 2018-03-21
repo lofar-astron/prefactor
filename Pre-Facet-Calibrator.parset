@@ -28,9 +28,8 @@
 # name of the station that will be used as a reference for the phase-plots
 ! reference_station        = CS001HBA0
 
-# pathes to the scripts etc. (specify your path to prefactor)
+# paths to the scripts etc. (specify your path to prefactor)
 ! prefactor                = /home/drabent/prefactor
-! calib_cal_parset         = {{ prefactor }}/parsets/calibcal.parset
 ! find_skymodel_cal_auto   = {{ prefactor }}/scripts/find_skymodel_cal.py
 pipeline.pluginpath        = {{ prefactor }}/plugins
 
