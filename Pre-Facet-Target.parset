@@ -369,7 +369,7 @@ gsmcal_solve.argument.gaincal.usechannelfreq          = True
 gsmcal_solve.argument.gaincal.beammode                = array_factor
 
 # apply the phase-only calibration solutions
-# solve and apply are seperate to allow to solve on a subset of baselines but apply to all
+# solve and apply are separate to allow to solve on a subset of baselines but apply to all
 gsmcal_apply.control.type                             = dppp
 gsmcal_apply.control.error_tolerance                  = {{ error_tolerance }}
 gsmcal_apply.control.inplace                          = True
