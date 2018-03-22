@@ -26,15 +26,13 @@ There are several pipeline parsets in this repository:
 * Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
 
 Software requirements:
-* the full "offline" LOFAR software installation version >= 3.1
+* the full "offline" LOFAR software installation (version >= 3.1)
 * LoSoTo (version >= 2.0 -- see https://github.com/revoltek/losoto)
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * RMextract (see https://github.com/maaijke/RMextract)
 * Python matplotlib
-* WSClean (for Initial-Subtract)
-  * for Initial-Subtract-Fast.parset : version >= 2.5
-  * for Initial-Subtract-IDG(-LowMemory).parset, WSClean must be compiled with IDG support
-  * see https://sourceforge.net/projects/wsclean/
+* WSClean (for Initial-Subtract; version >= 2.5 -- see https://sourceforge.net/projects/wsclean)
+  * for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
@@ -50,8 +48,7 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Reinout van Weeren <rvanweeren somewhere cfa.harvard.edu>
 * Wendy Williams <wwilliams somewhere strw.leidenuniv.nl>
 
-With special thanks to Stefan Froehlich <s.froehlich somewhere fz-juelich.de> for developing the
-genericpipeline.
+With special thanks to Stefan Froehlich for developing the genericpipeline.
 
 The procedure is also mostly described in these papers:
 * van Weeren, R. J., Williams, W. L., Hardcastle, M. J., et al. 2016, ApJS, 223, 2
