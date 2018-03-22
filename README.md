@@ -20,7 +20,6 @@ The documentation can be found on the GitHub wiki pages: https://github.com/lofa
 There are several pipeline parsets in this repository:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
-* Pre-Facet-Cal.parset : One parset calling first the calibrator and then the target pipelines. This is deprecated, please have a look at the [pipeline description](https://github.com/lofar-astron/prefactor/wiki/Documentation%3A-Pipelines#pre-facet-cal)
 * Initial-Subtract-Fast.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
 * Initial-Subtract-IDG.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean
 * Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
