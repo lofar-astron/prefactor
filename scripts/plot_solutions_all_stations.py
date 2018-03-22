@@ -75,8 +75,8 @@ def solplot_phaseonly(parmdb, imageroot, refstationi, plot_international=False):
             #print "no phases"
         fmt = ','
         
-        axs[istat][0].plot(times, normalize(phase00-phase00_ref), color='b',  marker=fmt, label='Gain:0:0:Phase')
-        axs[istat][0].plot(times, normalize(phase11-phase11_ref), color='g',  marker=fmt, label='Gain:1:1:Phase')
+        axs[istat][0].scatter(times, normalize(phase00-phase00_ref), color='b',  marker='.', s=1, label='Gain:0:0:Phase')
+        axs[istat][0].scatter(times, normalize(phase11-phase11_ref), color='g',  marker='.', s=1, label='Gain:1:1:Phase')
         axs[istat][0].set_ylim(-3.2, 3.2)
         axs[istat][0].set_xlim(times.min(), times.max())
         axs[istat][0].set_title(station)

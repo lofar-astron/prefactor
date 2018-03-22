@@ -1,24 +1,11 @@
 # Pre-Facet Calibration Pipeline
 #
-# Basic Pre-Facet Calibration Pipeline:
-# - no demixing but A-team flagging,
-# - calibration transfer and averaging of target data in one go.
-# - checks frequncies in MSs to group files
-# - the new "error_tolerance" option requires LOFAR software version >= 2.15
-#   (Comment out all lines with "error_tolerance" if you want to use an older version.)
-# - using LoSoTo from the pipeline requires latest executable_args node-script
-#   (available in the current LOFAR trunk, revision 33969 and later)
-#   (The diff, to do the patching by hand, can be found in the 6th comment at:
-#   https://github.com/lofar-astron/prefactor/issues/4  )
-# - expects shared filesystem, that all nodes can reach all files!
-#   (E.g. a single workstation or compute cluster with shared filesystem
-#   doesn't work on multiple nodes on CEP-2 or CEP3.)
-
+# Runs Pre-Facet-Calibrator.parset followed by Pre-Facet-Target.parset in one go
 
 # parameters you will need to adjust.
 # averaging for the calibrator and target data
-! avg_timestep         = 2   # averaging step needed to average the data to 4 seconds time resolution
-! avg_freqstep         = 2   # averaging step needed to average the data to 4 ch/SB frequency resolution
+! avg_timeresolution       = 4.        # average to 4 sec/timeslot
+! avg_freqresolution       = 48.82kHz  # average to 48.82 kHz/ch (= 4 ch/SB)
 # where to find the calibrator data
 ! cal_input_path       = /data/scratch/username/PathToYourCalibratorData/
 ! cal_input_pattern    = L*.MS
@@ -47,32 +34,33 @@
 ! min_unflagged_fraction = 0.5
 # name of the station that will be used as a reference for the phase-plots
 ! reference_station      = CS001HBA0
+# station-subband number to use as reference for grouping
+# "None" -> use lowest frequency input data as reference
+# (Please be aware of the difference between SBXXX number and station subband!)
+! reference_stationSB    = None
 
-## Values needed for RMextract
-# the URL of the server where the IONEX files can be downloaded
+### Values needed for RMextract
+# the URL of the server where  the IONEX files can be downloaded
 # leave it at "None" to disable downloads, or set it to:
-#   ftp://ftp.unibe.ch/aiub/CODE/
+#   ftp://ftp.aiub.unibe.ch/CODE/
 # to download from the "standard" server
-! ionex_server  = None
+! ionex_server  = "ftp://ftp.aiub.unibe.ch/CODE/"
 # the prefix of the IONEX files
 ! ionex_prefix  = CODG
 # path where the IONEX files can be stored or are already stored
 ! ionex_path    = /media/scratch/test/username/WhereYouWantToStoreTheValuesFromTheCalibrator/
 
-## pathes to the scripts etc.
-# #### ToDo: get the scripts onto CEP3 and adjust the pathes here!
+# paths to the scripts etc. (specify your path to prefactor)
+! prefactor                = /home/drabent/prefactor
+! find_skymodel_cal_auto   = {{ prefactor }}/scripts/find_skymodel_cal.py
+
 ! calibrator_parset        = /homea/htb00/htb001/prefactor/Pre-Facet-Calibrator.parset
 ! target_parset            = /homea/htb00/htb001/prefactor/Pre-Facet-Target.parset
-! calib_cal_parset         = /homea/htb00/htb001/prefactor/parsets/calibcal.parset
 ! find_skymodel_cal_auto   = /homea/htb00/htb001/prefactor/scripts/find_skymodel_cal.py
 ! ATeam_skymodel           = /homea/htb00/htb001/prefactor/skymodels/Ateam_LBA_CC.skymodel
 ! losoto_importer          = /homea/htb00/htb001/prefactor/scripts/losotoImporter.py
 ! get_ion_script           = /homea/htb00/htb001/prefactor/bin/download_IONEX.py
-! fitclock_script          = /homea/htb00/htb001/prefactor/scripts/fit_clocktec_initialguess_losoto.py
-! fitamps_script           = /homea/htb00/htb001/prefactor/scripts/amplitudes_losoto_3.py
-! plotsols_script          = /homea/htb00/htb001/prefactor/scripts/examine_npys.py
-! fit_XYoffset_script      = /homea/htb00/htb001/prefactor/scripts/find_cal_global_phaseoffset_losoto.py
-! transfer_script          = /homea/htb00/htb001/prefactor/scripts/transfer_gains_RMextract.py
+! transfer_script          = /homea/htb00/htb001/prefactor/scripts/add_RMextract_and_times_to_H5parm.py
 ! ATeam_Clipper            = /homea/htb00/htb001/prefactor/scripts/Ateamclipper.py
 ! get_tgss_skymodel_script = /homea/htb00/htb001/prefactor/scripts/download_tgss_skymodel_target.py
 ! sortmap_script           = /homea/htb00/htb001/prefactor/scripts/sort_times_into_freqGroups.py
@@ -80,6 +68,7 @@
 ! structurefunction_script = /homea/htb00/htb001/prefactor/scripts/getStructure_from_phases.py
 ! plotphases_script        = /homea/htb00/htb001/prefactor/scripts/plot_solutions_all_stations.py
 ! losoto_executable        = /opt/cep/losoto/current/bin/losoto
+! losoto_collector         = /opt/cep/losoto/current/bin/H5parm_collector.py
 ! flagging_strategy        = /homea/htb00/htb003/lofar_jureca_2.17_stack2016a/share/rfistrategies/HBAdefault
 ! makesourcedb             = /homea/htb00/htb003/lofar_jureca_2.17_stack2016a/bin/makesourcedb
 
@@ -101,8 +90,8 @@ pipeline.steps = [calibrator_pipeline, target_pipeline]
 # run the calibrator pipeline
 calibrator_pipeline.control.kind                      =  pipeline
 calibrator_pipeline.control.type                      =  {{ calibrator_parset }}
-calibrator_pipeline.argument.avg_timestep             =  {{ avg_timestep }}
-calibrator_pipeline.argument.avg_freqstep             =  {{ avg_freqstep }}
+calibrator_pipeline.argument.avg_timeresolution       =  {{ avg_timeresolution }}
+calibrator_pipeline.argument.avg_freqresolution       =  {{ avg_freqresolution }}
 calibrator_pipeline.argument.cal_input_path           =  {{ cal_input_path }}
 calibrator_pipeline.argument.cal_input_pattern        =  {{ cal_input_pattern }}
 calibrator_pipeline.argument.calibrator_path_skymodel =  {{ calibrator_path_skymodel }}
@@ -110,14 +99,8 @@ calibrator_pipeline.argument.inspection_directory     =  {{ inspection_directory
 calibrator_pipeline.argument.cal_values_directory     =  {{ cal_values_directory }}
 calibrator_pipeline.argument.flag_baselines           =  {{ flag_baselines }}
 calibrator_pipeline.argument.reference_station        =  {{ reference_station }}
-calibrator_pipeline.argument.calib_cal_parset         =  {{ calib_cal_parset }}
 calibrator_pipeline.argument.find_skymodel_cal_auto   =  {{ find_skymodel_cal_auto }}
-calibrator_pipeline.argument.losoto_importer          =  {{ losoto_importer }}
-calibrator_pipeline.argument.fitclock_script          =  {{ fitclock_script }}
-calibrator_pipeline.argument.fitamps_script           =  {{ fitamps_script }}
-calibrator_pipeline.argument.plotsols_script          =  {{ plotsols_script }}
-calibrator_pipeline.argument.fit_XYoffset_script      =  {{ fit_XYoffset_script }}
-calibrator_pipeline.argument.plotphases_script        =  {{ plotphases_script }}
+calibrator_pipeline.argument.losoto_collector         =  {{ losoto_collector }}
 calibrator_pipeline.argument.losoto_executable        =  {{ losoto_executable }}
 calibrator_pipeline.argument.num_proc_per_node        =  {{ num_proc_per_node }}
 calibrator_pipeline.argument.num_proc_per_node_limit  =  {{ num_proc_per_node_limit }}
@@ -127,8 +110,8 @@ calibrator_pipeline.argument.error_tolerance          =  {{ error_tolerance }}
 # run the target pipeline
 target_pipeline.control.kind                      =  pipeline
 target_pipeline.control.type                      =  {{ target_parset }}
-target_pipeline.argument.avg_timestep             =  {{ avg_timestep }}
-target_pipeline.argument.avg_freqstep             =  {{ avg_freqstep }}
+target_pipeline.argument.avg_timeresolution       =  {{ avg_timeresolution }}
+target_pipeline.argument.avg_freqresolution       =  {{ avg_freqresolution }}
 target_pipeline.argument.target_input_path        =  {{ target_input_path }}
 target_pipeline.argument.target_input_pattern     =  {{ target_input_pattern }}
 target_pipeline.argument.target_skymodel          =  {{ target_skymodel }}

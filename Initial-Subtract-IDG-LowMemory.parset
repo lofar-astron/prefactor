@@ -1,4 +1,4 @@
-# Initial Subtract Fast Pipeline
+# Initial Subtract IDG Pipeline for low-memory computers (< 64 GB)
 #
 #
 # Pipeline to do the initial subtraction of all sources
@@ -7,7 +7,7 @@
 # - copies merged skymodels into folder with input data: "data_input_path"
 # - requires combined predict-corrupt-subtract step in NDPPP
 #   (included in LOFAR since release 2.15)
-# - in addition to the standard LOFAR software it requires wsclean
+# - in addition to the standard LOFAR software it requires WSClean with IDG
 # - expects shared filesystem, that all nodes can reach all files!
 #   (E.g. a single workstation or compute cluster with shared filesystem;
 #   doesn't work on multiple nodes on CEP3.)
@@ -26,20 +26,20 @@
 #
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.
 
-#### Fast version
-# - ~ 6 times faster than the normal Initial-Subtract pipeline with default
-#   parameters
+#### IDG version
+# - Version of Initial-Subtract-Fast parset that uses the Image Domain Gridder for the
+#   high-res images and normal WSClean gridder for the low-res images
 # - only a part of the full bandwidth is imaged and model components are
 #   interpolated to all frequencies
 # - only one high-res and one low-res image is made for each band imaged, with
 #   a mask used to filter the clean components so that they are (mostly) real
 #   sources
-# - WSClean's baseline-dependent averaging is used to speed up imaging
+# - WSClean's baseline-dependent averaging is used to speed up imaging of low-res images
 # - WSClean's auto masking is used to reduce the number of artifacts included
 #   in the subtracted model
-# - Rectangular images are made to speed up imaging at lower declinations (where
-#   the primary beam is elongated N-S)
-
+# - Rectangular images are supported by IDG yet, so high-res images are square regardless
+#   of the field Dec. Rectangular low-res images are made to speed up imaging at lower
+#   declinations (where the primary beam is elongated N-S)
 
 ##### parameters you will need to adjust.
 ! data_input_path         = /data/scratch/username/PathToYourTargetData/
@@ -75,6 +75,8 @@
 # components below this flux density will not be subtracted. Lower values result
 # in better subtraction but longer runtimes
 ! min_flux_jy          = 0.005
+# IDG mode to use: cpu or hybrid
+! idg_mode             = hybrid
 
 ##### performance parameters
 ! max_imagers_per_node      =  2
@@ -96,7 +98,7 @@
 ! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
 
 # the Steps in this pipeline
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_size, select_high_nwavelengths, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, correct_high, regroup_map, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_size, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, correct_high, regroup_map, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -127,6 +129,8 @@ do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
 do_magic.argument.image_padding                 =  {{ image_padding }}
 do_magic.argument.calc_y_axis_stretch           =  True
+do_magic.argument.apply_y_axis_stretch_highres  =  False
+do_magic.argument.apply_y_axis_stretch_lowres   =  True
 
 # convert the output of do_magic into usable mapfiles, len = 1 / different
 do_magic_maps.control.kind                           =  plugin
@@ -168,15 +172,6 @@ select_high_size.control.mapfile_full = do_magic_maps.output.groupmap
 select_high_size.control.mapfile_dir  = input.output.mapfile_dir
 select_high_size.control.filename     = imaging_high_size.mapfile
 
-# adjust the nwavelengths mapfile to match the selected bands, length = nbands_image
-select_high_nwavelengths.control.kind         = plugin
-select_high_nwavelengths.control.type         = matchDistFreqs
-select_high_nwavelengths.control.mapfile_in   = do_magic_maps.output.nwavelengths_high_map
-select_high_nwavelengths.control.mapfile_dist = select_imaging_bands.output.mapfile
-select_high_nwavelengths.control.mapfile_full = do_magic_maps.output.groupmap
-select_high_nwavelengths.control.mapfile_dir  = input.output.mapfile_dir
-select_high_nwavelengths.control.filename     = imaging_high_nwavelengths.mapfile
-
 # high-res imaging, length = nbands_image
 wsclean_high.control.kind                      =   recipe
 wsclean_high.control.type                      =   executable_args
@@ -186,9 +181,9 @@ wsclean_high.control.outputkey                 =   name
 wsclean_high.control.args_format               =   wsclean
 wsclean_high.control.max_per_node              =   {{ max_imagers_per_node }}
 wsclean_high.control.error_tolerance           =   {{ error_tolerance }}
-wsclean_high.control.mapfiles_in               =   [select_imaging_bands.output.mapfile,select_high_size.output.mapfile,select_high_nwavelengths.output.mapfile]
-wsclean_high.control.inputkeys                 =   [msfile,outputsize,nwavelengths]
-wsclean_high.argument.flags                    =   [-no-update-model-required,-reorder,-local-rms,-fit-beam,msfile]
+wsclean_high.control.mapfiles_in               =   [select_imaging_bands.output.mapfile,select_high_size.output.mapfile]
+wsclean_high.control.inputkeys                 =   [msfile,outputsize]
+wsclean_high.argument.flags                    =   [-no-update-model-required,-reorder,-local-rms,-fit-beam,-use-idg,msfile]
 wsclean_high.argument.size                     =   outputsize
 wsclean_high.argument.padding                  =   {{ image_padding }}
 wsclean_high.argument.niter                    =   50000
@@ -196,7 +191,6 @@ wsclean_high.argument.threshold                =   0.0
 wsclean_high.argument.pol                      =   I
 wsclean_high.argument.weight                   =   briggs 0.0
 wsclean_high.argument.mgain                    =   0.8
-wsclean_high.argument.baseline-averaging       =   nwavelengths
 wsclean_high.argument.maxuv-l                  =   {{ maxlambda_highres }}
 wsclean_high.argument.scale                    =   {{ cellsize_highres_deg }}
 wsclean_high.argument.mem                      =   {{ max_percent_mem_per_img }}
@@ -207,6 +201,7 @@ wsclean_high.argument.auto-mask                =   3.3
 wsclean_high.argument.auto-threshold           =   0.5
 wsclean_high.argument.local-rms-window         =   50
 wsclean_high.argument.local-rms-method         =   rms-with-min
+wsclean_high.argument.idg-mode                 =   {{ idg_mode }}
 
 # make masks for the high-res images, length = nbands_image
 mask_high.control.type                          =   pythonplugin
