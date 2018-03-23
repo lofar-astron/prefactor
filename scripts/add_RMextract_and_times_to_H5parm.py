@@ -137,7 +137,7 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
                 raise ValueError("Station "+antenna+" missing in calibrator data!")
             else:
                 # just print a warning for international stations
-                logging.error("No calibratior data for station %s, but international stations will be flagged anyhow."%(antenna))
+                logging.warning("No calibratior data for station %s, but international stations will be flagged anyhow."%(antenna))
 
 
     for antenna_id, antenna in enumerate(station_names):
@@ -150,7 +150,6 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
     for antenna in msinfo.stations:
         rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
         rotation_angle_list.append(rotation_angles)
-        pass
 
     rotation = np.array(rotation_angle_list)
 
