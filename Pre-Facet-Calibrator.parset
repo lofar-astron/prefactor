@@ -172,7 +172,6 @@ calib_cal.argument.solve.uvlambdamin                 =   160
 calib_cal.argument.solve.uvlambdamax                 =   50000
 
 # apply the calibration solutions
-# Note: this step is not run by default -- to do so, add it to pipeline.steps
 cal_apply.control.type                               =   dppp
 cal_apply.control.error_tolerance                    =   {{ error_tolerance }}
 cal_apply.control.inplace                            =   True
