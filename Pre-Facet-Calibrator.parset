@@ -17,7 +17,7 @@
 ! cal_input_path           =  /data/scratch/drabent    ## specify the directory where your calibrator data is stored
 ! cal_input_pattern        =  L217455*.MS              ## regular expression pattern of all your calibrator files
 
-## location of the software 
+## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/ ## path to your prefactor copy
 ! losoto_directory         =  /home/drabent/losoto     ## path to your local LoSoTo installation
 
@@ -47,7 +47,7 @@
 ! lofar_directory          =  $LOFARROOT                         ## base directory of your LOFAR installation
 ! job_directory            =  input.output.job_directory         ## directory of the prefactor outputs
 
-## script and plugin directories 
+## script and plugin directories
 ! scripts                  =  {{ prefactor_directory }}/scripts
 pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 
@@ -169,6 +169,7 @@ calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.
 calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.output.mapfile
 calib_cal.argument.solve.usebeammodel                =   True
 calib_cal.argument.solve.uvlambdamin                 =   160
+calib_cal.argument.solve.uvlambdamax                 =   50000
 
 # apply the calibration solutions
 # Note: this step is not run by default -- to do so, add it to pipeline.steps
