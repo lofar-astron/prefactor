@@ -162,7 +162,6 @@ calib_cal.argument.msout.datacolumn                  =   CORRECTED_DATA
 calib_cal.argument.steps                             =   [solve]
 calib_cal.argument.solve.type                        =   ddecal
 calib_cal.argument.solve.mode                        =   rotation+diagonal
-calib_cal.argument.solve.maxiter                     =   100
 calib_cal.argument.solve.nchan                       =   1
 calib_cal.argument.solve.solint                      =   1
 calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.mapfile
