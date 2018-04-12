@@ -9,10 +9,9 @@ from losoto.h5parm import h5parm
 from losoto.lib_operations import *
 
 ########################################################################
-def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath, timestep):
+def get_RM_vals(MSinfo, server, prefix, ionexPath, timestep):
     """
-    Call getRM() from RMextract to get the RM values for the opbservation,
-    convert this to rotation values and write COMMONROTATION to the parmdb
+    Call getRM() from RMextract to get the RM values for the opbservation
 
     Parameters
     ----------
@@ -28,11 +27,12 @@ def get_COMMONROTATION_vals(MSinfo, server, prefix, ionexPath, timestep):
         timestep to use
     """
     if ionexPath[-1] != '/':
-        print "get_COMMONROTATION_vals: ionexPath doesn't end in \"/\", adding that character."
+        print "get_RM_vals: ionexPath doesn't end in \"/\", adding that character."
         ionexPath += '/'
 
     from RMextract import getRM
-    rmdict = getRM.getRM(MSinfo.msname,server=server,prefix=prefix,ionexPath=ionexPath,timestep=timestep)
+    rmdict = getRM.getRM(MSinfo.msname, server=server, prefix=prefix, ionexPath=ionexPath,
+                         timestep=timestep)
     if not rmdict:
         if not server:
             raise ValueError("One or more IONEX files is not found on disk and download is disabled!\n"
@@ -106,8 +106,6 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
     endtime   = msinfo.timepara['end']
     timestep  = msinfo.timepara['step'] * int(300.0 / msinfo.timepara['step']) # aim for ~ 300 seconds
     freqstep  = msinfo.GetFreqpara('step')
-    minfreq   = np.min(msinfo.msfreqvalues)
-    maxfreq   = np.max(msinfo.msfreqvalues)
 
     for ms in mslist[1:]:
         msinfo = ReadMs(ms)
@@ -115,18 +113,14 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
         assert starttime == msinfo.timepara['start']
         assert endtime   == msinfo.timepara['end']
         assert freqstep  == msinfo.GetFreqpara('step')
-        minfreq   = min(np.min(msinfo.msfreqvalues),minfreq)
-        maxfreq   = max(np.max(msinfo.msfreqvalues),maxfreq)
-
-    freqvalues = np.arange(minfreq, stop=(maxfreq+freqstep), step=freqstep)
-
 
     if ionex_server.strip(' []\'\"').lower() == 'none':
         ionex_server = None
-    rmdict = get_COMMONROTATION_vals(msinfo, ionex_server, ionex_prefix, ionexPath, timestep)
-
-    c = 299792458.0
-    lambdaSquared = (c/freqvalues)**2
+    rmdict = get_RM_vals(msinfo, ionex_server, ionex_prefix, ionexPath, timestep)
+    rm_list = []
+    for antenna in msinfo.stations:
+        rm_list.append(rmdict['RM'][antenna])
+    rm_vals = np.array(rm_list)
 
     # check if we have data for all target stations
     for antenna in msinfo.stations:
@@ -139,33 +133,24 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
                 # just print a warning for international stations
                 logging.warning("No calibratior data for station %s, but international stations will be flagged anyhow."%(antenna))
 
-
     for antenna_id, antenna in enumerate(station_names):
         if antenna not in msinfo.stations:
             logging.warning("Station %s not found in target observation, skipping generation of calibration values."%(antenna))
             continue
 
-    rotation_angle_list = []
-
-    for antenna in msinfo.stations:
-        rotation_angles = np.outer(rmdict['RM'][antenna],lambdaSquared)
-        rotation_angle_list.append(rotation_angles)
-
-    rotation = np.array(rotation_angle_list)
-
-    logging.info('Putting rotation angles into: ' + solsetName + ' of ' + h5parmdb)
+    logging.info('Adding rotation measure values to: ' + solsetName + ' of ' + h5parmdb)
     try:
         new_soltab = solset.getSoltab('RMextract')
         new_soltab.delete()
     except:
         pass
-    new_soltab = solset.makeSoltab(soltype='rotationangle', soltabName='RMextract',
-                             axesNames=['ant', 'time', 'freq'], axesVals=[msinfo.stations, rmdict['times'], freqvalues],
-                             vals=rotation,
-                             weights=np.ones_like(rotation, dtype=np.float16))
-    new_soltab.addHistory('CREATE (by add_RMextract_to_H5parm.py script)')
+    new_soltab = solset.makeSoltab(soltype='rotationmeasure', soltabName='RMextract',
+                             axesNames=['ant', 'time'], axesVals=[msinfo.stations, rmdict['times']],
+                             vals=rm_vals,
+                             weights=np.ones_like(rm_vals, dtype=np.float16))
+    new_soltab.addHistory('CREATE (by add_RMextract_and_times_to_H5parm.py script)')
 
-    logging.info('Adjusting times of clock offsets for target obs in: ' + solsetName + ' of ' + h5parmdb)
+    logging.info('Adjusting times of clock offsets in: ' + solsetName + ' of ' + h5parmdb)
     # For simplicity, we use the same time axis as for the RMextract values
     clock_soltab = solset.getSoltab('clock000')
     clock_single = clock_soltab.val[0, :]
@@ -179,11 +164,16 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
                              axesNames=['time', 'ant'], axesVals=[rmdict['times'], clock_soltab.ant[:]],
                              vals=clock,
                              weights=np.ones_like(clock, dtype=np.float16))
-    new_soltab.addHistory('CREATE (by add_RMextract_to_H5parm.py script)')
+    new_soltab.addHistory('CREATE (by add_RMextract_and_times_to_H5parm.py script)')
 
-    logging.info('Adjusting times of bandpass for target obs in: ' + solsetName + ' of ' + h5parmdb)
+    logging.info('Adjusting times of bandpass in: ' + solsetName + ' of ' + h5parmdb)
     # For simplicity, we use the same time axis as for the RMextract values
     bp_soltab = solset.getSoltab('bandpass')
+    try:
+        new_soltab = solset.getSoltab('bandpass_notimes')
+        new_soltab.delete()
+    except:
+        pass
     bp_soltab.rename('bandpass_notimes')
     bp = bp_soltab.val[:]
     bp = np.resize(bp, (len(rmdict['times']), len(bp_soltab.ant[:]), len(bp_soltab.freq[:]), len(bp_soltab.pol[:])))
@@ -197,11 +187,16 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
                              bp_soltab.ant[:], bp_soltab.freq[:],bp_soltab.pol[:]],
                              vals=bp,
                              weights=np.ones_like(bp, dtype=np.float16))
-    new_soltab.addHistory('CREATE (by add_RMextract_to_H5parm.py script)')
+    new_soltab.addHistory('CREATE (by add_RMextract_and_times_to_H5parm.py script)')
 
-    logging.info('Adjusting times of XYoffsets for target obs in: ' + solsetName + ' of ' + h5parmdb)
+    logging.info('Adjusting times of XYoffsets in: ' + solsetName + ' of ' + h5parmdb)
     # For simplicity, we use the same time axis as for the RMextract values
     xy_soltab = solset.getSoltab('XYoffset')
+    try:
+        new_soltab = solset.getSoltab('XYoffset_notimes')
+        new_soltab.delete()
+    except:
+        pass
     xy_soltab.rename('XYoffset_notimes')
     xy = xy_soltab.val[:]
     xy = np.resize(xy, (len(rmdict['times']), len(xy_soltab.freq[:]), len(xy_soltab.ant[:]), len(xy_soltab.pol[:])))
@@ -215,7 +210,7 @@ def main(MSfiles, h5parmdb, ionex_server="ftp://ftp.unibe.ch/aiub/CODE/", ionex_
                              xy_soltab.freq[:], xy_soltab.ant[:], xy_soltab.pol[:]],
                              vals=xy,
                              weights=np.ones_like(xy, dtype=np.float16))
-    new_soltab.addHistory('CREATE (by add_RMextract_to_H5parm.py script)')
+    new_soltab.addHistory('CREATE (by add_RMextract_and_times_to_H5parm.py script)')
 
     return 0
 
@@ -225,9 +220,9 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Adds CommonRotationAngle to an H5parm from RMextract.')
 
-    parser.add_argument('MSfiles', type=str, nargs='+',
+    parser.add_argument('MSfiles', type=str,
                         help='One or more MSs for which the parmdb should be created.')
-    parser.add_argument('h5parm', type=str, nargs='+',
+    parser.add_argument('h5parm', type=str,
                         help='H5parm to which the results of the CommonRotationAngle is added.')
     parser.add_argument('--server', type=str, default='None',
                         help='URL of the server to use. (default: None)')
@@ -235,7 +230,7 @@ if __name__ == '__main__':
                         help='Prefix of the IONEX files. (default: \"CODG\")')
     parser.add_argument('--ionexpath', '--path', type=str, default='IONEXdata/',
                         help='Directory where to store the IONEX files. (default: \"IONEXdata/\")')
-    parser.add_argument('--solsetName', '--solset', type=str, default='sol000/',
+    parser.add_argument('--solsetName', '--solset', type=str, default='sol000',
                         help='Name of the h5parm solution set (default: sol000)')
 
 
