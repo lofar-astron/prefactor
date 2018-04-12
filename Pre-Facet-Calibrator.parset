@@ -158,7 +158,6 @@ calib_cal.argument.numthreads                        =   {{ max_dppp_threads }}
 calib_cal.argument.msin                              =   ndppp_prep_cal.output.mapfile    # The input data.
 calib_cal.argument.msin.datacolumn                   =   DATA
 calib_cal.argument.msin.baseline                     =   CS*&; RS*&; CS*&RS*
-calib_cal.argument.msout.datacolumn                  =   CORRECTED_DATA
 calib_cal.argument.steps                             =   [solve]
 calib_cal.argument.solve.type                        =   ddecal
 calib_cal.argument.solve.mode                        =   rotation+diagonal
@@ -167,6 +166,7 @@ calib_cal.argument.solve.solint                      =   1
 calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.mapfile
 calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.output.mapfile
 calib_cal.argument.solve.usebeammodel                =   True
+calib_cal.argument.solve.usechannelfreq              =   False
 calib_cal.argument.solve.uvlambdamin                 =   160
 calib_cal.argument.solve.uvlambdamax                 =   50000
 
@@ -203,7 +203,7 @@ h5imp_cal.control.type                               =   executable_args
 h5imp_cal.control.executable                         =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_cal.control.error_tolerance                    =   {{ error_tolerance }}
 h5imp_cal.control.outputkey                          =   outh5parm
-h5imp_cal.argument.flags                             =   [h5_imp_cal_map.output.mapfile]
+h5imp_cal.argument.flags                             =   [-c,h5_imp_cal_map.output.mapfile]
 h5imp_cal.argument.outh5parm                         =   outh5parm
 
 # create losoto v2 parset file
