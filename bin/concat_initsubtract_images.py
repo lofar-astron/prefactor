@@ -1,5 +1,5 @@
 import numpy as np
-import pyfits
+from astropy.io import fits as pyfits
 import os,sys
 import glob
 #from pythoncodes.maths import *
@@ -14,30 +14,30 @@ def residuals_gaussian(coeffs, y, t):
     return y - model_gaussian(t, coeffs)
 
 def fit_gaussian_histogram(pixelvals,plotting):
- 
+
     fitnumbers,cellsizes = np.histogram(pixelvals,100)
     sigmaguess = np.std(pixelvals)/(abs(cellsizes[1]-cellsizes[0]))
     x0 = [0.0,max(fitnumbers),np.where(fitnumbers==max(fitnumbers))[0][0],sigmaguess] #Offset amp, amp, x-offset, sigma
     t = np.arange(len(fitnumbers))
     x, flag = scipy.optimize.leastsq(residuals_gaussian, x0, args=(fitnumbers, t))
- 
+
     if plotting == 'y':
         pylab.plot(fitnumbers)
         pylab.plot(t,fitnumbers,t,model_gaussian(t,x))
         pylab.show()
         pylab.close()
         pylab.cla()
- 
+
     #print 'Sigma is %s'%(x[3]*abs(cellsizes[1]-cellsizes[0]))
-     
+
     return (x[3]*abs(cellsizes[1]-cellsizes[0]))
 
 def removenoise(noisepix):
- 
+
     noisepix = noisepix.flatten()
- 
+
     noiseconverge = 0
- 
+
     while noiseconverge == 0:
         #print 'searching'
         currentnoise = fit_gaussian_histogram(noisepix,'n')
@@ -52,15 +52,15 @@ def removenoise(noisepix):
             noiseconverge = 1
         else:
             orignoise = rms
- 
+
     return noisepix
- 
+
 
 def concatimages_new(images,outimage,ignorenoise=False):
 
     infodict = {}
     image = images[0]
-    f = pyfits.open(image)    
+    f = pyfits.open(image)
     if (f[0].header['NAXIS3'] >1 or  f[0].header['BZERO']>0. or f[0].header['BSCALE']!=1.):
         print "Image",image,"has more than two dimensions, or sucks in another way!"
         sys.exit(1)
@@ -115,7 +115,7 @@ def concatimages_new(images,outimage,ignorenoise=False):
         naxis2 = f[0].header['NAXIS2']
         crpix1 = f[0].header['CRPIX1']
         crpix2 = f[0].header['CRPIX2']
- 
+
         print 'working on image %s at %.2f MHz'%(image,freq/1e6)
 
         if not ignorenoise:
