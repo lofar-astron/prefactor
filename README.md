@@ -30,7 +30,7 @@ Software requirements:
 * LoSoTo (version >= 2.0 -- see https://github.com/revoltek/losoto)
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * RMextract (see https://github.com/maaijke/RMextract)
-* Python matplotlib
+* Python (including matplotlib, scipy, and astropy)
 * WSClean (for Initial-Subtract; version >= 2.5 -- see https://sourceforge.net/projects/wsclean)
   * for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
