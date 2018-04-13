@@ -169,6 +169,8 @@ calib_cal.argument.solve.usebeammodel                =   True
 calib_cal.argument.solve.usechannelfreq              =   False
 calib_cal.argument.solve.uvlambdamin                 =   160
 calib_cal.argument.solve.uvlambdamax                 =   50000
+calib_cal.argument.solve.maxiter                     =   50
+calib_cal.argument.solve.tolerance                   =   1e-10
 
 # apply the calibration solutions
 cal_apply.control.type                               =   dppp
