@@ -15,16 +15,17 @@
 
 ## information about the calibrator data
 ! cal_input_path           =  /data/scratch/drabent    ## specify the directory where your calibrator data is stored
-! cal_input_pattern        =  L217455*.MS              ## regular expression pattern of all your calibrator files
+! cal_input_pattern        =  L228164*.MS              ## regular expression pattern of all your calibrator files
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/ ## path to your prefactor copy
-! losoto_directory         =  /home/drabent/losoto     ## path to your local LoSoTo installation
+! losoto_directory         =  /home/fdg/losoto         ## path to your local LoSoTo installation
 
 ##########################################
 ### parameters you may want to adjust   ##
 ##########################################
 
+! refant                   = 'CS002LBA'
 ! bad_SB_list              =  "307;308;309;310;311;312;313;314;315"  ## semicolumn-separated list of subbands to be mitigated, e.g., due to RFI
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! reference_station        =  CS001HBA0                              ## name of the station that will be used as a reference for the phase-plots
@@ -70,7 +71,8 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, calib_cal, cal_apply, h5_imp_cal_map, h5imp_cal, prepare_losoto, process_losoto, mk_cal_values_dir, copy_cal_h5]
+# pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, calib_cal, cal_apply, h5_imp_cal_map, h5imp_cal, prepare_losoto, process_losoto, mk_cal_values_dir, copy_cal_h5]
+pipeline.steps=[createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, smooth, calib_cal_parmmap, calib_cal, h5_imp_cal_map, h5imp_cal, prepare_losoto, process_losoto, cal_apply, mk_cal_values_dir, copy_cal_h5]
 
 
 # generate a mapfile of all the calibrator data
@@ -93,17 +95,19 @@ ndppp_prep_cal.argument.msin.baseline                =   CS*&; RS*&; CS*&RS*
 ndppp_prep_cal.argument.msout.datacolumn             =   DATA
 ndppp_prep_cal.argument.msout.writefullresflag       =   False
 ndppp_prep_cal.argument.msout.overwrite              =   True
-ndppp_prep_cal.argument.steps                        =   [flag,filter,avg,flagamp]
+ndppp_prep_cal.argument.steps                        =   [flag,elev,flagamp,filter,avg]
 ndppp_prep_cal.argument.flag.type                    =   preflagger
 ndppp_prep_cal.argument.flag.baseline                =   {{ flag_baselines }}
+ndppp_prep_cal.argument.elev.type                    =   preflagger
+ndppp_prep_cal.argument.elev.elevation               =   0deg..20deg
+ndppp_prep_cal.argument.flagamp.type                 =   preflagger
+ndppp_prep_cal.argument.flagamp.amplmin              =   1e-30
 ndppp_prep_cal.argument.filter.type                  =   filter
 ndppp_prep_cal.argument.filter.baseline              =   CS*, RS*&&
 ndppp_prep_cal.argument.filter.remove                =   true                     # fully kick out the international stations.
 ndppp_prep_cal.argument.avg.type                     =   average
 ndppp_prep_cal.argument.avg.timeresolution           =   {{ avg_timeresolution }}
 ndppp_prep_cal.argument.avg.freqresolution           =   {{ avg_freqresolution }}
-ndppp_prep_cal.argument.flagamp.type                 =   preflagger
-ndppp_prep_cal.argument.flagamp.amplmin              =   1e-30
 
 # combine all entries into one mapfile (just for the find_skymodel_cal_auto script)
 combine_data_cal_map.control.kind                    =   plugin
@@ -140,6 +144,31 @@ expand_sourcedb.control.mapfile_to_match             =   ndppp_prep_cal.output.m
 expand_sourcedb.control.mapfile_dir                  =   input.output.mapfile_dir
 expand_sourcedb.control.filename                     =   expand_sourcedb.mapfile
 
+# predict to save time
+predict_cal.control.type                             =   dppp
+predict_cal.control.inplace                          =   True
+predict_cal.control.max_per_node                     =   {{ num_proc_per_node_limit }}
+predict_cal.control.error_tolerance                  =   {{ error_tolerance }}
+predict_cal.argument.numthreads                      =   {{ max_dppp_threads }}
+predict_cal.argument.msin                            =   ndppp_prep_cal.output.mapfile    # The input data.
+predict_cal.argument.msin.datacolumn                 =   DATA
+predict_cal.argument.msin.baseline                   =   [CR]S*&
+predict_cal.argument.msout.datacolumn                =   MODEL_DATA
+predict_cal.argument.steps                           =   [predict]
+predict_cal.argument.predict.type                    =   predict
+predict_cal.argument.predict.sourcedb                =   expand_sourcedb.output.mapfile
+predict_cal.argument.predict.sources                 =   []
+predict_cal.argument.predict.usebeammodel            =   False # TODO: put to true for large sky
+predict_cal.argument.predict.usechannelfreq          =   False
+predict_cal.argument.predict.beammode                =   array_factor
+
+### smooth the data (baseline-based)
+smooth.control.type                                  =   executable_args
+smooth.control.max_per_node                          =   1
+smooth.control.error_tolerance                       =   {{ error_tolerance }}
+smooth.control.executable                            =   {{ scripts }}/BLsmooth.py
+smooth.argument.flags                                =   [-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
+
 # generate mapfile with the h5parm names to be used in the calib_cal steps
 calib_cal_parmmap.control.kind                       =   plugin
 calib_cal_parmmap.control.type                       =   createMapfile
@@ -151,46 +180,30 @@ calib_cal_parmmap.control.filename                   =   calib_cal_h5parms.mapfi
 
 # now run NDPPP on the averaged calibrator data
 calib_cal.control.type                               =   dppp
-calib_cal.control.max_per_node                       =   {{ num_proc_per_node_limit }}
 calib_cal.control.inplace                            =   True
+calib_cal.control.max_per_node                       =   {{ num_proc_per_node_limit }}
 calib_cal.control.error_tolerance                    =   {{ error_tolerance }}
 calib_cal.argument.numthreads                        =   {{ max_dppp_threads }}
 calib_cal.argument.msin                              =   ndppp_prep_cal.output.mapfile    # The input data.
-calib_cal.argument.msin.datacolumn                   =   DATA
-calib_cal.argument.msin.baseline                     =   CS*&; RS*&; CS*&RS*
+calib_cal.argument.msin.datacolumn                   =   SMOOTHED_DATA
+calib_cal.argument.msin.baseline                     =   [CR]S*&
 calib_cal.argument.steps                             =   [solve]
 calib_cal.argument.solve.type                        =   ddecal
 calib_cal.argument.solve.mode                        =   rotation+diagonal
+calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.output.mapfile
+calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.mapfile
+# calib_cal.argument.solve.uvlambdamin                 =   160
+calib_cal.argument.solve.uvlambdamin                 =   300
+# calib_cal.argument.solve.uvlambdamax                 =   50000
+calib_cal.argument.solve.maxiter                     =   500
+# calib_cal.argument.solve.maxiter                     =   50
 calib_cal.argument.solve.nchan                       =   1
 calib_cal.argument.solve.solint                      =   1
-calib_cal.argument.solve.sourcedb                    =   expand_sourcedb.output.mapfile
-calib_cal.argument.solve.h5parm                      =   calib_cal_parmmap.output.mapfile
-calib_cal.argument.solve.usebeammodel                =   True
-calib_cal.argument.solve.usechannelfreq              =   False
-calib_cal.argument.solve.uvlambdamin                 =   160
-calib_cal.argument.solve.uvlambdamax                 =   50000
-calib_cal.argument.solve.maxiter                     =   50
+calib_cal.argument.solve.propagatesolutions          =   True
+#calib_cal.argument.solve.usemodelcolumn              = True
+# calib_cal.argument.solve.usebeammodel                =   True
+# calib_cal.argument.solve.usechannelfreq              =   False
 calib_cal.argument.solve.tolerance                   =   1e-10
-
-# apply the calibration solutions
-cal_apply.control.type                               =   dppp
-cal_apply.control.error_tolerance                    =   {{ error_tolerance }}
-cal_apply.control.inplace                            =   True
-cal_apply.control.max_per_node                       =   {{ num_proc_per_node_limit }}
-cal_apply.argument.numthreads                        =   {{ max_dppp_threads }}
-cal_apply.argument.msin                              =   ndppp_prep_cal.output.mapfile
-cal_apply.argument.msin.datacolumn                   =   DATA
-cal_apply.argument.msout.datacolumn                  =   CORRECTED_DATA
-cal_apply.argument.steps                             =   [applycal1,applycal2,applycal3]
-cal_apply.argument.applycal1.type                    =   applycal
-cal_apply.argument.applycal1.correction              =   amplitude000
-cal_apply.argument.applycal1.parmdb                  =   calib_cal_parmmap.output.mapfile
-cal_apply.argument.applycal2.type                    =   applycal
-cal_apply.argument.applycal2.correction              =   phase000
-cal_apply.argument.applycal2.parmdb                  =   calib_cal_parmmap.output.mapfile
-cal_apply.argument.applycal3.type                    =   applycal
-cal_apply.argument.applycal3.correction              =   rotation000
-cal_apply.argument.applycal3.parmdb                  =   calib_cal_parmmap.output.mapfile
 
 # generate a mapfile with all files in a single entry
 h5_imp_cal_map.control.kind                          =   plugin
@@ -211,65 +224,147 @@ h5imp_cal.argument.outh5parm                         =   outh5parm
 # create losoto v2 parset file
 prepare_losoto.control.kind                          =   plugin
 prepare_losoto.control.type                          =   makeLosotoParset
-prepare_losoto.control.steps                         =   [clocktec, clock_smooth, bandpass, xyoffset, plot_phases, plot_amps, plot_clock, plot_TEC, plot_bandpass, plot_xyoffset]
+prepare_losoto.control.steps                         =   [plotP1,plotP2,plotP3,plotPd,flag,plotRot1,plotRot2,plotRot3,plotA1,plotA2,plotA3,bkp,align,plotAlign,residual,plotPr,plotPr2]
 prepare_losoto.control.filename                      =   input.output.job_directory/losoto.parset
-prepare_losoto.control.global.ncpu                   =   0
-prepare_losoto.control.clocktec.soltab               =   [sol000/phase000]
-prepare_losoto.control.clocktec.operation            =   CLOCKTEC
-prepare_losoto.control.clocktec.combinePol           =   True
-prepare_losoto.control.clocktec.flagBadChannels      =   False
-prepare_losoto.control.clocktec.fit3rdOrder          =   False
-prepare_losoto.control.clock_smooth.soltab           =   [sol000/clock000]
-prepare_losoto.control.clock_smooth.operation        =   SMOOTH
-prepare_losoto.control.clock_smooth.axestosmooth     =   [time]
-prepare_losoto.control.clock_smooth.mode             =   median
-prepare_losoto.control.clock_smooth.replace          =   True
-prepare_losoto.control.bandpass.soltab               =   [sol000/amplitude000]
-prepare_losoto.control.bandpass.operation            =   PREFACTOR_BANDPASS
-prepare_losoto.control.bandpass.chanWidth            =   {{ avg_freqresolution }}
-prepare_losoto.control.bandpass.BadSBList            =   {{ bad_SB_list }}
-prepare_losoto.control.xyoffset.soltab               =   [sol000/phase000]
-prepare_losoto.control.xyoffset.chanWidth            =   {{ avg_freqresolution }}
-prepare_losoto.control.xyoffset.operation            =   PREFACTOR_XYOFFSET
-prepare_losoto.control.plot_phases.Operation         =   PLOT
-prepare_losoto.control.plot_phases.Soltab            =   [sol000/phase000]
-prepare_losoto.control.plot_phases.axesInPlot        =   [time,freq]
-prepare_losoto.control.plot_phases.axisInTable       =   ant
-prepare_losoto.control.plot_phases.refAnt            =   CS001HBA0
-prepare_losoto.control.plot_phases.plotFlag          =   False
-prepare_losoto.control.plot_phases.minmax            =   [-3.14,3.14]
-prepare_losoto.control.plot_phases.prefix            =   {{ inspection_directory }}/cal_phases_
-prepare_losoto.control.plot_amps.Operation           =   PLOT
-prepare_losoto.control.plot_amps.Soltab              =   [sol000/amplitude000]
-prepare_losoto.control.plot_amps.axesInPlot          =   [time,freq]
-prepare_losoto.control.plot_amps.axisInTable         =   ant
-prepare_losoto.control.plot_amps.plotFlag            =   False
-prepare_losoto.control.plot_amps.prefix              =   {{ inspection_directory }}/cal_amplitude_
-prepare_losoto.control.plot_clock.Operation          =   PLOT
-prepare_losoto.control.plot_clock.Soltab             =   [sol000/clock000]
-prepare_losoto.control.plot_clock.axesInPlot         =   [time]
-prepare_losoto.control.plot_clock.axisInTable        =   ant
-prepare_losoto.control.plot_clock.plotFlag           =   False
-prepare_losoto.control.plot_clock.prefix             =   {{ inspection_directory }}/losoto_clock
-prepare_losoto.control.plot_TEC.Operation            =   PLOT
-prepare_losoto.control.plot_TEC.Soltab               =   [sol000/tec000]
-prepare_losoto.control.plot_TEC.axesInPlot           =   [time]
-prepare_losoto.control.plot_TEC.axisInTable          =   ant
-prepare_losoto.control.plot_TEC.PlotFlag             =   False
-prepare_losoto.control.plot_TEC.prefix               =   {{ inspection_directory }}/losoto_tec
-prepare_losoto.control.plot_bandpass.Operation       =   PLOT
-prepare_losoto.control.plot_bandpass.Soltab          =   [sol000/bandpass]
-prepare_losoto.control.plot_bandpass.axesInPlot      =   [freq]
-prepare_losoto.control.plot_bandpass.axisInCol       =   ant
-prepare_losoto.control.plot_bandpass.PlotFlag        =   False
-prepare_losoto.control.plot_bandpass.prefix          =   {{ inspection_directory }}/losoto_bandpass
-prepare_losoto.control.plot_xyoffset.Operation       =   PLOT
-prepare_losoto.control.plot_xyoffset.Soltab          =   [sol000/XYoffset]
-prepare_losoto.control.plot_xyoffset.pol             =   YY
-prepare_losoto.control.plot_xyoffset.axesInPlot      =   [freq]
-prepare_losoto.control.plot_xyoffset.axisInTable     =   ant
-prepare_losoto.control.plot_xyoffset.PlotFlag        =   False
-prepare_losoto.control.plot_xyoffset.prefix          =   {{ inspection_directory }}/losoto_xyoffset
+prepare_losoto.control.global.ncpu                   =   {{ num_proc_per_node }}
+prepare_losoto.control.plotP1.operation              =   PLOT
+prepare_losoto.control.plotP1.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP1.freq.minmaxstep        =   [0,300e6,100]
+prepare_losoto.control.plotP1.axesInPlot             =   time
+prepare_losoto.control.plotP1.axisInTable            =   ant
+prepare_losoto.control.plotP1.axisInCol              =   pol
+prepare_losoto.control.plotP1.plotFlag               =   True
+prepare_losoto.control.plotP1.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP1.refAnt                 =   {{ refant }}
+prepare_losoto.control.plotP1.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotP1.NColFig                =   4
+prepare_losoto.control.plotP1.figSize                =   [20,20]
+prepare_losoto.control.plotP2.operation              =   PLOT
+prepare_losoto.control.plotP2.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP2.time.minmaxstep        =   [0,1e20,500]
+prepare_losoto.control.plotP2.axesInPlot             =   freq
+prepare_losoto.control.plotP2.axisInTable            =   ant
+prepare_losoto.control.plotP2.axisInCol              =   pol
+prepare_losoto.control.plotP2.plotFlag               =   True
+prepare_losoto.control.plotP2.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP2.refAnt                 =   {{ refant }}
+prepare_losoto.control.plotP2.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotP3.operation              =   PLOT
+prepare_losoto.control.plotP3.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP3.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotP3.axisInTable            =   ant
+prepare_losoto.control.plotP3.plotFlag               =   True
+prepare_losoto.control.plotP3.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP3.refAnt                 =   {{ refant }}
+prepare_losoto.control.plotP3.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotPd.operation              =   PLOT
+prepare_losoto.control.plotPd.soltab                 =   sol000/phase000
+prepare_losoto.control.plotPd.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotPd.axisInTable            =   ant
+prepare_losoto.control.plotPd.axisDiff               =   pol
+prepare_losoto.control.plotPd.plotFlag               =   True
+prepare_losoto.control.plotPd.prefix                 =   {{ inspection_directory }}/ph-dif
+prepare_losoto.control.plotPd.refAnt                 =   {{ refant }}
+prepare_losoto.control.plotPd.minmax                 =   [-1,+1]
+prepare_losoto.control.flag.operation                =   REWEIGHT
+prepare_losoto.control.flag.flagBad                  =   True
+prepare_losoto.control.flag.soltab                   =   sol000/rotation000
+prepare_losoto.control.plotRot1.operation            =   PLOT
+prepare_losoto.control.plotRot1.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot1.freq.minmaxstep      =   [0,300e6,100]
+prepare_losoto.control.plotRot1.axesInPlot           =   time
+prepare_losoto.control.plotRot1.axisInTable          =   ant
+prepare_losoto.control.plotRot1.plotFlag             =   True
+prepare_losoto.control.plotRot1.prefix               =   {{ inspection_directory }}/rot_
+prepare_losoto.control.plotRot1.refAnt               =   {{ refant }}
+prepare_losoto.control.plotRot1.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotRot1.NColFig              =   4
+prepare_losoto.control.plotRot1.figSize              =   [20,20]
+prepare_losoto.control.plotRot2.operation            =   PLOT
+prepare_losoto.control.plotRot2.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot2.time.minmaxstep      =   [0,1e20,500]
+prepare_losoto.control.plotRot2.axesInPlot           =   freq
+prepare_losoto.control.plotRot2.axisInTable          =   ant
+prepare_losoto.control.plotRot2.plotFlag             =   True
+prepare_losoto.control.plotRot2.prefix               =   {{ inspection_directory }}/rot_
+prepare_losoto.control.plotRot2.refAnt               =   {{ refant }}
+prepare_losoto.control.plotRot2.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotRot3.operation            =   PLOT
+prepare_losoto.control.plotRot3.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot3.axesInPlot           =   [time,freq]
+prepare_losoto.control.plotRot3.axisInTable          =   ant
+prepare_losoto.control.plotRot3.plotFlag             =   True
+prepare_losoto.control.plotRot3.prefix               =   {{ inspection_directory }}/rot
+prepare_losoto.control.plotRot3.refAnt               =   {{ refant }}
+prepare_losoto.control.plotRot3.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotA1.operation              =   PLOT
+prepare_losoto.control.plotA1.Soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA1.freq.minmaxstep        =   [0,300e6,100]
+prepare_losoto.control.plotA1.axesInPlot             =   time
+prepare_losoto.control.plotA1.axisInTable            =   ant
+prepare_losoto.control.plotA1.axisInCol              =   pol
+prepare_losoto.control.plotA1.plotFlag               =   True
+prepare_losoto.control.plotA1.prefix                 =   {{ inspection_directory }}/amp_
+prepare_losoto.control.plotA1.NColFig                =   4
+prepare_losoto.control.plotA1.figSize                =   [20,20]
+#prepare_losoto.control.plotA1.minmax                 =   [0,300]
+prepare_losoto.control.plotA2.operation              =   PLOT
+prepare_losoto.control.plotA2.soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA2.time.minmaxstep        =   [0,1e20,500]
+prepare_losoto.control.plotA2.axesInPlot             =   freq
+prepare_losoto.control.plotA2.axisInTable            =   ant
+prepare_losoto.control.plotA2.axisInCol              =   pol
+prepare_losoto.control.plotA2.plotFlag               =   True
+prepare_losoto.control.plotA2.prefix                 =   {{ inspection_directory }}/amp_
+#prepare_losoto.control.plotA2.minmax                 =   [0,300]
+prepare_losoto.control.plotA3.operation              =   PLOT
+prepare_losoto.control.plotA3.soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA3.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotA3.axisInTable            =   ant
+prepare_losoto.control.plotA3.plotFlag               =   True
+prepare_losoto.control.plotA3.prefix                 =   {{ inspection_directory }}/amp_
+#prepare_losoto.control.plotA3.minmax                 =   [0,300]
+prepare_losoto.control.bkp.operation                 =   DUPLICATE
+prepare_losoto.control.bkp.soltab                    =   sol000/phase000
+prepare_losoto.control.bkp.soltabOut                 =   phaseOrig000
+prepare_losoto.control.align.soltab                  =   sol000/phase000
+prepare_losoto.control.align.operation               =   POLALIGN
+prepare_losoto.control.align.soltabOut               =   polalign
+prepare_losoto.control.align.average                 =   True
+prepare_losoto.control.align.replace                 =   True
+prepare_losoto.control.align.fitOffset               =   False
+prepare_losoto.control.align.refAnt                  =   {{ refant }}
+prepare_losoto.control.plotAlign.operation           =   PLOT
+prepare_losoto.control.plotAlign.soltab              =   sol000/polalign
+prepare_losoto.control.plotAlign.axesInPlot          =   [time,freq]
+prepare_losoto.control.plotAlign.axisInTable         =   ant
+prepare_losoto.control.plotAlign.axisDiff            =   pol
+prepare_losoto.control.plotAlign.plotFlag            =   True
+prepare_losoto.control.plotAlign.prefix              =   {{ inspection_directory }}/ph-align
+prepare_losoto.control.plotAlign.refAnt              =   {{ refant }}
+prepare_losoto.control.plotAlign.minmax              =   [-1,+1]
+prepare_losoto.control.residual.operation            =   RESIDUALS
+prepare_losoto.control.residual.soltab               =   sol000/phase000
+prepare_losoto.control.residual.soltabsToSub         =   polalign
+prepare_losoto.control.plotPr.operation              =   PLOT
+prepare_losoto.control.plotPr.soltab                 =   sol000/phase000
+prepare_losoto.control.plotPr.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotPr.axisInTable            =   ant
+prepare_losoto.control.plotPr.axisDiff               =   pol
+prepare_losoto.control.plotPr.plotFlag               =   True
+prepare_losoto.control.plotPr.prefix                 =   {{ inspection_directory }}/ph-res
+prepare_losoto.control.plotPr.refAnt                 =   {{ refant }}
+prepare_losoto.control.plotPr.minmax                 =   [-1,+1]
+prepare_losoto.control.plotPr2.operation             =   PLOT
+prepare_losoto.control.plotPr2.soltab                =   sol000/phase000
+prepare_losoto.control.plotPr2.time.minmaxstep       =   [0,1e20,500]
+prepare_losoto.control.plotPr2.axesInPlot            =   freq
+prepare_losoto.control.plotPr2.axisInTable           =   ant
+prepare_losoto.control.plotPr2.axisInCol             =   pol
+prepare_losoto.control.plotPr2.plotFlag              =   True
+prepare_losoto.control.plotPr2.prefix                =   {{ inspection_directory }}/ph-res_
+prepare_losoto.control.plotPr2.refAnt                =   {{ refant }}
+prepare_losoto.control.plotPr2.minmax                =   [-3.14,+3.14]
 
 # do the processing on the LoSoTo file
 process_losoto.control.kind                          =   recipe
@@ -277,6 +372,20 @@ process_losoto.control.type                          =   executable_args
 process_losoto.control.executable                    =   {{ losoto_directory }}/bin/losoto
 process_losoto.control.max_per_node                  =   {{ num_proc_per_node }}
 process_losoto.argument.flags                        =   [h5imp_cal.output.mapfile, input.output.job_directory/losoto.parset]
+
+# apply the calibration solutions
+cal_apply.control.type                               =   dppp
+cal_apply.control.error_tolerance                    =   {{ error_tolerance }}
+cal_apply.control.inplace                            =   True
+cal_apply.control.max_per_node                       =   {{ num_proc_per_node_limit }}
+cal_apply.argument.numthreads                        =   {{ max_dppp_threads }}
+cal_apply.argument.msin                              =   ndppp_prep_cal.output.mapfile
+cal_apply.argument.msin.datacolumn                   =   DATA
+cal_apply.argument.msout.datacolumn                  =   CORRECTED_DATA
+cal_apply.argument.steps                             =   [applyPA]
+cal_apply.argument.applyPA.type                      =   applycal
+cal_apply.argument.applyPA.correction                =   amplitude000
+cal_apply.argument.applyPA.parmdb                    =   calib_cal_parmmap.output.mapfile
 
 # create the cal_values_directory if needed
 mk_cal_values_dir.control.kind                       =   plugin
