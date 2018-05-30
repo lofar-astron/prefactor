@@ -1,101 +1,103 @@
-# Initial Subtract IDG Pipeline for low-memory computers (< 64 GB)
-#
-#
-# Pipeline to do the initial subtraction of all sources
-# - will change the input-MSs (adds SUBTRACTED_DATA_HIGH and
-#   SUBTRACTED_DATA_ALL columns)
-# - copies merged skymodels into folder with input data: "data_input_path"
-# - requires combined predict-corrupt-subtract step in NDPPP
-#   (included in LOFAR since release 2.15)
-# - in addition to the standard LOFAR software it requires WSClean with IDG
-# - expects shared filesystem, that all nodes can reach all files!
-#   (E.g. a single workstation or compute cluster with shared filesystem;
-#   doesn't work on multiple nodes on CEP3.)
+##################################################################################
+# Initial-Subtract-IDG-LowMemory Pipeline                                        #
+#                                                                                #
+# Pipeline to do the initial subtraction of all sources:                         #
+# - requires LOFAR software version  >= 2.17                                     #
+# - requires WSClean software version >= 2.5 with IDG                            #
+# - will change the input-MSs (adds SUBTRACTED_DATA_HIGH and                     #
+#   SUBTRACTED_DATA_ALL columns)                                                 #
+# - copies merged skymodels into folder with input data: "data_input_path"       #
+# - requires combined predict-corrupt-subtract step in NDPPP                     #
+#   (included in LOFAR since release 2.15)                                       #
+# - in addition to the standard LOFAR software it requires wsclean               #
+# - expects shared filesystem, that all nodes can reach all files!               #
+#   (E.g. a single workstation or compute cluster with shared filesystem;        #
+#   doesn't work on multiple nodes on CEP3.)                                     #
+#                                                                                #
+# For this pipeline to work the data must have:                                  #
+# - in the DATA column:                                                          #
+#   - the average amplitude scale set                                            #
+#   - the average clock offsets removed                                          #
+#   - the LOFAR beam towards the phase center corrected                          #
+# - in the CORRECTED_DATA column:                                                #
+#   - the DATA calibrated with the gains in supplied the                         #
+#     direction-indepndent parmDB                                                #
+# - inside the measurement sets there has to be a parmDB with the                #
+#   direction-indepndent, phase-only calibration values:                         #
+#   "Gain:0:0:*","Gain:1:1:*"                                                    #
+# The Pre-Facet-Cal pipelines will supply exactly this kind of data.             #
+#                                                                                #
+# IDG version                                                                    #
+# - Version of Initial-Subtract-Fast parset that uses the Image Domain Gridder   #
+#   for the high-res images and normal WSClean gridder for the low-res images    #
+# - only a part of the full bandwidth is imaged and model components are         #
+#   interpolated to all frequencies                                              #
+# - only one high-res and one low-res image is made for each band imaged, with   #
+#   a mask used to filter the clean components so that they are (mostly) real    #
+#   sources                                                                      #
+# - WSClean's auto masking is used to reduce the number of artifacts included    #
+#   in the subtracted model                                                      #
+# - Rectangular images are supported by IDG yet, so high-res images are square   #
+#   regardless of the field Dec. Rectangular low-res images are made to speed up #
+#   imaging at lower declinations (where the primary beam is elongated N-S)      #
+##################################################################################
 
-##### For this pipeline to work the data must have:
-# - in the DATA column:
-#   - the average amplitude scale set
-#   - the average clock offsets removed
-#   - the LOFAR beam towards the phase center corrected
-# - in the CORRECTED_DATA column:
-#   - the DATA calibrated with the gains in supplied the
-#     direction-indepndent parmDB
-# - inside the measurement sets there has to be a parmDB with the
-#   direction-indepndent, phase-only calibration values:
-#   "Gain:0:0:*","Gain:1:1:*"
-#
-# The Pre-Facet-Cal pipelines will supply exactly this kind of data.
+##########################################
+### parameters you will need to adjust  ##
+##########################################
 
-#### IDG version
-# - Version of Initial-Subtract-Fast parset that uses the Image Domain Gridder for the
-#   high-res images and normal WSClean gridder for the low-res images
-# - only a part of the full bandwidth is imaged and model components are
-#   interpolated to all frequencies
-# - only one high-res and one low-res image is made for each band imaged, with
-#   a mask used to filter the clean components so that they are (mostly) real
-#   sources
-# - WSClean's baseline-dependent averaging is used to speed up imaging of low-res images
-# - WSClean's auto masking is used to reduce the number of artifacts included
-#   in the subtracted model
-# - Rectangular images are supported by IDG yet, so high-res images are square regardless
-#   of the field Dec. Rectangular low-res images are made to speed up imaging at lower
-#   declinations (where the primary beam is elongated N-S)
+## information about the input data
+! data_input_path          = /data/scratch/drabent  ## specify the directory where your concatenated target data are stored
+! data_input_pattern       = L217445*.pre-cal.ms    ## regular expression pattern of all your calibrator files
+! direction_indep_parmDBs  = /instrument_directionindependent  ## name of the direction independent parmDBs inside the measurement sets
 
-##### parameters you will need to adjust.
-! data_input_path         = /data/scratch/username/PathToYourTargetData/
-! data_input_pattern      = L*.pre-cal.ms
-# name of the direction independent parmDBs inside the measurement sets
-# needs to include the leading "/" to indicate that the parmDB is a subdirectory of the MS
-! direction_indep_parmDBs = /instrument_directionindependent
-# where to put the inspection plots generated by the pipeline
-! inspection_directory = /media/scratch/test/username/WhereYouWantImagesAndInspectionPlots/
-# scratch directory for wsclean (can be local to the processing nodes!)
-! local_scratch_dir        =  /local/username
+## location of the software
+! prefactor_directory      =  /home/drabent/prefactor  ## path to your prefactor copy
+! wsclean_executable       =  /home/drabent/wsclean    ## path to your local WSClean executable
 
-##### imaging parameters (Feel free to leave them untouched.)
-#### specify  the image parameters here
-# cellsize in degrees, 0.00208 deg is about 7.5 arcsec
-! cellsize_highres_deg = 0.00208
-! cellsize_lowres_deg  = 0.00694
-# size of the image is this value times the FWHM of mean semi-major axis of the station beam
-! fieldsize_highres    = 2.5
-! fieldsize_lowres     = 6.5
-# maximum uv-distance in lambda that will be used for imaging
-# 7 klambda is machted to 7.5 arcsec cellsize
-! maxlambda_highres    = 7000
-! maxlambda_lowres     = 2000
-# How much padding shall we add during the imaging?
-! image_padding        = 1.4
-# Number of bands to image (spread over the full bandwidth). Larger values
-# result in better subtraction but longer runtimes
-! nbands_image         = 6
-# Minimum flux density in Jy of clean components from the high-resolution
-# imaging to include in subtract_high step (note that all components from the
-# low-resolution imaging are included in the subtract_low step). Clean
-# components below this flux density will not be subtracted. Lower values result
-# in better subtraction but longer runtimes
-! min_flux_jy          = 0.005
-# IDG mode to use: cpu or hybrid
-! idg_mode             = hybrid
+##########################################
+###  parameters you may want to adjust  ##
+##########################################
 
-##### performance parameters
-! max_imagers_per_node      =  2
-! max_percent_mem_per_img   =  45
-! max_cpus_per_img          =  20
-! max_dppp_per_node         =  6
-! max_dppp_threads          =  8
-# set this to True if you want the pipeline run to continue if single bands fail
-! error_tolerance           =  False
+## imaging parameters
+! cellsize_highres_deg     = 0.00208  ## cellsize in degrees, 0.00208 deg is about 7.5 arcsec
+! cellsize_lowres_deg      = 0.00694  ## cellsize in degrees, 0.00208 deg is about 7.5 arcsec
+! fieldsize_highres        = 2.5      ## size of the image is this value times the FWHM of mean semi-major axis of the station beam
+! fieldsize_lowres         = 6.5      ## size of the image is this value times the FWHM of mean semi-major axis of the station beam
+! maxlambda_highres        = 7000     ## maximum uv-distance in lambda that will be used for imaging
+! maxlambda_lowres         = 2000     ## maximum uv-distance in lambda that will be used for imaging
+! image_padding            = 1.4      ## How much padding shall we add during the imaging?
+! nbands_image             = 6        ## Number of bands to image (spread over the full bandwidth). Larger values result in better subtraction but longer runtimes
+! min_flux_jy              = 0.005    ## Minimum flux density in Jy of clean components from the high-resolution imaging to include in subtract_high step
+! idg_mode                 = hybrid   ## IDG mode to use: cpu or hybrid
 
-##### pathes to the scripts etc.
-! wsclean_executable          = /homea/htb00/htb003/local_jureca/bin/wsclean
-! do_magic_script             = /homea/htb00/htb001/prefactor/scripts/InitSubtract_sort_and_compute.py
-! merge_skymodels_script      = /homea/htb00/htb001/prefactor/scripts/merge_skymodels.py
-! make_clean_mask_script      = /homea/htb00/htb001/prefactor/scripts/make_clean_mask.py
-! plot_subtract_images_script = /homea/htb00/htb001/prefactor/scripts/plot_subtract_images.py
-! fits2sky_script             = /homea/htb00/htb001/prefactor/scripts/fits2sky.py
-! pad_image_script            = /homea/htb00/htb001/prefactor/scripts/pad_image.py
-! makesourcedb                = /homea/htb00/htb003/lofar_jureca_2-15/bin/makesourcedb
+## pipeline performance
+! max_imagers_per_node     =  2      ## number of simultaneous imager process per node
+! max_percent_mem_per_img  =  45     ## max memory (as % of total) per imager process
+! max_cpus_per_img         =  20     ## number of cpus per imager process
+! max_dppp_per_node        =  6      ## number of simultaneous DPPP processes per node
+! max_dppp_threads         =  8      ## number of threads per process for NDPPP
+! error_tolerance          =  False  ## set this to True if you want the pipeline run to continue if single bands fail
+
+## main directories
+! lofar_directory          =  $LOFARROOT                  ## base directory of your LOFAR installation
+! job_directory            =  input.output.job_directory  ## directory of the prefactor outputs
+
+## script and plugin directories
+! scripts                  =  {{ prefactor_directory }}/scripts
+pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
+
+## result and scratch directories
+! results_directory        =  {{ job_directory }}/results         ## location of the results
+! inspection_directory     =  {{ results_directory }}/inspection  ## directory where the images will be stored
+! local_scratch_dir        =  /tmp                                ## scratch directory for wsclean (can be local to the processing nodes!)
+
+
+########################################################
+##                                                    ##
+##   BEGIN PIPELINE: DO NOT UPDATE BELOW THIS LINE!   ##
+##                                                    ##
+########################################################
 
 # the Steps in this pipeline
 pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_parmdb_map, select_imaging_bands, select_high_size, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_parmdb, select_freqstep, select_timestep, correct_high, regroup_map, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
@@ -119,7 +121,7 @@ combine_mapfile.control.filename                =  combine_mapfile.mapfile
 
 # compute frequency groupings, image sizes, averaging values, etc., len = different
 do_magic.control.type                           =  pythonplugin
-do_magic.control.executable                     =  {{ do_magic_script }}
+do_magic.control.executable                     =  {{ scripts }}/InitSubtract_sort_and_compute.py
 do_magic.argument.flags                         =  [combine_mapfile.output.mapfile]
 do_magic.argument.outmapname                    =  do_magic.datamap
 do_magic.argument.mapfile_dir                   =  input.output.mapfile_dir
@@ -205,7 +207,7 @@ wsclean_high.argument.idg-mode                 =   {{ idg_mode }}
 
 # make masks for the high-res images, length = nbands_image
 mask_high.control.type                          =   pythonplugin
-mask_high.control.executable                    =   {{ make_clean_mask_script }}
+mask_high.control.executable                    =   {{ scripts }}/make_clean_mask.py
 mask_high.control.max_per_node                  =   {{ max_imagers_per_node }}
 mask_high.control.error_tolerance               =   {{ error_tolerance }}
 mask_high.control.mapfile_in                    =   wsclean_high.output.wsclean_high-image.fits.mapfile
@@ -237,7 +239,7 @@ copy_mask.control.arguments                     =  [source,{{ inspection_directo
 
 # plot the high-res image and mask, length = nbands_image
 plot_im_high.control.type                       =   pythonplugin
-plot_im_high.control.executable                 =   {{ plot_subtract_images_script }}
+plot_im_high.control.executable                 =   {{ scripts }}/plot_subtract_images.py
 plot_im_high.control.error_tolerance            =   {{ error_tolerance }}
 plot_im_high.control.mapfiles_in                =   [wsclean_high.output.wsclean_high-image.fits.mapfile,mask_high.output.mapfile]
 plot_im_high.control.inputkeys                  =   [imhigh,maskhigh]
@@ -262,7 +264,7 @@ create_maxsize_high_map.control.filename           =   maxsize_high.datamap
 
 # Pad the model images to a uniform size, length = nbands_image
 pad_model_high.control.type             =   pythonplugin
-pad_model_high.control.executable       =   {{ pad_image_script }}
+pad_model_high.control.executable       =   {{ scripts }}/pad_image.py
 pad_model_high.control.error_tolerance  =   {{ error_tolerance }}
 pad_model_high.control.mapfiles_in      =   [wsclean_high.output.wsclean_high-model.fits.mapfile,create_maxsize_high_map.output.mapfile]
 pad_model_high.control.inputkeys        =   [imagefile,xypadsize]
@@ -270,7 +272,7 @@ pad_model_high.argument.flags           =   [imagefile,xypadsize]
 
 # Pad the mask images to a uniform size, length = nbands_image
 pad_mask_high.control.type             =   pythonplugin
-pad_mask_high.control.executable       =   {{ pad_image_script }}
+pad_mask_high.control.executable       =   {{ scripts }}/pad_image.py
 pad_mask_high.control.error_tolerance  =   {{ error_tolerance }}
 pad_mask_high.control.mapfiles_in      =   [mask_high.output.mapfile,create_maxsize_high_map.output.mapfile]
 pad_mask_high.control.inputkeys        =   [imagefile,xypadsize]
@@ -308,7 +310,7 @@ expand_mask_high.control.filename           =   expand_mask_high.datamap
 
 # convert high-res model images to sky models, length = nbands
 fits_to_bbs_high.control.type             =   pythonplugin
-fits_to_bbs_high.control.executable       =   {{ fits2sky_script }}
+fits_to_bbs_high.control.executable       =   {{ scripts }}/fits2sky.py
 fits_to_bbs_high.control.error_tolerance  =   {{ error_tolerance }}
 fits_to_bbs_high.control.max_per_node     =   1      # can use a lot of memory, so don't do too many at once
 fits_to_bbs_high.control.mapfiles_in      =   [do_magic_maps.output.groupmap,expand_model_high.output.mapfile,expand_mask_high.output.mapfile]
@@ -322,7 +324,7 @@ fits_to_bbs_high.argument.min_flux_jy     =   {{ min_flux_jy }}
 # also NDPPP doesn't wait for exclusive lock on blob-type sourceDBs
 make_sourcedb_high.control.kind                 =   recipe
 make_sourcedb_high.control.type                 =   executable_args
-make_sourcedb_high.control.executable           =   {{ makesourcedb }}
+make_sourcedb_high.control.executable           =   {{ lofar_directory }}/bin/makesourcedb
 make_sourcedb_high.control.error_tolerance      =   {{ error_tolerance }}
 make_sourcedb_high.control.args_format          =   lofar
 make_sourcedb_high.control.outputkey            =   out
@@ -469,7 +471,7 @@ wsclean_low.argument.local-rms-method          =   rms-with-min
 
 # make masks for the low-res images, length = nbands_image
 mask_low.control.type                           =   pythonplugin
-mask_low.control.executable                     =   {{ make_clean_mask_script }}
+mask_low.control.executable                     =   {{ scripts }}/make_clean_mask.py
 mask_low.control.max_per_node                   =   {{ max_imagers_per_node }}
 mask_low.control.error_tolerance                =   {{ error_tolerance }}
 mask_low.control.mapfile_in                     =   wsclean_low.output.wsclean_low-image.fits.mapfile
@@ -487,7 +489,7 @@ mask_low.argument.trim_by                       =   0.1
 
 # plot the low-res image and mask, length = nbands_image
 plot_im_low.control.type                        =   pythonplugin
-plot_im_low.control.executable                  =   {{ plot_subtract_images_script }}
+plot_im_low.control.executable                  =   {{ scripts }}/plot_subtract_images.py
 plot_im_low.control.error_tolerance             =   {{ error_tolerance }}
 plot_im_low.control.mapfiles_in                 =   [wsclean_low.output.wsclean_low-image.fits.mapfile,mask_low.output.mapfile]
 plot_im_low.control.inputkeys                   =   [imlow,masklow]
@@ -512,7 +514,7 @@ create_maxsize_low_map.control.filename           =   maxsize_low.datamap
 
 # Pad the model images to a uniform size, length = nbands_image
 pad_model_low.control.type             =   pythonplugin
-pad_model_low.control.executable       =   {{ pad_image_script }}
+pad_model_low.control.executable       =   {{ scripts }}/pad_image.py
 pad_model_low.control.error_tolerance  =   {{ error_tolerance }}
 pad_model_low.control.mapfiles_in      =   [wsclean_low.output.wsclean_low-model.fits.mapfile,create_maxsize_low_map.output.mapfile]
 pad_model_low.control.inputkeys        =   [imagefile,xypadsize]
@@ -520,7 +522,7 @@ pad_model_low.argument.flags           =   [imagefile,xypadsize]
 
 # Pad the mask images to a uniform size, length = nbands_image
 pad_mask_low.control.type             =   pythonplugin
-pad_mask_low.control.executable       =   {{ pad_image_script }}
+pad_mask_low.control.executable       =   {{ scripts }}/pad_image.py
 pad_mask_low.control.error_tolerance  =   {{ error_tolerance }}
 pad_mask_low.control.mapfiles_in      =   [mask_low.output.mapfile,create_maxsize_low_map.output.mapfile]
 pad_mask_low.control.inputkeys        =   [imagefile,xypadsize]
@@ -558,7 +560,7 @@ expand_mask_low.control.filename           =   expand_mask_low.datamap
 
 # convert low-res model images to sky models, length = nbands
 fits_to_bbs_low.control.type             =   pythonplugin
-fits_to_bbs_low.control.executable       =   {{ fits2sky_script }}
+fits_to_bbs_low.control.executable       =   {{ scripts }}/fits2sky.py
 fits_to_bbs_low.control.error_tolerance  =   {{ error_tolerance }}
 fits_to_bbs_low.control.max_per_node     =   4      # can use a lot of memory, so don't do too many at once
 fits_to_bbs_low.control.mapfiles_in      =   [do_magic_maps.output.groupmap,expand_model_low.output.mapfile,expand_mask_low.output.mapfile]
@@ -571,7 +573,7 @@ fits_to_bbs_low.argument.min_flux_jy     =   0.0    # keep all clean components,
 # outtype = blob for the same reasons as for sourcedb_high
 make_sourcedb_low.control.kind                  =   recipe
 make_sourcedb_low.control.type                  =   executable_args
-make_sourcedb_low.control.executable            =   {{ makesourcedb }}
+make_sourcedb_low.control.executable            =   {{ lofar_directory }}/bin/makesourcedb
 make_sourcedb_low.control.error_tolerance       =   {{ error_tolerance }}
 make_sourcedb_low.control.args_format           =   lofar
 make_sourcedb_low.control.outputkey             =   out
@@ -608,7 +610,7 @@ subtract_low.argument.subtract.applycal.parmdb  =   parmdb
 
 # merge the high-res and low-res skymodels, length = nbands
 merge.control.type                              =   pythonplugin
-merge.control.executable                        =   {{ merge_skymodels_script }}
+merge.control.executable                        =   {{ scripts }}/merge_skymodels.py
 merge.control.error_tolerance                   =   {{ error_tolerance }}
 merge.control.mapfiles_in                       =   [fits_to_bbs_low.output.mapfile,fits_to_bbs_high.output.mapfile]
 merge.control.inputkeys                         =   [modellow,modelhigh]
