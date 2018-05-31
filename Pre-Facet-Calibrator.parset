@@ -18,8 +18,8 @@
 ! cal_input_pattern        =  L217455*.MS            ## regular expression pattern of all your calibrator files
 
 ## location of the software
-! prefactor_directory      =  /home/drabent/prefactor  ## path to your prefactor copy
-! losoto_directory         =  /home/drabent/losoto     ## path to your local LoSoTo installation
+! prefactor_directory      =  $PREFACTOR_PATH        ## path to your prefactor copy
+! losoto_directory         =  $LOSOTO_PATH           ## path to your local LoSoTo installation
 
 ##########################################
 ###  parameters you may want to adjust  ##
