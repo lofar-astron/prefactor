@@ -1,4 +1,0 @@
-Note: The old "Initial-Subtract.parset" hase been removed. It's functionality 
-can be reproduced with the "Initial-Subtract-Fast.parset" by setting the
-"nbands_image" parameter to the number of frequency-bands that are being 
-processed.
