@@ -49,14 +49,20 @@ opt.add_option('-w', '--weight', help='Save the newly computed WEIGHT_SPECTRUM, 
 opt.add_option('-r', '--restore', help='If WEIGHT_SPECTRUM_ORIG exists then restore it before smoothing [default: False]', action="store_true", default=False)
 opt.add_option('-b', '--nobackup', help='Do not backup the old WEIGHT_SPECTRUM in WEIGHT_SPECTRUM_ORIG [default: do backup if -w]', action="store_true", default=False)
 opt.add_option('-a', '--onlyamp', help='Smooth only amplitudes [default: smooth real/imag]', action="store_true", default=False)
+<<<<<<< HEAD
 opt.add_option('-c', '--onlycopy', help='Copies a column instead of smoothing', type="string", default=True)
+=======
+>>>>>>> 19c9eafe799bdfb15e8d8347395ed4fb43fefa6d
 (options, msfile) = opt.parse_args()
 
 if msfile == []:
     opt.print_help()
     sys.exit(0)
 msfile = msfile[0]
+<<<<<<< HEAD
 print msfile
+=======
+>>>>>>> 19c9eafe799bdfb15e8d8347395ed4fb43fefa6d
 
 if not os.path.exists(msfile):
     logging.error("Cannot find MS file.")
@@ -79,9 +85,12 @@ if not all(all_time[i] <= all_time[i+1] for i in xrange(len(all_time)-1)):
 
 # create column to smooth
 addcol(ms, options.incol, options.outcol)
+<<<<<<< HEAD
 # if smoothing should not be performed
 if options.onlycopy == 'False':
     sys.exit(0)
+=======
+>>>>>>> 19c9eafe799bdfb15e8d8347395ed4fb43fefa6d
 
 # retore WEIGHT_SPECTRUM
 if 'WEIGHT_SPECTRUM_ORIG' in ms.colnames() and options.restore:

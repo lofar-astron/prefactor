@@ -25,7 +25,11 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
+<<<<<<< HEAD
 ! refant                   = 'CS001HBA0'                             ## name of the station that will be used as a reference for the phase-plots
+=======
+! bad_SB_list              =  "307;308;309;310;311;312;313;314;315"  ## semicolumn-separated list of subbands to be mitigated, e.g., due to RFI
+>>>>>>> 19c9eafe799bdfb15e8d8347395ed4fb43fefa6d
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
 ! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects
@@ -53,7 +57,7 @@
 pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 
 ## skymodel directory
-! calibrator_path_skymodel =  {{ lofar_directory }}/share/pipeline/skymodels/
+! calibrator_path_skymodel =  {{ prefactor_directory }}/skymodels
 
 ## result directories
 ! results_directory        =  {{ job_directory }}/results            ## location of the results
@@ -380,6 +384,7 @@ h5imp_cal_FR.argument.flags                            =   [-c,h5imp_cal_map.out
 h5imp_cal_FR.argument.outh5parm                        =   outh5parm
 
 # create losoto v2 parset file
+<<<<<<< HEAD
 prepare_losoto_FR.control.kind                         =   plugin
 prepare_losoto_FR.control.type                         =   makeLosotoParset
 prepare_losoto_FR.control.steps                        =   [plotP3,plotPd,flag,plotRot3,plotA3,faraday,plotFR]
@@ -429,6 +434,151 @@ prepare_losoto_FR.control.plotFR.soltab                =   sol000/rotationmeasur
 prepare_losoto_FR.control.plotFR.axesInPlot            =   [time]
 prepare_losoto_FR.control.plotFR.axisInTable           =   ant
 prepare_losoto_FR.control.plotFR.prefix                =   {{ inspection_directory }}/fr
+=======
+prepare_losoto.control.kind                          =   plugin
+prepare_losoto.control.type                          =   makeLosotoParset
+prepare_losoto.control.steps                         =   [plotP1,plotP2,plotP3,plotPd,flag,plotRot1,plotRot2,plotRot3,plotA1,plotA2,plotA3,bkp,align,plotAlign,residual,plotPr,plotPr2]
+prepare_losoto.control.filename                      =   input.output.job_directory/losoto.parset
+prepare_losoto.control.global.ncpu                   =   {{ num_proc_per_node }}
+prepare_losoto.control.plotP1.operation              =   PLOT
+prepare_losoto.control.plotP1.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP1.freq.minmaxstep        =   [0,300e6,100]
+prepare_losoto.control.plotP1.axesInPlot             =   time
+prepare_losoto.control.plotP1.axisInTable            =   ant
+prepare_losoto.control.plotP1.axisInCol              =   pol
+prepare_losoto.control.plotP1.plotFlag               =   True
+prepare_losoto.control.plotP1.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP1.refAnt                 =   {{ reference_station }}
+prepare_losoto.control.plotP1.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotP1.NColFig                =   4
+prepare_losoto.control.plotP1.figSize                =   [20,20]
+prepare_losoto.control.plotP2.operation              =   PLOT
+prepare_losoto.control.plotP2.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP2.time.minmaxstep        =   [0,1e20,500]
+prepare_losoto.control.plotP2.axesInPlot             =   freq
+prepare_losoto.control.plotP2.axisInTable            =   ant
+prepare_losoto.control.plotP2.axisInCol              =   pol
+prepare_losoto.control.plotP2.plotFlag               =   True
+prepare_losoto.control.plotP2.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP2.refAnt                 =   {{ reference_station }}
+prepare_losoto.control.plotP2.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotP3.operation              =   PLOT
+prepare_losoto.control.plotP3.soltab                 =   sol000/phase000
+prepare_losoto.control.plotP3.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotP3.axisInTable            =   ant
+prepare_losoto.control.plotP3.plotFlag               =   True
+prepare_losoto.control.plotP3.prefix                 =   {{ inspection_directory }}/ph_
+prepare_losoto.control.plotP3.refAnt                 =   {{ reference_station }}
+prepare_losoto.control.plotP3.minmax                 =   [-3.14,3.14]
+prepare_losoto.control.plotPd.operation              =   PLOT
+prepare_losoto.control.plotPd.soltab                 =   sol000/phase000
+prepare_losoto.control.plotPd.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotPd.axisInTable            =   ant
+prepare_losoto.control.plotPd.axisDiff               =   pol
+prepare_losoto.control.plotPd.plotFlag               =   True
+prepare_losoto.control.plotPd.prefix                 =   {{ inspection_directory }}/ph-dif
+prepare_losoto.control.plotPd.refAnt                 =   {{ reference_station }}
+prepare_losoto.control.plotPd.minmax                 =   [-1,+1]
+prepare_losoto.control.flag.operation                =   REWEIGHT
+prepare_losoto.control.flag.flagBad                  =   True
+prepare_losoto.control.flag.soltab                   =   sol000/rotation000
+prepare_losoto.control.plotRot1.operation            =   PLOT
+prepare_losoto.control.plotRot1.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot1.freq.minmaxstep      =   [0,300e6,100]
+prepare_losoto.control.plotRot1.axesInPlot           =   time
+prepare_losoto.control.plotRot1.axisInTable          =   ant
+prepare_losoto.control.plotRot1.plotFlag             =   True
+prepare_losoto.control.plotRot1.prefix               =   {{ inspection_directory }}/rot_
+prepare_losoto.control.plotRot1.refAnt               =   {{ reference_station }}
+prepare_losoto.control.plotRot1.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotRot1.NColFig              =   4
+prepare_losoto.control.plotRot1.figSize              =   [20,20]
+prepare_losoto.control.plotRot2.operation            =   PLOT
+prepare_losoto.control.plotRot2.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot2.time.minmaxstep      =   [0,1e20,500]
+prepare_losoto.control.plotRot2.axesInPlot           =   freq
+prepare_losoto.control.plotRot2.axisInTable          =   ant
+prepare_losoto.control.plotRot2.plotFlag             =   True
+prepare_losoto.control.plotRot2.prefix               =   {{ inspection_directory }}/rot_
+prepare_losoto.control.plotRot2.refAnt               =   {{ reference_station }}
+prepare_losoto.control.plotRot2.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotRot3.operation            =   PLOT
+prepare_losoto.control.plotRot3.soltab               =   sol000/rotation000
+prepare_losoto.control.plotRot3.axesInPlot           =   [time,freq]
+prepare_losoto.control.plotRot3.axisInTable          =   ant
+prepare_losoto.control.plotRot3.plotFlag             =   True
+prepare_losoto.control.plotRot3.prefix               =   {{ inspection_directory }}/rot
+prepare_losoto.control.plotRot3.refAnt               =   {{ reference_station }}
+prepare_losoto.control.plotRot3.minmax               =   [-1.6,1.6]
+prepare_losoto.control.plotA1.operation              =   PLOT
+prepare_losoto.control.plotA1.Soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA1.freq.minmaxstep        =   [0,300e6,100]
+prepare_losoto.control.plotA1.axesInPlot             =   time
+prepare_losoto.control.plotA1.axisInTable            =   ant
+prepare_losoto.control.plotA1.axisInCol              =   pol
+prepare_losoto.control.plotA1.plotFlag               =   True
+prepare_losoto.control.plotA1.prefix                 =   {{ inspection_directory }}/amp_
+prepare_losoto.control.plotA1.NColFig                =   4
+prepare_losoto.control.plotA1.figSize                =   [20,20]
+#prepare_losoto.control.plotA1.minmax                 =   [0,300]
+prepare_losoto.control.plotA2.operation              =   PLOT
+prepare_losoto.control.plotA2.soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA2.time.minmaxstep        =   [0,1e20,500]
+prepare_losoto.control.plotA2.axesInPlot             =   freq
+prepare_losoto.control.plotA2.axisInTable            =   ant
+prepare_losoto.control.plotA2.axisInCol              =   pol
+prepare_losoto.control.plotA2.plotFlag               =   True
+prepare_losoto.control.plotA2.prefix                 =   {{ inspection_directory }}/amp_
+#prepare_losoto.control.plotA2.minmax                 =   [0,300]
+prepare_losoto.control.plotA3.operation              =   PLOT
+prepare_losoto.control.plotA3.soltab                 =   sol000/amplitude000
+prepare_losoto.control.plotA3.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotA3.axisInTable            =   ant
+prepare_losoto.control.plotA3.plotFlag               =   True
+prepare_losoto.control.plotA3.prefix                 =   {{ inspection_directory }}/amp_
+#prepare_losoto.control.plotA3.minmax                 =   [0,300]
+prepare_losoto.control.bkp.operation                 =   DUPLICATE
+prepare_losoto.control.bkp.soltab                    =   sol000/phase000
+prepare_losoto.control.bkp.soltabOut                 =   phaseOrig000
+prepare_losoto.control.align.soltab                  =   sol000/phase000
+prepare_losoto.control.align.operation               =   POLALIGN
+prepare_losoto.control.align.soltabOut               =   polalign
+prepare_losoto.control.align.average                 =   True
+prepare_losoto.control.align.replace                 =   True
+prepare_losoto.control.align.fitOffset               =   False
+prepare_losoto.control.align.refAnt                  =   {{ reference_station }}
+prepare_losoto.control.plotAlign.operation           =   PLOT
+prepare_losoto.control.plotAlign.soltab              =   sol000/polalign
+prepare_losoto.control.plotAlign.axesInPlot          =   [time,freq]
+prepare_losoto.control.plotAlign.axisInTable         =   ant
+prepare_losoto.control.plotAlign.axisDiff            =   pol
+prepare_losoto.control.plotAlign.plotFlag            =   True
+prepare_losoto.control.plotAlign.prefix              =   {{ inspection_directory }}/ph-align
+prepare_losoto.control.plotAlign.refAnt              =   {{ reference_station }}
+prepare_losoto.control.plotAlign.minmax              =   [-1,+1]
+prepare_losoto.control.residual.operation            =   RESIDUALS
+prepare_losoto.control.residual.soltab               =   sol000/phase000
+prepare_losoto.control.residual.soltabsToSub         =   polalign
+prepare_losoto.control.plotPr.operation              =   PLOT
+prepare_losoto.control.plotPr.soltab                 =   sol000/phase000
+prepare_losoto.control.plotPr.axesInPlot             =   [time,freq]
+prepare_losoto.control.plotPr.axisInTable            =   ant
+prepare_losoto.control.plotPr.axisDiff               =   pol
+prepare_losoto.control.plotPr.plotFlag               =   True
+prepare_losoto.control.plotPr.prefix                 =   {{ inspection_directory }}/ph-res
+prepare_losoto.control.plotPr.refAnt                 =   {{ reference_station }}
+prepare_losoto.control.plotPr.minmax                 =   [-1,+1]
+prepare_losoto.control.plotPr2.operation             =   PLOT
+prepare_losoto.control.plotPr2.soltab                =   sol000/phase000
+prepare_losoto.control.plotPr2.time.minmaxstep       =   [0,1e20,500]
+prepare_losoto.control.plotPr2.axesInPlot            =   freq
+prepare_losoto.control.plotPr2.axisInTable           =   ant
+prepare_losoto.control.plotPr2.axisInCol             =   pol
+prepare_losoto.control.plotPr2.plotFlag              =   True
+prepare_losoto.control.plotPr2.prefix                =   {{ inspection_directory }}/ph-res_
+prepare_losoto.control.plotPr2.refAnt                =   {{ reference_station }}
+prepare_losoto.control.plotPr2.minmax                =   [-3.14,+3.14]
+>>>>>>> 19c9eafe799bdfb15e8d8347395ed4fb43fefa6d
 
 # do the processing on the LoSoTo file
 process_losoto_FR.control.kind                         =   recipe
