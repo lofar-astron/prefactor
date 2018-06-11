@@ -197,14 +197,14 @@ h5imp_cal_map.control.mapfile_in                       =   calib_cal_parmmap.out
 h5imp_cal_map.control.mapfile_dir                      =   input.output.mapfile_dir
 h5imp_cal_map.control.filename                         =   h5imp_cal_map.mapfile
 
-# baseline-dependent smooting
+# baseline-dependent smoothing
 smooth_data.control.type                               =   executable_args
 smooth_data.control.max_per_node                       =   {{ num_proc_per_node }}
 smooth_data.control.error_tolerance                    =   {{ error_tolerance }}
 smooth_data.control.executable                         =   {{ scripts }}/BLsmooth.py
 smooth_data.argument.flags                             =   [-c,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
 
-# baseline-dependent smooting
+# baseline-dependent smoothing
 smooth_corrected.control.type                          =   executable_args
 smooth_corrected.control.max_per_node                  =   {{ num_proc_per_node }}
 smooth_corrected.control.error_tolerance               =   {{ error_tolerance }}
