@@ -697,13 +697,13 @@ h5exp_cal_ion.argument.outh5parm                       =   {{ cal_values_directo
 ################################
 ## applying the results       ##
 ################################
-# apply the calibration solutions
+# apply the PA solutions
 apply_PA.control.type                                  =   dppp
 apply_PA.control.error_tolerance                       =   {{ error_tolerance }}
 apply_PA.control.inplace                               =   True
 apply_PA.control.max_per_node                          =   {{ num_proc_per_node_limit }}
-apply_PA.control.mapfile_in                            =   ndppp_prep_cal.output.mapfile
-apply_PA.control.inputkey                              =   msin
+apply_PA.control.mapfiles_in                           =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
+apply_PA.control.inputkeys                             =   [msin, applyPA.parmdb]
 apply_PA.argument.numthreads                           =   {{ max_dppp_threads }}
 # apply_PA.argument.msin                                 =   ndppp_prep_cal.output.mapfile
 apply_PA.argument.msin.datacolumn                      =   DATA
@@ -711,22 +711,24 @@ apply_PA.argument.msout.datacolumn                     =   CORRECTED_DATA
 apply_PA.argument.steps                                =   [applyPA]
 apply_PA.argument.applyPA.type                         =   applycal
 apply_PA.argument.applyPA.correction                   =   polalign
-apply_PA.argument.applyPA.parmdb                       =   expand_parmdb.output.mapfile
+# apply_PA.argument.applyPA.parmdb                       =   expand_parmdb.output.mapfile
 
 # apply the bandpass
 apply_bandpass.control.type                            =   dppp
 apply_bandpass.control.error_tolerance                 =   {{ error_tolerance }}
 apply_bandpass.control.inplace                         =   True
 apply_bandpass.control.max_per_node                    =   {{ num_proc_per_node_limit }}
+apply_bandpass.control.mapfiles_in                     =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
+apply_bandpass.control.inputkeys                       =   [msin, applybandpass.parmdb]
 apply_bandpass.argument.numthreads                     =   {{ max_dppp_threads }}
-apply_bandpass.argument.msin                           =   ndppp_prep_cal.output.mapfile
+# apply_bandpass.argument.msin                           =   ndppp_prep_cal.output.mapfile
 apply_bandpass.argument.msin.datacolumn                =   CORRECTED_DATA
 apply_bandpass.argument.msout.datacolumn               =   CORRECTED_DATA
 apply_bandpass.argument.steps                          =   [applybandpass]
 apply_bandpass.argument.applybandpass.type             =   applycal
 apply_bandpass.argument.applybandpass.correction       =   amplitudeSmooth000
 apply_bandpass.argument.applybandpass.updateweights    =   True
-apply_bandpass.argument.applybandpass.parmdb           =   expand_parmdb.output.mapfile
+# apply_bandpass.argument.applybandpass.parmdb           =   expand_parmdb.output.mapfile
 
 # apply the beam
 apply_beam.control.type                                =   dppp
@@ -744,13 +746,13 @@ apply_beam.argument.applybeam.usechannelfreq           =   False
 apply_beam.argument.applybeam.beammode                 =   element
 apply_beam.argument.applybeam.updateweights            =   True
 
-# apply the FR
+# apply the FR solutions
 apply_FR.control.type                                  =   dppp
 apply_FR.control.error_tolerance                       =   {{ error_tolerance }}
 apply_FR.control.inplace                               =   True
 apply_FR.control.max_per_node                          =   {{ num_proc_per_node_limit }}
-apply_FR.control.mapfile_in                            =   ndppp_prep_cal.output.mapfile
-apply_FR.control.inputkey                              =   msin
+apply_FR.control.mapfiles_in                           =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
+apply_FR.control.inputkeys                             =   [msin, applyFR.parmdb]
 apply_FR.argument.numthreads                           =   {{ max_dppp_threads }}
 # apply_FR.argument.msin                                 =   ndppp_prep_cal.output.mapfile
 apply_FR.argument.msin.datacolumn                      =   CORRECTED_DATA
@@ -758,7 +760,7 @@ apply_FR.argument.msout.datacolumn                     =   CORRECTED_DATA
 apply_FR.argument.steps                                =   [applyFR]
 apply_FR.argument.applyFR.type                         =   applycal
 apply_FR.argument.applyFR.correction                   =   rotationmeasure000
-apply_FR.argument.applyFR.parmdb                       =   expand_parmdb.output.mapfile
+# apply_FR.argument.applyFR.parmdb                       =   expand_parmdb.output.mapfile
 
 ########################################################
 ##                                                    ##
