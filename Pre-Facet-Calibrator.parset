@@ -51,7 +51,7 @@
 pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 
 ## skymodel directory
-! calibrator_path_skymodel =  {{ lofar_directory }}/share/pipeline/skymodels
+! calibrator_path_skymodel =  {{ prefactor_directory }}/skymodels
 
 ## result directories
 ! results_directory        =  {{ job_directory }}/results         ## location of the results
@@ -176,6 +176,7 @@ cal_apply.argument.numthreads                        =   {{ max_dppp_threads }}
 cal_apply.argument.msin                              =   ndppp_prep_cal.output.mapfile
 cal_apply.argument.msin.datacolumn                   =   DATA
 cal_apply.argument.msout.datacolumn                  =   CORRECTED_DATA
+cal_apply.argument.msout                             =   .
 cal_apply.argument.steps                             =   [applycal1,applycal2,applycal3]
 cal_apply.argument.applycal1.type                    =   applycal
 cal_apply.argument.applycal1.correction              =   amplitude000
