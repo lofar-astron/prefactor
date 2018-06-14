@@ -28,6 +28,10 @@
 ! refant                   = 'CS001HBA0'                             ## name of the station that will be used as a reference for the phase-plots
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
+
+# definitions for pipeline options
+! 1st_order                =  ct,plotTEC,residuals                   ## Do not change! Only cal_ion should be edited if needed
+! 3rd_order                =  ct3,plotTEC3,residuals3                ## Do not change! Only cal_ion should be edited if needed
 ! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects
 
 ##########################################
@@ -69,9 +73,6 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ##    BEGIN PIPELINE: DO NOT UPDATE BELOW THIS LINE!  ##
 ##                                                    ##
 ########################################################
-# definitions for pipeline options
-! 1st_order             =  ct,plotTEC,residuals
-! 3rd_order             =  ct3,plotTEC3,residuals3
 
 # which steps to run
 pipeline.steps          = [prep, PA, FR, bandpass, ion]
