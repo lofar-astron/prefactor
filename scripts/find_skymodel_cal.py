@@ -54,7 +54,7 @@ def find_skymodel(NameSource,PathSkyMod,extensionSky=".skymodel"):
     list_skymodel=[] #"list" of corresponding skymodels for the calibrator 
     
     for skymodel in glob.glob(PathSkyMod+"/*"+extensionSky):
-        if skymodel.split("/")[-1].lower().find(NameSource.lower())!=-1:
+        if os.path.basename(skymodel).rstrip(extensionSky).upper() in NameSource.upper():
             list_skymodel.append(skymodel)
         
     # checking that one and only one skymodel is found
