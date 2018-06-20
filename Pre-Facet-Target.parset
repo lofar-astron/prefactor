@@ -272,7 +272,7 @@ ndppp_flag_target.argument.steps                               =   [flag]
 ndppp_flag_target.argument.flag.type                           =   aoflagger
 ndppp_flag_target.argument.flag.keepstatistics                 =   True
 ndppp_flag_target.argument.flag.strategy                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
-ndppp_prep_target.argument.flag.memoryperc                     =   90
+ndppp_flag_target.argument.flag.memoryperc                     =   90
 
 # sort the target data by frequency into groups so that NDPPP can concatenate them
 sortmap_target.control.type                                    =   pythonplugin
@@ -306,6 +306,11 @@ dpppconcat.argument.msin.orderms                               =   False   #/ co
 dpppconcat.argument.msout.datacolumn                           =   DATA
 dpppconcat.argument.msout.writefullresflag                     =   False
 dpppconcat.argument.msout.overwrite                            =   True
+dpppconcat.argument.msout.storagemanager.databitrate           =   0
+dpppconcat.argument.msout.storagemanager.weightbitrate         =   12
+dpppconcat.argument.msout.storagemanager.distribution          =   "TruncatedGaussian"
+dpppconcat.argument.msout.storagemanager.disttruncation        =   1.5
+dpppconcat.argument.msout.storagemanager.normalization         =   "AF"
 dpppconcat.argument.steps                                      =   [count]      # run the aoflagger (this used to be an extra step)
 
 ########################################################
