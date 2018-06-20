@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+import sys
+import glob
+import re
+import pyrap.tables as pt
+
+########################################################################
+def input2strlist_nomapfile(invar):
+   """ 
+   from bin/download_IONEX.py
+   give the list of MSs from the list provided as a string
+   """
+   str_list = None
+   if type(invar) is str:
+       if invar.startswith('[') and invar.endswith(']'):
+           str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
+       else:
+           str_list = [invar.strip(' \'\"')]
+   elif type(invar) is list:
+       str_list = [str(f).strip(' \'\"') for f in invar]
+   else:
+       raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
+   return str_list
+
+########################################################################
+def main(ms_input,ms_output):
+
+    """
+    Virtuall concatenate subbands 
+  
+
+    Parameters
+    ----------
+    ms_input : str
+        String from the list (map) of the calibrator MSs
+    ms_output : str
+        String from the outut concatenated MS
+
+    """    
+
+    pt.msconcat(input2strlist_nomapfile(ms_input), ms_output)
+           
+    return { 'ms_concat' : ms_output }
+
+########################################################################
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Virtuall concat subbands')
+    
+    parser.add_argument('MSfile', type=str, nargs='+',
+                        help='One (or more MSs) that we want to concatenate.')
+    parser.add_argument('MSout', type=str, 
+                        help='Output MS file')
+        
+ 
+   
+    args = parser.parse_args()
+    
+    main(args.MSfile,args.MSout)
