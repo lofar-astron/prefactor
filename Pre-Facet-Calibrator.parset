@@ -79,7 +79,7 @@ pipeline.steps          = [prep, PA, FR, bandpass, ion]
 
 
 # pipeline substeps
-pipeline.steps.prep     = [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
+pipeline.steps.prep     = [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ndppp_flag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
 
 pipeline.steps.PA       = [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, h5exp_cal_map, expand_parmdb, apply_PA, apply_beam]
 pipeline.steps.FR       = [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -135,7 +135,26 @@ combine_data_cal_map.control.type                      =   createMapfile
 combine_data_cal_map.control.method                    =   mapfile_all_to_one
 combine_data_cal_map.control.mapfile_dir               =   input.output.mapfile_dir
 combine_data_cal_map.control.filename                  =   combine_data_cal_map.mapfile
-combine_data_cal_map.control.mapfile_in                =   createmap_cal.output.mapfile
+combine_data_cal_map.control.mapfile_in                =   ndppp_prep_cal.output.mapfile
+
+# virtually concatenate calibrator subbands
+ms_concat.control.type                                 =   pythonplugin
+ms_concat.control.executable                           =   {{ scripts }}/concat_MS.py
+ms_concat.control.error_tolerance                      =   {{ error_tolerance }}
+ms_concat.argument.flags                               =   [combine_data_cal_map.output.mapfile,outputkey]
+
+# run NDPPP on the calibrator data
+ndppp_flag.control.type                                =   dppp
+ndppp_flag.control.max_per_node                        =   {{ num_proc_per_node_limit }}
+ndppp_flag.control.inplace                             =   True
+ndppp_flag.control.error_tolerance                     =   {{ error_tolerance }}
+ndppp_flag.argument.numthreads                         =   {{ num_proc_per_node }}
+ndppp_flag.argument.msin                               =   ms_concat.output.mapfile    # The input data.
+ndppp_flag.argument.msin.datacolumn                    =   DATA
+ndppp_flag.argument.steps                              =   [flag]
+ndppp_flag.argument.flag.type                          =   aoflagger
+ndppp_flag.argument.flag.keepstatistics                =   True
+ndppp_flag.argument.flag.strategy                      =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
 
 # find automatically the calibrator sky model
 sky_cal.control.type                                   =   pythonplugin
@@ -198,14 +217,14 @@ h5imp_cal_map.control.mapfile_in                       =   calib_cal_parmmap.out
 h5imp_cal_map.control.mapfile_dir                      =   input.output.mapfile_dir
 h5imp_cal_map.control.filename                         =   h5imp_cal_map.mapfile
 
-# baseline-dependent smoothing
+# baseline-dependent smooting
 smooth_data.control.type                               =   executable_args
 smooth_data.control.max_per_node                       =   {{ num_proc_per_node }}
 smooth_data.control.error_tolerance                    =   {{ error_tolerance }}
 smooth_data.control.executable                         =   {{ scripts }}/BLsmooth.py
 smooth_data.argument.flags                             =   [-c,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
 
-# baseline-dependent smoothing
+# baseline-dependent smooting
 smooth_corrected.control.type                          =   executable_args
 smooth_corrected.control.max_per_node                  =   {{ num_proc_per_node }}
 smooth_corrected.control.error_tolerance               =   {{ error_tolerance }}
@@ -292,7 +311,7 @@ prepare_losoto_PA.control.plotA3.axesInPlot            =   [time,freq]
 prepare_losoto_PA.control.plotA3.axisInTable           =   ant
 prepare_losoto_PA.control.plotA3.plotFlag              =   True
 prepare_losoto_PA.control.plotA3.prefix                =   {{ inspection_directory }}/polalign_amp_
-prepare_losoto_PA.control.plotA3.minmax                =   [0,300]
+prepare_losoto_PA.control.plotA3.minmax                =   [0,350]
 prepare_losoto_PA.control.bkp.operation                =   DUPLICATE
 prepare_losoto_PA.control.bkp.soltab                   =   sol000/phase000
 prepare_losoto_PA.control.bkp.soltabOut                =   phaseOrig000
@@ -463,7 +482,7 @@ h5imp_cal_bandpass.argument.outh5parm                  =   outh5parm
 # create losoto v2 parset file
 prepare_losoto_bandpass.control.kind                   =   plugin
 prepare_losoto_bandpass.control.type                   =   makeLosotoParset
-prepare_losoto_bandpass.control.steps                  =   [plotA1,flag,flagextend,plotA2,merge,plotA3,bkp,duplicateA,smooth,plotAs,residualA,plotAr3]
+prepare_losoto_bandpass.control.steps                  =   [plotA1,flag,flagextend,plotA2,merge,plotA3,bkp,duplicateA,smooth,plotAs,plotB,residualA,plotAr3]
 prepare_losoto_bandpass.control.filename               =   input.output.job_directory/losoto.parset
 prepare_losoto_bandpass.control.global.ncpu            =   {{ num_proc_per_node }}
 prepare_losoto_bandpass.control.plotA1.operation       =   PLOT
@@ -476,7 +495,7 @@ prepare_losoto_bandpass.control.plotA1.minmax          =   [0,300]
 prepare_losoto_bandpass.control.flag.operation         =   FLAG
 prepare_losoto_bandpass.control.flag.soltab            =   sol000/amplitude000
 prepare_losoto_bandpass.control.flag.axesToFlag        =   [time]
-prepare_losoto_bandpass.control.flag.order             =   [100]
+prepare_losoto_bandpass.control.flag.order             =   [100] 
 prepare_losoto_bandpass.control.flag.maxCycles         =   1
 prepare_losoto_bandpass.control.flag.maxRms            =   5
 prepare_losoto_bandpass.control.flag.replce            =   False
@@ -522,6 +541,14 @@ prepare_losoto_bandpass.control.plotAs.axesInPlot      =   [time,freq]
 prepare_losoto_bandpass.control.plotAs.axisInTable     =   ant
 prepare_losoto_bandpass.control.plotAs.plotFlag        =   True
 prepare_losoto_bandpass.control.plotAs.prefix          =   {{ inspection_directory }}/ampSmooth_
+prepare_losoto_bandpass.control.plotB.operation        =   PLOT
+prepare_losoto_bandpass.control.plotB.soltab           =   sol000/amplitudeSmooth000
+prepare_losoto_bandpass.control.plotB.axesInPlot       =   freq
+prepare_losoto_bandpass.control.plotB.time.minmaxstep  =   [0,1e20,50000]
+prepare_losoto_bandpass.control.plotB.axisInTable      =   ant
+prepare_losoto_bandpass.control.plotB.axisInCol        =   pol
+prepare_losoto_bandpass.control.plotB.plotFlag         =   True
+prepare_losoto_bandpass.control.plotB.prefix           =   {{ inspection_directory }}/bandpass_
 prepare_losoto_bandpass.control.residualA.operation    =   RESIDUALS
 prepare_losoto_bandpass.control.residualA.soltab       =   sol000/amplitude000
 prepare_losoto_bandpass.control.residualA.soltabsToSub =   amplitudeSmooth000
@@ -579,7 +606,7 @@ prepare_losoto_ion.control.plotA1.minmax               =   [0,300]
 prepare_losoto_ion.control.flag.operation              =   FLAG
 prepare_losoto_ion.control.flag.soltab                 =   sol000/amplitude000
 prepare_losoto_ion.control.flag.axesToFlag             =   [time]
-prepare_losoto_ion.control.flag.order                  =   [100]
+prepare_losoto_ion.control.flag.order                  =   [100] 
 prepare_losoto_ion.control.flag.maxCycles              =   1
 prepare_losoto_ion.control.flag.maxRms                 =   5
 prepare_losoto_ion.control.flag.replce                 =   False
