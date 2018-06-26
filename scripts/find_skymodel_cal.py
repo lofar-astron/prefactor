@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import os,sys
+import os
 import glob
-import re
 import pyrap.tables as pt
-
+import math
+import lsmtool
     
-def grab_name_MS(MS):
+def grab_pointing(MS):
     """
     Read the name of the calibrator from one MS corresponding to the selection given in the parameters
 
@@ -22,12 +22,28 @@ def grab_name_MS(MS):
         NB: we suppose that all the calibrators' observations have this field filled in (MS/Observation, column LOFAR_TARGET)
     """
     
-    [nameCal] =pt.table(MS+'/OBSERVATION', readonly=True, ack=False).getcol('LOFAR_TARGET')['array']
-    return nameCal
+    [ra, dec] = pt.table(MS+'/FIELD', readonly=True, ack=False).getcol('PHASE_DIR')[0][0] * 180 / math.pi
+    return ra, dec
 
     
-########################################################################        
-def find_skymodel(NameSource,PathSkyMod,extensionSky=".skymodel"):
+########################################################################
+
+def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
+    """
+    Searches for an appropriate sky model
+    """
+    s = lsmtool.load(skymodel)
+    dist_deg = s.getDistance(ra, dec)
+    if any(dist_deg * 60.0 < max_separation_arcmin):
+        return True
+        pass
+    else:
+        return False
+        pass
+    pass
+
+########################################################################
+def find_skymodel(ra, dec, PathSkyMod, extensionSky = ".skymodel", max_separation_arcmin = 1.0):
     """
     Find in the provided folder the correponding skymodel for the given source
 
@@ -51,22 +67,20 @@ def find_skymodel(NameSource,PathSkyMod,extensionSky=".skymodel"):
     """
     
 
-    list_skymodel=[] #"list" of corresponding skymodels for the calibrator 
+    skymodels = glob.glob(PathSkyMod + "/*" + extensionSky)
     
-    for skymodel in glob.glob(PathSkyMod+"/*"+extensionSky):
-        if os.path.basename(skymodel).rstrip(extensionSky).upper() in NameSource.upper():
-            list_skymodel.append(skymodel)
-        
-    # checking that one and only one skymodel is found
-    nbr_skymodel=len(list_skymodel)
-    if nbr_skymodel==1:
-        print "The following skymodel will be used for the calibrator: "+list_skymodel[0].split("/")[-1]+ " (in "+PathSkyMod+")"
-        return list_skymodel[0]
-    elif nbr_skymodel==0:
-        raise TypeError('find_skymodel: /!\ SKYMODEL FOR THE CALIBRATOR NOT FOUND IN '+PathSkyMod)
-    elif nbr_skymodel>1:
-        raise TypeError('find_skymodel: Several skymodels match. \n TODO: Please implement here which one is generally prefered \n Calibrator Skymodels are :\n'+'\n\t'.join(list_skymodel))
-
+    for skymodel in skymodels:
+        if check_skymodel(skymodel, ra, dec, max_separation_arcmin):
+            print "The following skymodel will be used for the calibrator: " + skymodel.split("/")[-1] + " (in " + PathSkyMod + ")"
+            return skymodel
+            pass
+        else:
+            pass
+        pass
+    
+    raise TypeError('find_skymodel: SKYMODEL FOR THE CALIBRATOR NOT FOUND IN ' + PathSkyMod)
+    pass
+            
 ########################################################################
 def input2strlist_nomapfile(invar):
    """ 
@@ -85,10 +99,8 @@ def input2strlist_nomapfile(invar):
        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
    return str_list
 
-
-
 ########################################################################
-def main(ms_input,DirSkymodelCal,extensionSky=".skymodel"):
+def main(ms_input, DirSkymodelCal, extensionSky=".skymodel", max_separation_arcmin = 1.0):
 
     """
     Find automatically the skymodel to use for the Calibrator 
@@ -112,20 +124,15 @@ def main(ms_input,DirSkymodelCal,extensionSky=".skymodel"):
     """    
 
     if os.path.isfile(DirSkymodelCal):
-        print "Using the skymodel provided :" +DirSkymodelCal
+        print "Using the skymodel provided: " + DirSkymodelCal
         return { 'SkymodelCal' : DirSkymodelCal }
         
     elif os.path.isdir(DirSkymodelCal):
-        # Getting the name of the Calibrator from the information stored in a MS
-        # NB: we suppose that all the calibrators observations have this field filled in (MS/Observation, column LOFAR_TARGET)
-        nameCal=grab_name_MS(input2strlist_nomapfile(ms_input)[0])
-        
-        # Looking in the folder DirSkymodelCal to find the corresponding skymodel
-        # NB: we suppose that the name of the calibrator is included in the name of the skymodel
-        skymodelCal=find_skymodel(nameCal,DirSkymodelCal,extensionSky)
+        ra, dec = grab_pointing(input2strlist_nomapfile(ms_input)[0])
+        skymodelCal = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, max_separation_arcmin)
         return { 'SkymodelCal' : skymodelCal }
     else:
-        raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal) )
+        raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal))
 
 
 ########################################################################
@@ -140,8 +147,6 @@ if __name__ == '__main__':
     parser.add_argument('--extsky', type=str, 
                         help='extension of the skymodel files. (default: \".skymodel\")')
         
- 
-   
     args = parser.parse_args()
     extensionSky='.skymodel'
     if args.extsky:
@@ -149,3 +154,4 @@ if __name__ == '__main__':
     
     main(args.MSfile,args.DirSky, extensionSky)
     
+    pass
