@@ -15,7 +15,7 @@
 
 ## information about the target data
 ! target_input_path        =  /data/scratch/drabent                  ## specify the directory where your calibrator data is stored
-! target_input_pattern     =  L228161*.MS                            ## regular expression pattern of all your calibrator files
+! target_input_pattern     =  L228163*.MS                            ## regular expression pattern of all your calibrator files
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/               ## path to your prefactor copy
@@ -78,7 +78,7 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ## RMextract settings
 ! ionex_server             =  "ftp://ftp.aiub.unibe.ch/CODE/" # to download from the "standard" server
 ! ionex_prefix             =  CODG                            # the prefix of the IONEX files
-! ionex_path               =  {{ job_directory }}/IONEX/     # path where the IONEX files can be stored or are already stored
+! ionex_path               =  {{ job_directory }}/IONEX/      # path where the IONEX files can be stored or are already stored
 
 ########################################################
 ##                                                    ##
@@ -89,10 +89,12 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 # which steps to run
 pipeline.steps             =  [prep, {{ substep }} concat]
 
+
 # pipeline substeps
 pipeline.steps.prep        =  [createmap_target, combine_data_target_map, get_ion_files, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
 pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
+
 
 #############################
 ## Prepare target part     ##
@@ -114,6 +116,7 @@ combine_data_target_map.control.mapfile_dir                    =   input.output.
 combine_data_target_map.control.filename                       =   combine_data_tar_map.mapfile
 combine_data_target_map.control.mapfile_in                     =   createmap_target.output.mapfile
 
+
 #############################
 ## RM target correction    ##
 #############################
@@ -126,6 +129,7 @@ get_ion_files.argument.flags                                   =   [combine_data
 get_ion_files.argument.ionex_server                            =   {{ ionex_server }}
 get_ion_files.argument.ionex_prefix                            =   {{ ionex_prefix }}
 get_ion_files.argument.ionexPath                               =   {{ ionex_path }}
+
 
 #############################
 ## Apply calibrator sols   ##
@@ -148,7 +152,8 @@ ndppp_prep_target.argument.msout.storagemanager.weightbitrate  =   12
 ndppp_prep_target.argument.msout.storagemanager.distribution   =   "TruncatedGaussian"
 ndppp_prep_target.argument.msout.storagemanager.disttruncation =   1.5
 ndppp_prep_target.argument.msout.storagemanager.normalization  =   "AF"
-ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
+# ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
+ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,count,avg]
 ndppp_prep_target.argument.flag.type                           =   preflagger
 ndppp_prep_target.argument.flag.baseline                       =   {{ flag_baselines }}
 ndppp_prep_target.argument.elev.type                           =   preflagger
@@ -160,13 +165,13 @@ ndppp_prep_target.argument.flagamp.type                        =   preflagger
 ndppp_prep_target.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_target.argument.applyclock.type                     =   applycal
 ndppp_prep_target.argument.applyclock.parmdb                   =   {{ cal_solutions }}
-ndppp_prep_target.argument.applyclock.correction               =   clock
+ndppp_prep_target.argument.applyclock.correction               =   clock000
 ndppp_prep_target.argument.applyPA.type                        =   applycal
 ndppp_prep_target.argument.applyPA.parmdb                      =   {{ cal_solutions }}
 ndppp_prep_target.argument.applyPA.correction                  =   polalign
 ndppp_prep_target.argument.applybandpass.type                  =   applycal
 ndppp_prep_target.argument.applybandpass.parmdb                =   {{ cal_solutions }}
-ndppp_prep_target.argument.applybandpass.correction            =   amplitudeSmooth000
+ndppp_prep_target.argument.applybandpass.correction            =   bandpass000
 ndppp_prep_target.argument.applybandpass.updateweights         =   True
 ndppp_prep_target.argument.applybeam.type                      =   applybeam
 ndppp_prep_target.argument.applybeam.usechannelfreq            =   True
@@ -177,6 +182,7 @@ ndppp_prep_target.argument.applyRM.correction                  =   RMextract
 ndppp_prep_target.argument.avg.type                            =   average
 ndppp_prep_target.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_target.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
+
 
 #############################
 ##     Clip A-Team         ##
@@ -260,7 +266,7 @@ ms_concat_target.control.executable                            =   {{ scripts }}
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.flags                                =   [combine_target_map.output.mapfile,outputkey]
 
-# run NDPPP on the calibrator data
+# run NDPPP on the target data
 ndppp_flag_target.control.type                                 =   dppp
 ndppp_flag_target.control.max_per_node                         =   {{ num_proc_per_node_limit }}
 ndppp_flag_target.control.inplace                              =   True
@@ -311,7 +317,7 @@ dpppconcat.argument.msout.storagemanager.weightbitrate         =   12
 dpppconcat.argument.msout.storagemanager.distribution          =   "TruncatedGaussian"
 dpppconcat.argument.msout.storagemanager.disttruncation        =   1.5
 dpppconcat.argument.msout.storagemanager.normalization         =   "AF"
-dpppconcat.argument.steps                                      =   [count]      # run the aoflagger (this used to be an extra step)
+dpppconcat.argument.steps                                      =   []
 
 ########################################################
 ##                                                    ##
