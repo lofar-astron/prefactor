@@ -65,6 +65,9 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ! inspection_directory     =  {{ results_directory }}/inspection     ## directory where the inspection plots will be stored
 ! cal_values_directory     =  {{ results_directory }}/cal_values     ## directory where the final h5parm solution set will be stored
 
+## calibrator solutions
+! cal_solutions            =  {{ cal_values_directory }}/cal_solutions.h5
+
 ## averaging for the calibrator data
 ! avg_timeresolution       =  4.        # average to 4 sec/timeslot
 ! avg_freqresolution       =  48.82kHz  # average to 48.82 kHz/ch (= 4 ch/SB)
@@ -374,7 +377,7 @@ h5exp_cal_PA.control.executable                             =   {{ losoto_direct
 h5exp_cal_PA.control.error_tolerance                        =   {{ error_tolerance }}
 h5exp_cal_PA.argument.flags                                 =   [h5imp_cal_PA.output.mapfile]
 h5exp_cal_PA.argument.insoltab                              =   polalign
-h5exp_cal_PA.argument.outh5parm                             =   {{ cal_values_directory }}/cal_solutions.h5
+h5exp_cal_PA.argument.outh5parm                             =   {{ cal_solutions }}
 
 # generate a mapfile of all the solutions
 h5exp_cal_map.control.kind                                  =   plugin
@@ -467,7 +470,7 @@ h5exp_cal_FR.control.executable                             =   {{ losoto_direct
 h5exp_cal_FR.control.error_tolerance                        =   {{ error_tolerance }}
 h5exp_cal_FR.argument.flags                                 =   [h5imp_cal_FR.output.mapfile]
 h5exp_cal_FR.argument.insoltab                              =   rotationmeasure000
-h5exp_cal_FR.argument.outh5parm                             =   {{ cal_values_directory }}/cal_solutions.h5
+h5exp_cal_FR.argument.outh5parm                             =   {{ cal_solutions }}
 
 
 ################################
@@ -569,7 +572,7 @@ h5exp_cal_bandpass.control.executable                       =   {{ losoto_direct
 h5exp_cal_bandpass.control.error_tolerance                  =   {{ error_tolerance }}
 h5exp_cal_bandpass.argument.flags                           =   [h5imp_cal_bandpass.output.mapfile]
 h5exp_cal_bandpass.argument.insoltab                        =   bandpass000
-h5exp_cal_bandpass.argument.outh5parm                       =   {{ cal_values_directory }}/cal_solutions.h5
+h5exp_cal_bandpass.argument.outh5parm                       =   {{ cal_solutions }}
 
 
 ################################
@@ -706,7 +709,7 @@ h5exp_cal_ion.control.executable                            =   {{ losoto_direct
 h5exp_cal_ion.control.error_tolerance                       =   {{ error_tolerance }}
 h5exp_cal_ion.argument.flags                                =   [h5imp_cal_ion.output.mapfile]
 h5exp_cal_ion.argument.insoltab                             =   clock000
-h5exp_cal_ion.argument.outh5parm                            =   {{ cal_values_directory }}/cal_solutions.h5
+h5exp_cal_ion.argument.outh5parm                            =   {{ cal_solutions }}
 
 ################################
 ## applying the results       ##
