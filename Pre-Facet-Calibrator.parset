@@ -239,14 +239,14 @@ smooth_data.control.type                                    =   executable_args
 smooth_data.control.max_per_node                            =   {{ num_proc_per_node }}
 smooth_data.control.error_tolerance                         =   {{ error_tolerance }}
 smooth_data.control.executable                              =   {{ scripts }}/BLsmooth.py
-smooth_data.argument.flags                                  =   [-c,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
+smooth_data.argument.flags                                  =   [-S,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
 
 # baseline-dependent smooting
 smooth_corrected.control.type                               =   executable_args
 smooth_corrected.control.max_per_node                       =   {{ num_proc_per_node }}
 smooth_corrected.control.error_tolerance                    =   {{ error_tolerance }}
 smooth_corrected.control.executable                         =   {{ scripts }}/BLsmooth.py
-smooth_corrected.argument.flags                             =   [-c,{{ do_smooth }},-r,-i,CORRECTED_DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
+smooth_corrected.argument.flags                             =   [-S,{{ do_smooth }},-r,-i,CORRECTED_DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
 
 # now run NDPPP on the averaged calibrator data
 calib_cal.control.type                                      =   dppp
