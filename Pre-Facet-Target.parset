@@ -93,7 +93,7 @@ pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
 pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
-pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal, h5exp_targ_map, expand_parmdb_targ, gsmcal_apply]
+pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal, gsmcal_apply]
 
 
 #############################
@@ -472,6 +472,7 @@ prepare_losoto_gsmcal.control.plotP.axisInTable                =   ant
 prepare_losoto_gsmcal.control.plotP.plotFlag                   =   True
 prepare_losoto_gsmcal.control.plotP.prefix                     =   {{ inspection_directory }}/ph_
 prepare_losoto_gsmcal.control.plotP.refAnt                     =   {{ refant }}
+prepare_losoto_gsmcal.control.plotP.minmax                     =   [-3.14,3.14]
 prepare_losoto_gsmcal.control.plotP2.operation                 =   PLOT
 prepare_losoto_gsmcal.control.plotP2.soltab                    =   sol000/phase000
 prepare_losoto_gsmcal.control.plotP2.axesInPlot                =   [time]
@@ -480,6 +481,7 @@ prepare_losoto_gsmcal.control.plotP2.axisInCol                 =   pol
 prepare_losoto_gsmcal.control.plotP2.plotFlag                  =   True
 prepare_losoto_gsmcal.control.plotP2.prefix                    =   {{ inspection_directory }}/ph_
 prepare_losoto_gsmcal.control.plotP2.refAnt                    =   {{ refant }}
+prepare_losoto_gsmcal.control.plotP2.minmax                    =   [-3.14,3.14]
 prepare_losoto_gsmcal.control.plotPd.operation                 =   PLOT
 prepare_losoto_gsmcal.control.plotPd.soltab                    =   sol000/phase000
 prepare_losoto_gsmcal.control.plotPd.axesInPlot                =   [time,freq]
@@ -488,14 +490,16 @@ prepare_losoto_gsmcal.control.plotPd.axisDiff                  =   pol
 prepare_losoto_gsmcal.control.plotPd.plotFlag                  =   True
 prepare_losoto_gsmcal.control.plotPd.prefix                    =   {{ inspection_directory }}/ph_poldif
 prepare_losoto_gsmcal.control.plotPd.refAnt                    =   {{ refant }}
+prepare_losoto_gsmcal.control.plotPd.minmax                    =   [-3.14,3.14]
 prepare_losoto_gsmcal.control.plotPd2.operation                =   PLOT
 prepare_losoto_gsmcal.control.plotPd2.soltab                   =   sol000/phase000
 prepare_losoto_gsmcal.control.plotPd2.axesInPlot               =   [time]
 prepare_losoto_gsmcal.control.plotPd2.axisInTable              =   ant
 prepare_losoto_gsmcal.control.plotPd2.axisDiff                 =   pol
 prepare_losoto_gsmcal.control.plotPd2.plotFlag                 =   True
-prepare_losoto_gsmcal.control.plotPd2.prefix                   =   {{ inspection_directory }}/ph_poldif
+prepare_losoto_gsmcal.control.plotPd2.prefix                   =   {{ inspection_directory }}/ph_poldif_
 prepare_losoto_gsmcal.control.plotPd2.refAnt                   =   {{ refant }}
+prepare_losoto_gsmcal.control.plotPd2.minmax                   =   [-3.14,3.14]
 
 # do the processing on the LoSoTo file
 process_losoto_gsmcal.control.kind                             =   recipe
