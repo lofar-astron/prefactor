@@ -18,8 +18,8 @@
 ! target_input_pattern     =  L228163*.MS                            ## regular expression pattern of all your calibrator files
 
 ## location of the software
-! prefactor_directory      =  /home/drabent/prefactor/               ## path to your prefactor copy
-! losoto_directory         =  /home/fdg/losoto                       ## path to your local LoSoTo installation
+! prefactor_directory      =  /home/drabent/prefactor                ## path to your prefactor copy
+! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
 
 ##########################################
 ### parameters you may need to adjust   ##
@@ -68,17 +68,17 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ! cal_solutions            =  {{ cal_values_directory }}/cal_solutions.h5
 
 ## averaging for the target data
-! avg_timeresolution       =  4.        # average to 4 sec/timeslot
-! avg_freqresolution       =  48.82kHz  # average to 48.82 kHz/ch (= 4 ch/SB)
+! avg_timeresolution       =  4.                                     ## average to 4 sec/timeslot
+! avg_freqresolution       =  48.82kHz                               ## average to 48.82 kHz/ch (= 4 ch/SB)
 
 ## concatenating the target data
-! num_SBs_per_group        =  10        # make concatenated measurement-sets with that many subbands
-! reference_stationSB      =  None      # station-subband number to use as reference for grouping, "None" -> use lowest frequency input data as reference
+! num_SBs_per_group        =  10                                     ## make concatenated measurement-sets with that many subbands
+! reference_stationSB      =  None                                   ## station-subband number to use as reference for grouping, "None" -> use lowest frequency input data as reference
 
 ## RMextract settings
-! ionex_server             =  "ftp://ftp.aiub.unibe.ch/CODE/" # to download from the "standard" server
-! ionex_prefix             =  CODG                            # the prefix of the IONEX files
-! ionex_path               =  {{ job_directory }}/IONEX/      # path where the IONEX files can be stored or are already stored
+! ionex_server             =  "ftp://ftp.aiub.unibe.ch/CODE/"        ## to download from the "standard" server
+! ionex_prefix             =  CODG                                   ## the prefix of the IONEX files
+! ionex_path               =  {{ job_directory }}/IONEX/             ## path where the IONEX files can be stored or are already stored
 
 ########################################################
 ##                                                    ##
@@ -87,18 +87,23 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps             =  [prep, {{ substep }} concat]
-
+pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 
 # pipeline substeps
-pipeline.steps.prep        =  [createmap_target, combine_data_target_map, get_ion_files, ndppp_prep_target]
+pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
 pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
+pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal, h5exp_targ_map, expand_parmdb_targ, gsmcal_apply]
 
 
 #############################
 ## Prepare target part     ##
 #############################
+# create the cal_values_directory if needed
+mk_targ_values_dir.control.kind                                =   plugin
+mk_targ_values_dir.control.type                                =   makeDirectory
+mk_targ_values_dir.control.directory                           =   {{ cal_values_directory }}
+
 # generate a mapfile of all the target data
 createmap_target.control.kind                                  =   plugin
 createmap_target.control.type                                  =   createMapfile
@@ -116,19 +121,41 @@ combine_data_target_map.control.mapfile_dir                    =   input.output.
 combine_data_target_map.control.filename                       =   combine_data_tar_map.mapfile
 combine_data_target_map.control.mapfile_in                     =   createmap_target.output.mapfile
 
-
 #############################
 ## RM target correction    ##
 #############################
+
 # get ionex files once for every day that is covered by one of the input MSs
-get_ion_files.control.type                                     =   pythonplugin
-get_ion_files.control.executable                               =   {{ scripts }}/download_IONEX.py
-get_ion_files.control.max_per_node                             =   1
-get_ion_files.control.error_tolerance                          =   {{ error_tolerance }}
-get_ion_files.argument.flags                                   =   [combine_data_target_map.output.mapfile]
-get_ion_files.argument.ionex_server                            =   {{ ionex_server }}
-get_ion_files.argument.ionex_prefix                            =   {{ ionex_prefix }}
-get_ion_files.argument.ionexPath                               =   {{ ionex_path }}
+h5imp_RMextract.control.type                                   =   pythonplugin
+h5imp_RMextract.control.executable                             =   {{ scripts }}/createRMh5parm.py
+h5imp_RMextract.control.error_tolerance                        =   {{ error_tolerance }}
+h5imp_RMextract.argument.flags                                 =   [combine_data_target_map.output.mapfile, {{ cal_solutions }}]
+h5imp_RMextract.argument.ionex_server                          =   {{ ionex_server }}
+h5imp_RMextract.argument.ionex_prefix                          =   {{ ionex_prefix }}
+h5imp_RMextract.argument.ionexPath                             =   {{ ionex_path }}
+h5imp_RMextract.argument.solset_name                           =   target
+h5imp_RMextract.argument.all_stations                          =   True
+
+# create losoto v2 parset file
+prepare_losoto_RMextract.control.kind                          =   plugin
+prepare_losoto_RMextract.control.type                          =   makeLosotoParset
+prepare_losoto_RMextract.control.steps                         =   [plotRM]
+prepare_losoto_RMextract.control.filename                      =   input.output.job_directory/losoto.parset
+prepare_losoto_RMextract.control.global.ncpu                   =   {{ num_proc_per_node }}
+prepare_losoto_RMextract.control.plotRM.operation              =   PLOT
+prepare_losoto_RMextract.control.plotRM.soltab                 =   target/RMextract
+prepare_losoto_RMextract.control.plotRM.axesInPlot             =   time
+prepare_losoto_RMextract.control.plotRM.axisInTable            =   ant
+prepare_losoto_RMextract.control.plotRM.prefix                 =   {{ inspection_directory }}/RMextract
+
+# do the processing on the LoSoTo file
+process_losoto_RMextract.control.kind                          =   recipe
+process_losoto_RMextract.control.type                          =   executable_args
+process_losoto_RMextract.control.executable                    =   {{ losoto_directory }}/bin/losoto
+process_losoto_RMextract.control.max_per_node                  =   {{ num_proc_per_node }}
+process_losoto_RMextract.control.mapfile_in                    =   combine_data_target_map.output.mapfile
+process_losoto_RMextract.control.inputkey                      =   input
+process_losoto_RMextract.argument.flags                        =   [{{ cal_solutions }}, input.output.job_directory/losoto.parset]
 
 
 #############################
@@ -147,13 +174,13 @@ ndppp_prep_target.argument.msin.baseline                       =   CS*&; RS*&; C
 ndppp_prep_target.argument.msout.datacolumn                    =   DATA
 ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
+ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
 ndppp_prep_target.argument.msout.storagemanager.weightbitrate  =   12
 ndppp_prep_target.argument.msout.storagemanager.distribution   =   "TruncatedGaussian"
 ndppp_prep_target.argument.msout.storagemanager.disttruncation =   1.5
 ndppp_prep_target.argument.msout.storagemanager.normalization  =   "AF"
-# ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
-ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,count,avg]
+ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
 ndppp_prep_target.argument.flag.type                           =   preflagger
 ndppp_prep_target.argument.flag.baseline                       =   {{ flag_baselines }}
 ndppp_prep_target.argument.elev.type                           =   preflagger
@@ -166,19 +193,23 @@ ndppp_prep_target.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_target.argument.applyclock.type                     =   applycal
 ndppp_prep_target.argument.applyclock.parmdb                   =   {{ cal_solutions }}
 ndppp_prep_target.argument.applyclock.correction               =   clock000
+ndppp_prep_target.argument.applyclock.solset                   =   calibrator
 ndppp_prep_target.argument.applyPA.type                        =   applycal
 ndppp_prep_target.argument.applyPA.parmdb                      =   {{ cal_solutions }}
 ndppp_prep_target.argument.applyPA.correction                  =   polalign
+ndppp_prep_target.argument.applyPA.solset                      =   calibrator
 ndppp_prep_target.argument.applybandpass.type                  =   applycal
 ndppp_prep_target.argument.applybandpass.parmdb                =   {{ cal_solutions }}
-ndppp_prep_target.argument.applybandpass.correction            =   bandpass000
+ndppp_prep_target.argument.applybandpass.correction            =   bandpass
 ndppp_prep_target.argument.applybandpass.updateweights         =   True
+ndppp_prep_target.argument.applybandpass.solset                =   calibrator
 ndppp_prep_target.argument.applybeam.type                      =   applybeam
 ndppp_prep_target.argument.applybeam.usechannelfreq            =   True
 ndppp_prep_target.argument.applybeam.updateweights             =   True
 ndppp_prep_target.argument.applyRM.type                        =   applycal
 ndppp_prep_target.argument.applyRM.parmdb                      =   {{ cal_solutions }}
 ndppp_prep_target.argument.applyRM.correction                  =   RMextract
+ndppp_prep_target.argument.applyRM.solset                      =   target
 ndppp_prep_target.argument.avg.type                            =   average
 ndppp_prep_target.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_target.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
@@ -312,6 +343,7 @@ dpppconcat.argument.msin.orderms                               =   False   #/ co
 dpppconcat.argument.msout.datacolumn                           =   DATA
 dpppconcat.argument.msout.writefullresflag                     =   False
 dpppconcat.argument.msout.overwrite                            =   True
+dpppconcat.argument.msout.storagemanager                       =   "Dysco"
 dpppconcat.argument.msout.storagemanager.databitrate           =   0
 dpppconcat.argument.msout.storagemanager.weightbitrate         =   12
 dpppconcat.argument.msout.storagemanager.distribution          =   "TruncatedGaussian"
@@ -319,224 +351,198 @@ dpppconcat.argument.msout.storagemanager.disttruncation        =   1.5
 dpppconcat.argument.msout.storagemanager.normalization         =   "AF"
 dpppconcat.argument.steps                                      =   []
 
+
+#############################
+##     phasecal target     ##
+#############################
+#check all files for minimum unflagged fraction
+check_unflagged.control.type                                   =   pythonplugin
+check_unflagged.control.executable                             =   {{ scripts }}/check_unflagged_fraction.py
+check_unflagged.argument.flags                                 =   [dpppconcat.output.mapfile]
+check_unflagged.argument.min_fraction                          =   {{ min_unflagged_fraction }}
+
+# prune flagged files from mapfile
+check_unflagged_map.control.kind                               =   plugin
+check_unflagged_map.control.type                               =   pruneMapfile
+check_unflagged_map.control.mapfile_in                         =   check_unflagged.output.flagged.mapfile
+check_unflagged_map.control.mapfile_dir                        =   input.output.mapfile_dir
+check_unflagged_map.control.filename                           =   check_unflagged_map.mapfile
+check_unflagged_map.control.prune_str                          =   None
+
+# if wished, download the tgss skymodel for the target
+sky_tar.control.type                                           =   pythonplugin
+sky_tar.control.executable                                     =   {{ scripts }}/download_tgss_skymodel_target.py
+sky_tar.argument.flags                                         =   [combine_target_map.output.mapfile]
+sky_tar.argument.DoDownload                                    =   {{ use_tgss_target }}
+sky_tar.argument.SkymodelPath                                  =   {{ target_skymodel }}
+sky_tar.argument.Radius                                        =   5. #in degrees
+
+# create a mapfile with the target skymodel, length = 1
+create_target_model_map.control.kind                           =   plugin
+create_target_model_map.control.type                           =   addListMapfile
+create_target_model_map.control.hosts                          =   ['localhost']
+create_target_model_map.control.files                          =   [ {{ target_skymodel }} ]
+create_target_model_map.control.mapfile_dir                    =   input.output.mapfile_dir
+create_target_model_map.control.filename                       =   target_model_name.mapfile
+
+# make sourcedbs from the target skymodel, length = 1
+make_sourcedb_target.control.kind                              =   recipe
+make_sourcedb_target.control.type                              =   executable_args
+make_sourcedb_target.control.executable                        =   {{ lofar_directory }}/bin/makesourcedb
+make_sourcedb_target.control.error_tolerance                   =   {{ error_tolerance }}
+make_sourcedb_target.control.args_format                       =   lofar
+make_sourcedb_target.control.outputkey                         =   out
+make_sourcedb_target.control.mapfile_in                        =   create_target_model_map.output.mapfile
+make_sourcedb_target.control.inputkey                          =   in
+make_sourcedb_target.argument.format                           =   <
+make_sourcedb_target.argument.outtype                          =   blob
+
+# expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
+expand_sourcedb_target.control.kind                            =   plugin
+expand_sourcedb_target.control.type                            =   expandMapfile
+expand_sourcedb_target.control.mapfile_in                      =   make_sourcedb_target.output.mapfile
+expand_sourcedb_target.control.mapfile_to_match                =   check_unflagged_map.output.mapfile
+expand_sourcedb_target.control.mapfile_dir                     =   input.output.mapfile_dir
+expand_sourcedb_target.control.filename                        =   expand_sourcedb_target.datamap
+
+# generate mapfile with the parmDB names to be used in the gsmcal steps
+gsmcal_parmmap.control.kind                                    =   plugin
+gsmcal_parmmap.control.type                                    =   createMapfile
+gsmcal_parmmap.control.method                                  =   add_suffix_to_file
+gsmcal_parmmap.control.mapfile_in                              =   check_unflagged_map.output.mapfile
+gsmcal_parmmap.control.add_suffix_to_file                      =   .h5
+gsmcal_parmmap.control.mapfile_dir                             =   input.output.mapfile_dir
+gsmcal_parmmap.control.filename                                =   gsmcal_parmdbs.mapfile
+
+# generate a mapfile with all files in a single entry
+h5_gsmsol_map.control.kind                                     =   plugin
+h5_gsmsol_map.control.type                                     =   compressMapfile
+h5_gsmsol_map.control.mapfile_in                               =   gsmcal_parmmap.output.mapfile
+h5_gsmsol_map.control.mapfile_dir                              =   input.output.mapfile_dir
+h5_gsmsol_map.control.filename                                 =   h5_imp_gsmsol_map.mapfile
+
+# # solve for phase-only calibration solutions
+# # solve and apply are seperate to allow to solve on a subset of baselines but apply to all
+gsmcal_solve.control.type                                      =   dppp
+gsmcal_solve.control.environment                               =   {OMP_NUM_THREADS: 4}
+gsmcal_solve.control.error_tolerance                           =   {{ error_tolerance }}
+gsmcal_solve.control.inplace                                   =   True
+gsmcal_solve.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+gsmcal_solve.argument.numthreads                               =   {{ max_dppp_threads }}
+gsmcal_solve.argument.msin                                     =   check_unflagged_map.output.mapfile
+gsmcal_solve.argument.msin.datacolumn                          =   DATA
+gsmcal_solve.argument.msin.baseline                            =   CS*&; RS*&; CS*&RS*
+gsmcal_solve.argument.msout.datacolumn                         =   CORRECTED_DATA
+gsmcal_solve.argument.steps                                    =   [filter,gaincal]
+gsmcal_solve.argument.filter.type                              =   filter
+gsmcal_solve.argument.filter.blrange                           =   [150, 999999]
+gsmcal_solve.argument.gaincal.type                             =   gaincal
+gsmcal_solve.argument.gaincal.maxiter                          =   50
+gsmcal_solve.argument.gaincal.caltype                          =   phaseonly
+gsmcal_solve.argument.gaincal.nchan                            =   0
+gsmcal_solve.argument.gaincal.solint                           =   1
+gsmcal_solve.argument.gaincal.sourcedb                         =   expand_sourcedb_target.output.mapfile
+gsmcal_solve.argument.gaincal.parmdb                           =   gsmcal_parmmap.output.mapfile
+gsmcal_solve.argument.gaincal.usebeammodel                     =   True
+gsmcal_solve.argument.gaincal.usechannelfreq                   =   True
+gsmcal_solve.argument.gaincal.beammode                         =   array_factor
+
+###########################
+## Analyze cal           ##
+###########################
+# collect all instrument tables into one h5parm
+h5imp_gsmcal.control.kind                                      =   recipe
+h5imp_gsmcal.control.type                                      =   executable_args
+h5imp_gsmcal.control.executable                                =   {{ losoto_directory }}/bin/H5parm_collector.py
+h5imp_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
+h5imp_gsmcal.control.outputkey                                 =   outh5parm
+h5imp_gsmcal.argument.flags                                    =   [-c,h5_gsmsol_map.output.mapfile]
+h5imp_gsmcal.argument.outh5parm                                =   outh5parm
+
+# create losoto v2 parset file
+prepare_losoto_gsmcal.control.kind                             =   plugin
+prepare_losoto_gsmcal.control.type                             =   makeLosotoParset
+prepare_losoto_gsmcal.control.steps                            =   [plotP, plotP2, plotPd, plotPd2]
+prepare_losoto_gsmcal.control.filename                         =   input.output.job_directory/losoto.parset
+prepare_losoto_gsmcal.control.global.ncpu                      =   {{ num_proc_per_node }}
+prepare_losoto_gsmcal.control.plotP.operation                  =   PLOT
+prepare_losoto_gsmcal.control.plotP.soltab                     =   sol000/phase000
+prepare_losoto_gsmcal.control.plotP.axesInPlot                 =   [time,freq]
+prepare_losoto_gsmcal.control.plotP.axisInTable                =   ant
+prepare_losoto_gsmcal.control.plotP.plotFlag                   =   True
+prepare_losoto_gsmcal.control.plotP.prefix                     =   {{ inspection_directory }}/ph_
+prepare_losoto_gsmcal.control.plotP.refAnt                     =   {{ refant }}
+prepare_losoto_gsmcal.control.plotP2.operation                 =   PLOT
+prepare_losoto_gsmcal.control.plotP2.soltab                    =   sol000/phase000
+prepare_losoto_gsmcal.control.plotP2.axesInPlot                =   [time]
+prepare_losoto_gsmcal.control.plotP2.axisInTable               =   ant
+prepare_losoto_gsmcal.control.plotP2.axisInCol                 =   pol
+prepare_losoto_gsmcal.control.plotP2.plotFlag                  =   True
+prepare_losoto_gsmcal.control.plotP2.prefix                    =   {{ inspection_directory }}/ph_
+prepare_losoto_gsmcal.control.plotP2.refAnt                    =   {{ refant }}
+prepare_losoto_gsmcal.control.plotPd.operation                 =   PLOT
+prepare_losoto_gsmcal.control.plotPd.soltab                    =   sol000/phase000
+prepare_losoto_gsmcal.control.plotPd.axesInPlot                =   [time,freq]
+prepare_losoto_gsmcal.control.plotPd.axisInTable               =   ant
+prepare_losoto_gsmcal.control.plotPd.axisDiff                  =   pol
+prepare_losoto_gsmcal.control.plotPd.plotFlag                  =   True
+prepare_losoto_gsmcal.control.plotPd.prefix                    =   {{ inspection_directory }}/ph_poldif
+prepare_losoto_gsmcal.control.plotPd.refAnt                    =   {{ refant }}
+prepare_losoto_gsmcal.control.plotPd2.operation                =   PLOT
+prepare_losoto_gsmcal.control.plotPd2.soltab                   =   sol000/phase000
+prepare_losoto_gsmcal.control.plotPd2.axesInPlot               =   [time]
+prepare_losoto_gsmcal.control.plotPd2.axisInTable              =   ant
+prepare_losoto_gsmcal.control.plotPd2.axisDiff                 =   pol
+prepare_losoto_gsmcal.control.plotPd2.plotFlag                 =   True
+prepare_losoto_gsmcal.control.plotPd2.prefix                   =   {{ inspection_directory }}/ph_poldif
+prepare_losoto_gsmcal.control.plotPd2.refAnt                   =   {{ refant }}
+
+# do the processing on the LoSoTo file
+process_losoto_gsmcal.control.kind                             =   recipe
+process_losoto_gsmcal.control.type                             =   executable_args
+process_losoto_gsmcal.control.executable                       =   {{ losoto_directory }}/bin/losoto
+process_losoto_gsmcal.control.max_per_node                     =   {{ num_proc_per_node }}
+process_losoto_gsmcal.argument.flags                           =   [h5imp_gsmcal.output.mapfile, input.output.job_directory/losoto.parset]
+
+# output the final soltab into an external h5parm
+h5exp_gsmcal.control.kind                                      =   recipe
+h5exp_gsmcal.control.type                                      =   executable_args
+h5exp_gsmcal.control.executable                                =   {{ losoto_directory }}/bin/H5parm_collector.py
+h5exp_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
+h5exp_gsmcal.argument.flags                                    =   [h5imp_gsmcal.output.mapfile]
+h5exp_gsmcal.argument.insoltab                                 =   phase000
+h5exp_gsmcal.argument.outsolset                                =   target
+h5exp_gsmcal.argument.outh5parm                                =   {{ cal_solutions }}
+
+
+################################
+## apply the calibration      ##
+################################
+# # solve and apply are separate to allow to solve on a subset of baselines but apply to all
+gsmcal_apply.control.type                                      =   dppp
+gsmcal_apply.control.error_tolerance                           =   {{ error_tolerance }}
+gsmcal_apply.control.inplace                                   =   True
+gsmcal_apply.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+gsmcal_apply.argument.numthreads                               =   {{ max_dppp_threads }}
+gsmcal_apply.argument.msin                                     =   check_unflagged_map.output.mapfile
+gsmcal_apply.argument.msin.datacolumn                          =   DATA
+gsmcal_apply.argument.msout.datacolumn                         =   CORRECTED_DATA
+gsmcal_apply.argument.msout.writefullresflag                   =   False
+gsmcal_apply.argument.steps                                    =   [applycal]
+gsmcal_apply.argument.msout.storagemanager                     =   "Dysco"
+gsmcal_apply.argument.msout.storagemanager.databitrate         =   0
+gsmcal_apply.argument.msout.storagemanager.weightbitrate       =   12
+gsmcal_apply.argument.msout.storagemanager.distribution        =   "TruncatedGaussian"
+gsmcal_apply.argument.msout.storagemanager.disttruncation      =   1.5
+gsmcal_apply.argument.msout.storagemanager.normalization       =   "AF"
+gsmcal_apply.argument.applycal.type                            =   applycal
+gsmcal_apply.argument.applycal.correction                      =   phase000
+gsmcal_apply.argument.applycal.parmdb                          =   {{ cal_solutions }}
+gsmcal_apply.argument.applycal.solset                          =   target
+
+
 ########################################################
 ##                                                    ##
 ##                  END PIPELINE                      ##
 ##                                                    ##
 ########################################################
-
-# check all files for minimum unflagged fraction
-# check_unflagged.control.type            =  pythonplugin
-# check_unflagged.control.executable      =  {{ check_flagged_script }}
-# check_unflagged.argument.flags          =  [dpppconcat.output.mapfile]
-# check_unflagged.argument.min_fraction   =  {{ min_unflagged_fraction }}
-# # this step writes hostnames into "check_unflagged.flagged.mapfile" due to a "feature" of the pythonplugin
-# 
-# # prune flagged files from mapfile
-# check_unflagged_map.control.kind               =  plugin
-# check_unflagged_map.control.type               =  pruneMapfile
-# check_unflagged_map.control.mapfile_in         =  check_unflagged.output.flagged.mapfile
-# check_unflagged_map.control.mapfile_dir        =  input.output.mapfile_dir
-# check_unflagged_map.control.filename           =  check_unflagged_map.mapfile
-# check_unflagged_map.control.prune_str          =  None
-# 
-# # if wished, download the tgss skymodel for the target
-# sky_tar.control.type               =  pythonplugin
-# sky_tar.control.executable         =  {{ get_tgss_skymodel_script }}
-# sky_tar.argument.flags             =  [combine_target_map.output.mapfile]
-# sky_tar.argument.DoDownload        =  {{ use_tgss_target }}
-# sky_tar.argument.SkymodelPath      =  {{ target_skymodel }}
-# sky_tar.argument.Radius            =  5. #in degrees
-# 
-# # create a mapfile with the target skymodel, length = 1
-# create_target_model_map.control.kind              =  plugin
-# create_target_model_map.control.type              =  addListMapfile
-# create_target_model_map.control.hosts             =  ['localhost']
-# create_target_model_map.control.files             =  [ {{ target_skymodel }} ]
-# create_target_model_map.control.mapfile_dir       =  input.output.mapfile_dir
-# create_target_model_map.control.filename          =  target_model_name.mapfile
-# 
-# # make sourcedbs from the target skymodel, length = 1
-# # outtype = blob, because NDPPP likes that
-# make_sourcedb_target.control.kind                 =  recipe
-# make_sourcedb_target.control.type                 =  executable_args
-# make_sourcedb_target.control.executable           =  {{ makesourcedb }}
-# make_sourcedb_target.control.error_tolerance      =  {{ error_tolerance }}
-# make_sourcedb_target.control.args_format          =  lofar
-# make_sourcedb_target.control.outputkey            =  out
-# make_sourcedb_target.control.mapfile_in           =  create_target_model_map.output.mapfile
-# make_sourcedb_target.control.inputkey             =  in
-# make_sourcedb_target.argument.format              =  <
-# make_sourcedb_target.argument.outtype             =  blob
-# 
-# # expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
-# expand_sourcedb_target.control.kind               =  plugin
-# expand_sourcedb_target.control.type               =  expandMapfile
-# expand_sourcedb_target.control.mapfile_in         =  make_sourcedb_target.output.mapfile
-# expand_sourcedb_target.control.mapfile_to_match   =  check_unflagged_map.output.mapfile
-# expand_sourcedb_target.control.mapfile_dir        =  input.output.mapfile_dir
-# expand_sourcedb_target.control.filename           =  expand_sourcedb_target.datamap
-# 
-# # generate mapfile with the parmDB names to be used in the gsmcal steps
-# gsmcal_parmmap.control.kind               =  plugin
-# gsmcal_parmmap.control.type               =  createMapfile
-# gsmcal_parmmap.control.method             =  add_suffix_to_file
-# gsmcal_parmmap.control.mapfile_in         =  check_unflagged_map.output.mapfile
-# gsmcal_parmmap.control.add_suffix_to_file =  /instrument_directionindependent
-# gsmcal_parmmap.control.mapfile_dir        =  input.output.mapfile_dir
-# gsmcal_parmmap.control.filename           =  gsmcal_parmdbs.mapfile
-# 
-# # solve for phase-only calibration solutions
-# # solve and apply are seperate to allow to solve on a subset of baselines but apply to all
-# gsmcal_solve.control.type                             = dppp
-# gsmcal_solve.control.environment                      = {OMP_NUM_THREADS: 4}
-# gsmcal_solve.control.error_tolerance                  = {{ error_tolerance }}
-# gsmcal_solve.control.inplace                          = True
-# gsmcal_solve.control.max_per_node                     = {{ num_proc_per_node_limit }}
-# gsmcal_solve.argument.numthreads                      = {{ max_dppp_threads }}
-# gsmcal_solve.argument.msin                            = check_unflagged_map.output.mapfile
-# gsmcal_solve.argument.msin.datacolumn                 = DATA
-# gsmcal_solve.argument.msin.baseline                   = CS*&; RS*&; CS*&RS*
-# gsmcal_solve.argument.msout.datacolumn                = CORRECTED_DATA
-# gsmcal_solve.argument.steps                           = [filter,gaincal]
-# gsmcal_solve.filter.type                              = filter
-# gsmcal_solve.filter.blrange                           = [150, 999999]
-# gsmcal_solve.argument.gaincal.type                    = gaincal
-# gsmcal_solve.argument.gaincal.maxiter                 = 500
-# gsmcal_solve.argument.gaincal.caltype                 = phaseonly
-# gsmcal_solve.argument.gaincal.nchan                   = 0
-# gsmcal_solve.argument.gaincal.solint                  = 1
-# gsmcal_solve.argument.gaincal.sourcedb                = expand_sourcedb_target.output.mapfile
-# gsmcal_solve.argument.gaincal.parmdb                  = gsmcal_parmmap.output.mapfile
-# gsmcal_solve.argument.gaincal.usebeammodel            = True
-# gsmcal_solve.argument.gaincal.usechannelfreq          = True
-# gsmcal_solve.argument.gaincal.beammode                = array_factor
-# 
-# # apply the phase-only calibration solutions
-# # solve and apply are separate to allow to solve on a subset of baselines but apply to all
-# gsmcal_apply.control.type                             = dppp
-# gsmcal_apply.control.error_tolerance                  = {{ error_tolerance }}
-# gsmcal_apply.control.inplace                          = True
-# gsmcal_apply.control.max_per_node                     = {{ num_proc_per_node_limit }}
-# gsmcal_apply.argument.numthreads                      = {{ max_dppp_threads }}
-# gsmcal_apply.argument.msin                            = check_unflagged_map.output.mapfile
-# gsmcal_apply.argument.msin.datacolumn                 = DATA
-# gsmcal_apply.argument.msout.datacolumn                = CORRECTED_DATA
-# gsmcal_apply.argument.msout.writefullresflag          = False
-# gsmcal_apply.argument.steps                           = [applycal]
-# gsmcal_apply.argument.applycal.type                   = applycal
-# gsmcal_apply.argument.applycal.correction             = gain
-# gsmcal_apply.argument.applycal.parmdb                 = gsmcal_parmmap.output.mapfile
-# 
-# # generate a mapfile with all files in a single entry
-# h5_imp_gsmsol_map.control.kind               =  plugin
-# h5_imp_gsmsol_map.control.type               =  MapfileToOne
-# h5_imp_gsmsol_map.control.method             =  mapfile_all_to_one
-# h5_imp_gsmsol_map.control.mapfile_in         =  check_unflagged_map.output.mapfile
-# h5_imp_gsmsol_map.control.mapfile_dir        =  input.output.mapfile_dir
-# h5_imp_gsmsol_map.control.filename           =  h5_imp_gsmsol_map.mapfile
-# 
-# # import all instrument tables into one LoSoTo file
-# h5imp_gsmsol.control.type            =  pythonplugin
-# h5imp_gsmsol.control.executable      =  {{ losoto_importer }}
-# h5imp_gsmsol.control.error_tolerance =  {{ error_tolerance }}
-# h5imp_gsmsol.argument.flags          =  [h5_imp_gsmsol_map.output.mapfile,h5imp_gsmsol_losoto.h5]
-# h5imp_gsmsol.argument.instrument     =  /instrument_directionindependent
-# h5imp_gsmsol.argument.solsetName     =  sol000
-# h5imp_gsmsol.argument.compression    =  7
-# 
-# # plot the phase solutions from the phase-only calibration of the target
-# plot_gsm_phases.control.kind                          =  recipe
-# plot_gsm_phases.control.type                          =  executable_args
-# plot_gsm_phases.control.executable                    =  {{ losoto_executable }}
-# plot_gsm_phases.control.max_per_node                  =  {{ num_proc_per_node }}
-# plot_gsm_phases.control.parsetasfile                  =  True
-# plot_gsm_phases.control.args_format                   =  losoto
-# plot_gsm_phases.control.mapfiles_in                   =  [h5imp_gsmsol.output.h5parm.mapfile]
-# plot_gsm_phases.control.inputkeys                     =  [hdf5file]
-# plot_gsm_phases.argument.flags                        =  [hdf5file]
-# plot_gsm_phases.argument.LoSoTo.Steps                 =  [plot]
-# plot_gsm_phases.argument.LoSoTo.Solset                =  [sol000]
-# plot_gsm_phases.argument.LoSoTo.Soltab                =  [sol000/phase000]
-# plot_gsm_phases.argument.LoSoTo.SolType               =  [phase]
-# plot_gsm_phases.argument.LoSoTo.ant                   =  []
-# plot_gsm_phases.argument.LoSoTo.pol                   =  [XX,YY]
-# plot_gsm_phases.argument.LoSoTo.dir                   =  [pointing]
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.Operation  =  PLOT
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.PlotType   =  2D
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.Axes       =  [time,freq]
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.TableAxis  =  [ant]
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.ColorAxis  =  [pol]
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.Reference  =  {{ reference_station }}
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.PlotFlag   =  False
-# plot_gsm_phases.argument.LoSoTo.Steps.plot.Prefix     =  {{ inspection_directory }}/gsm_phases_
-# 
-# # generate mapfile with the antenna tables of the concatenated target datafiles
-# gsmcal_antmap.control.kind               =  plugin
-# gsmcal_antmap.control.type               =  createMapfile
-# gsmcal_antmap.control.method             =  add_suffix_to_file
-# gsmcal_antmap.control.mapfile_in         =  dpppconcat.output.mapfile
-# gsmcal_antmap.control.add_suffix_to_file =  /ANTENNA
-# gsmcal_antmap.control.mapfile_dir        =  input.output.mapfile_dir
-# gsmcal_antmap.control.filename           =  gsmcal_antmaps.mapfile
-# 
-# # plot the phase solutions from the phase-only calibration of the target
-# make_structurefunction.control.kind               =  recipe
-# make_structurefunction.control.type               =  executable_args
-# make_structurefunction.control.executable         =  {{ structurefunction_script }}
-# make_structurefunction.control.max_per_node       =  {{ num_proc_per_node }}
-# make_structurefunction.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,gsmcal_antmap.output.mapfile,check_unflagged_map.output.mapfile]
-# make_structurefunction.control.inputkeys          =  [inparmdb,inants,outbase]
-# make_structurefunction.control.arguments          =  [inparmdb,inants,outbase]
-# 
-# # plot the phase solutions from the phase-only calibration of the target
-# old_plot_gsmphases.control.kind               =  recipe
-# old_plot_gsmphases.control.type               =  executable_args
-# old_plot_gsmphases.control.executable         =  {{ plotphases_script }}
-# old_plot_gsmphases.control.max_per_node       =  {{ num_proc_per_node }}
-# old_plot_gsmphases.control.mapfiles_in        =  [gsmcal_parmmap.output.mapfile,check_unflagged_map.output.mapfile]
-# old_plot_gsmphases.control.inputkeys          =  [infile,outbase]
-# old_plot_gsmphases.control.arguments          =  [-p,infile,outbase]
-# 
-# # generate a mapfile of all the diagnostic plots
-# createmap_plots.control.kind            =   plugin
-# createmap_plots.control.type            =   createMapfile
-# createmap_plots.control.method          =   mapfile_from_folder
-# createmap_plots.control.mapfile_dir     =   input.output.mapfile_dir
-# createmap_plots.control.filename        =   diagnostic_plots.mapfile
-# createmap_plots.control.folder          =   input.output.working_directory/input.output.job_name
-# createmap_plots.control.pattern         =   *.png
-# 
-# # copy the diagnostic plots to the results_directory
-# copy_plots.control.kind               =  recipe
-# copy_plots.control.type               =  executable_args
-# copy_plots.control.executable         =  /bin/cp
-# copy_plots.control.max_per_node       =  {{ num_proc_per_node_limit }}
-# copy_plots.control.mapfile_in         =  createmap_plots.output.mapfile
-# copy_plots.control.inputkey           =  source
-# copy_plots.control.arguments          =  [source,{{ inspection_directory }}]
-# 
-# # create the results directory if needed
-# mk_results_dir.control.kind               =  plugin
-# mk_results_dir.control.type               =  makeDirectory
-# mk_results_dir.control.directory          =  {{ results_directory }}
-# 
-# # make mapfile with the filenames of the results that we want
-# make_results_mapfile.control.kind            =  plugin
-# make_results_mapfile.control.type            =  makeResultsMapfile
-# make_results_mapfile.control.mapfile_dir     =  input.output.mapfile_dir
-# make_results_mapfile.control.filename        =  make_results_mapfile.mapfile
-# make_results_mapfile.control.mapfile_in      =  check_unflagged_map.output.mapfile
-# make_results_mapfile.control.target_dir      =  {{ results_directory }}
-# make_results_mapfile.control.make_target_dir =  True
-# make_results_mapfile.control.new_suffix      =  .pre-cal.ms
-# 
-# # move the results to where we want them
-# move_results.control.kind               =  recipe
-# move_results.control.type               =  executable_args
-# move_results.control.executable         =  /bin/mv
-# move_results.control.max_per_node       =  {{ num_proc_per_node_limit }}
-# move_results.control.mapfiles_in        =  [check_unflagged_map.output.mapfile,make_results_mapfile.output.mapfile]
-# move_results.control.inputkeys          =  [source,destination]
-# move_results.control.arguments          =  [source,destination]
-# 
