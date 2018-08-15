@@ -85,7 +85,7 @@ pipeline.steps             =  [prep, PA, FR, bandpass, ion]
 # pipeline substeps
 pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ndppp_flag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
 
-pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, h5exp_cal_map, expand_parmdb, apply_PA, apply_beam]
+pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
 pipeline.steps.bandpass    =  [smooth_corrected, calib_cal, h5imp_cal_bandpass, prepare_losoto_bandpass, process_losoto_bandpass, h5exp_cal_bandpass, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
@@ -374,23 +374,6 @@ h5exp_cal_PA.argument.flags                                 =   [h5imp_cal_PA.ou
 h5exp_cal_PA.argument.insoltab                              =   polalign
 h5exp_cal_PA.argument.outh5parm                             =   {{ cal_solutions }}
 h5exp_cal_PA.argument.outsolset                             =   calibrator
-
-# generate a mapfile of all the solutions
-h5exp_cal_map.control.kind                                  =   plugin
-h5exp_cal_map.control.type                                  =   createMapfile
-h5exp_cal_map.control.method                                =   mapfile_from_folder
-h5exp_cal_map.control.mapfile_dir                           =   input.output.mapfile_dir
-h5exp_cal_map.control.filename                              =   cal_solutions.mapfile
-h5exp_cal_map.control.folder                                =   {{ cal_values_directory }}
-h5exp_cal_map.control.pattern                               =   cal_solutions.h5
-
-# expand the parmdb mapfile so that there is one entry for every file, length = nfiles
-expand_parmdb.control.kind                                  =   plugin
-expand_parmdb.control.type                                  =   expandMapfile
-expand_parmdb.control.mapfile_in                            =   h5exp_cal_map.output.mapfile
-expand_parmdb.control.mapfile_to_match                      =   ndppp_prep_cal.output.mapfile
-expand_parmdb.control.mapfile_dir                           =   input.output.mapfile_dir
-expand_parmdb.control.filename                              =   expand_parmdb.mapfile
 
 
 ################################
@@ -729,9 +712,8 @@ apply_PA.control.type                                       =   dppp
 apply_PA.control.error_tolerance                            =   {{ error_tolerance }}
 apply_PA.control.inplace                                    =   True
 apply_PA.control.max_per_node                               =   {{ num_proc_per_node_limit }}
-apply_PA.control.mapfiles_in                                =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
-apply_PA.control.inputkeys                                  =   [msin, applyPA.parmdb]
 apply_PA.argument.numthreads                                =   {{ max_dppp_threads }}
+apply_PA.argument.msin                                      =   ndppp_prep_cal.output.mapfile
 apply_PA.argument.msin.datacolumn                           =   DATA
 apply_PA.argument.msout.datacolumn                          =   CORRECTED_DATA
 apply_PA.argument.msout.storagemanager                      =   "Dysco"
@@ -743,15 +725,15 @@ apply_PA.argument.msout.storagemanager.normalization        =   "AF"
 apply_PA.argument.steps                                     =   [applyPA]
 apply_PA.argument.applyPA.type                              =   applycal
 apply_PA.argument.applyPA.correction                        =   polalign
+apply_PA.argument.applyPA.parmdb                            =   {{ cal_solutions }}
 
 # apply the bandpass
 apply_bandpass.control.type                                 =   dppp
 apply_bandpass.control.error_tolerance                      =   {{ error_tolerance }}
 apply_bandpass.control.inplace                              =   True
 apply_bandpass.control.max_per_node                         =   {{ num_proc_per_node_limit }}
-apply_bandpass.control.mapfiles_in                          =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
-apply_bandpass.control.inputkeys                            =   [msin, applybandpass.parmdb]
 apply_bandpass.argument.numthreads                          =   {{ max_dppp_threads }}
+apply_bandpass.argument.msin                                =   ndppp_prep_cal.output.mapfile
 apply_bandpass.argument.msin.datacolumn                     =   CORRECTED_DATA
 apply_bandpass.argument.msout.datacolumn                    =   CORRECTED_DATA
 apply_bandpass.argument.msout.storagemanager                =   "Dysco"
@@ -763,6 +745,7 @@ apply_bandpass.argument.msout.storagemanager.normalization  =   "AF"
 apply_bandpass.argument.steps                               =   [applybandpass]
 apply_bandpass.argument.applybandpass.type                  =   applycal
 apply_bandpass.argument.applybandpass.correction            =   bandpass
+apply_bandpass.argument.applybandpass.parmdb                =   {{ cal_solutions }}
 apply_bandpass.argument.applybandpass.updateweights         =   True
 
 # apply the beam
@@ -792,9 +775,8 @@ apply_FR.control.type                                       =   dppp
 apply_FR.control.error_tolerance                            =   {{ error_tolerance }}
 apply_FR.control.inplace                                    =   True
 apply_FR.control.max_per_node                               =   {{ num_proc_per_node_limit }}
-apply_FR.control.mapfiles_in                                =   [ndppp_prep_cal.output.mapfile, expand_parmdb.output.mapfile]
-apply_FR.control.inputkeys                                  =   [msin, applyFR.parmdb]
 apply_FR.argument.numthreads                                =   {{ max_dppp_threads }}
+apply_FR.argument.msin                                      =   ndppp_prep_cal.output.mapfile
 apply_FR.argument.msin.datacolumn                           =   CORRECTED_DATA
 apply_FR.argument.msout.datacolumn                          =   CORRECTED_DATA
 apply_FR.argument.msout.storagemanager                      =   "Dysco"
@@ -806,6 +788,7 @@ apply_FR.argument.msout.storagemanager.normalization        =   "AF"
 apply_FR.argument.steps                                     =   [applyFR]
 apply_FR.argument.applyFR.type                              =   applycal
 apply_FR.argument.applyFR.correction                        =   rotationmeasure000
+apply_FR.argument.applyFR.parmdb                            =   {{ cal_solutions }}
 
 ########################################################
 ##                                                    ##
