@@ -62,12 +62,17 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps             =  [map_target, combine_data_target_map, convert, h5imp_gsmcal, h5_gsmsol_map, h5exp_gsmcal]
+pipeline.steps             =  [mk_targ_values_dir, map_target, combine_data_target_map, convert, h5imp_gsmcal, h5_gsmsol_map, h5exp_gsmcal]
 
 
 #############################
 ## Tasks                   ##
 #############################
+
+# create the cal_values_directory if needed
+mk_targ_values_dir.control.kind                           =   plugin
+mk_targ_values_dir.control.type                           =   makeDirectory
+mk_targ_values_dir.control.directory                      =   {{ cal_values_directory }}
 
 # --- Create mapfile for target data
 map_target.control.kind                                   =   plugin                     # plugin -> short, non-parallel step
