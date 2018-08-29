@@ -14,9 +14,9 @@
 ##########################################
 
 ## information about the calibrator data
-! target_input_path        =  /data/scratch/drabent/                 ## specify the directory where your target data is stored
-! target_input_pattern     =  L401323*.pre-cal.ms                    ## regular expression pattern of all your target files
-! npys_directory           =  {{ target_input_path }}/cal_values     ## directory where the final h5parm solution set will be stored
+! target_input_path        =  /data/scratch/drabent/prefactor/results     ## specify the directory where your target data is stored
+! target_input_pattern     =  L401323*.pre-cal.ms                         ## regular expression pattern of all your target files
+! npys_directory           =  /data/scratch/drabent/prefactor/cal_values  ## directory where the final h5parm solution set will be stored
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/               ## path to your conversion pipeline copy
