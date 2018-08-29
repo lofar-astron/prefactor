@@ -1,7 +1,7 @@
 ##########################################################################
-# Parmdb2H5parm Conversion Pipeline                                      #
+# Convert_all_to_h5parm Pipeline                                         #
 #                                                                        #
-# Calibrator part of the basic Pre-Facet calibration pipeline:           #
+# Run once to match prefactor3.0 compatible h5parm solutions:            #
 # - requires LOFAR software version  >= 3.1.0                            #
 # - requires losoto software version >= 2.0.0                            #
 # - expects shared filesystem, that all nodes can reach all files!       #
@@ -14,11 +14,12 @@
 ##########################################
 
 ## information about the calibrator data
-! target_input_path        =  /data/scratch/drabent/working_directory/convert_all_h5parm/results/cal_values              ## specify the directory where your target data is stored
-! target_input_pattern     =  L401323*.pre-cal.ms                    ## regular expression pattern of all your target files
+! target_input_path        =  /data/scratch/drabent/prefactor/results     ## specify the directory where your target data is stored
+! target_input_pattern     =  L401323*.pre-cal.ms                         ## regular expression pattern of all your target files
+! npys_directory           =  /data/scratch/drabent/prefactor/cal_values  ## directory where the final h5parm solution set will be stored
 
 ## location of the software
-! pipeline_directory       =  /home/drabent/conversion/              ## path to your conversion pipeline copy
+! prefactor_directory      =  /home/drabent/prefactor/               ## path to your conversion pipeline copy
 ! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
 
 ##########################################
@@ -37,8 +38,8 @@
 ! job_directory            =  input.output.job_directory             ## directory of the prefactor outputs
 
 ## script and plugin directories
-! scripts                  =  {{ pipeline_directory }}/scripts
-pipeline.pluginpath        =  {{ pipeline_directory }}/plugins
+! scripts                  =  {{ prefactor_directory }}/scripts
+pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 
 ## result directories
 ! results_directory        =  {{ job_directory }}/results            ## location of the results
@@ -61,7 +62,7 @@ pipeline.pluginpath        =  {{ pipeline_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps             =  [map_target, map_instrument, combine_data_target_map, convert, h5imp_gsmcal, h5_gsmsol_map, h5exp_gsmcal]
+pipeline.steps             =  [map_target, combine_data_target_map, convert, h5imp_gsmcal, h5_gsmsol_map, h5exp_gsmcal]
 
 
 #############################
@@ -76,15 +77,6 @@ map_target.control.mapfile_dir                            =   input.output.mapfi
 map_target.control.filename                               =   map_target.mapfile         # name of the generated mapfile
 map_target.control.folder                                 =   {{ target_input_path }}    # directory in which to look for the data
 map_target.control.pattern                                =   {{ target_input_pattern }} # use only files that match this pattern
-
-# find the phase solution tables
-map_instrument.control.kind                               =   plugin
-map_instrument.control.type                               =   createMapfile
-map_instrument.control.method                             =   add_suffix_to_file
-map_instrument.control.mapfile_in                         =   map_target.output.mapfile
-map_instrument.control.add_suffix_to_file                 =   /instrument_directionindependent
-map_instrument.control.mapfile_dir                        =   input.output.mapfile_dir
-map_instrument.control.filename                           =   map_instrument.mapfile
 
 # combine all entries into one mapfile, for the sortmap script
 combine_data_target_map.control.kind                      =   plugin
@@ -103,7 +95,7 @@ convert.control.mapfile_in                                =   combine_data_targe
 convert.control.inputkey                                  =   indata
 convert.argument.flags                                    =   [indata, {{ cal_solutions }}]
 convert.argument.store_basename                           =   caldata_transfer
-convert.argument.store_directory                          =   {{ cal_values_directory }}
+convert.argument.store_directory                          =   {{ npys_directory }}
 
 # export all instrument tables to h5parms
 h5imp_gsmcal.control.kind                                 =   recipe
