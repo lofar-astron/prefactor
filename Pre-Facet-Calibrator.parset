@@ -153,9 +153,18 @@ ms_concat.control.executable                                =   {{ scripts }}/co
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
 ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey]
 
+# generate a mapfile of all the concatenated data
+ms_concat_map.control.kind                                  =   plugin
+ms_concat_map.control.type                                  =   createMapfile
+ms_concat_map.control.method                                =   mapfile_from_folder
+ms_concat_map.control.mapfile_dir                           =   input.output.mapfile_dir
+ms_concat_map.control.filename                              =   ms_concat.mapfile
+ms_concat_map.control.folder                                =   {{ job_directory }}
+ms_concat_map.control.pattern                               =   *ms_concat_?
+
 # run NDPPP on the calibrator data
 ndppp_flag.control.type                                     =   dppp
-ndppp_flag.control.max_per_node                             =   {{ num_proc_per_node_limit }}
+ndppp_flag.control.max_per_node                             =   1
 ndppp_flag.control.inplace                                  =   True
 ndppp_flag.control.error_tolerance                          =   {{ error_tolerance }}
 ndppp_flag.argument.numthreads                              =   {{ num_proc_per_node }}
@@ -467,7 +476,7 @@ h5imp_cal_bandpass.argument.outh5parm                       =   outh5parm
 # create losoto v2 parset file
 prepare_losoto_bandpass.control.kind                        =   plugin
 prepare_losoto_bandpass.control.type                        =   makeLosotoParset
-prepare_losoto_bandpass.control.steps                       =   [plotA1,flag,flagextend,plotA2,merge,bkp,bandpass,plotB1,plotB2]
+prepare_losoto_bandpass.control.steps                       =   [plotA1,flag,flagextend,flagbp,plotA2,merge,bkp,bandpass,plotB1,plotB2]
 prepare_losoto_bandpass.control.filename                    =   input.output.job_directory/losoto.parset
 prepare_losoto_bandpass.control.global.ncpu                 =   {{ num_proc_per_node }}
 prepare_losoto_bandpass.control.plotA1.operation            =   PLOT
@@ -491,6 +500,11 @@ prepare_losoto_bandpass.control.flagextend.axesToExt        =   [freq,time]
 prepare_losoto_bandpass.control.flagextend.size             =   [50,100]
 prepare_losoto_bandpass.control.flagextend.percent          =   50
 prepare_losoto_bandpass.control.flagextend.maxCycles        =   3
+prepare_losoto_bandpass.control.flagbp.operation            =   FLAG
+prepare_losoto_bandpass.control.flagbp.soltab               =   sol000/amplitude000
+prepare_losoto_bandpass.control.flagbp.axesToFlag           =   [time]
+prepare_losoto_bandpass.control.flagbp.order                =   [100]
+prepare_losoto_bandpass.control.flagbp.mode                 =   bandpass
 prepare_losoto_bandpass.control.plotA2.operation            =   PLOT
 prepare_losoto_bandpass.control.plotA2.soltab               =   sol000/amplitude000
 prepare_losoto_bandpass.control.plotA2.axesInPlot           =   [time,freq]
@@ -510,7 +524,7 @@ prepare_losoto_bandpass.control.bandpass.outSoltabName      =   bandpass
 prepare_losoto_bandpass.control.bandpass.BadSBList          =   ""
 prepare_losoto_bandpass.control.bandpass.interpolate        =   True
 prepare_losoto_bandpass.control.bandpass.removeTimeAxis     =   False
-prepare_losoto_bandpass.control.bandpass.autoFlag           =   True
+prepare_losoto_bandpass.control.bandpass.autoFlag           =   False
 prepare_losoto_bandpass.control.bandpass.chanWidth          =   {{ avg_freqresolution }}
 prepare_losoto_bandpass.control.plotB1.operation            =   PLOT
 prepare_losoto_bandpass.control.plotB1.soltab               =   sol000/bandpass

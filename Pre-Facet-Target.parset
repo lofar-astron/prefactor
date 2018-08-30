@@ -92,7 +92,7 @@ pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 # pipeline substeps
 pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
-pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
+pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ms_concat_target_map, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
 pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal, gsmcal_apply]
 
 
@@ -280,6 +280,7 @@ ateamcliptar.control.mapfile_in                                =   ndppp_prep_ta
 ateamcliptar.control.arguments                                 =   [allms]
 ateamcliptar.control.inputkey                                  =   allms
 
+
 #############################
 ##     concatenate         ##
 #############################
@@ -297,9 +298,18 @@ ms_concat_target.control.executable                            =   {{ scripts }}
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.flags                                =   [combine_target_map.output.mapfile,outputkey]
 
+# generate a mapfile of all the concatenated target data
+ms_concat_target_map.control.kind                              =   plugin
+ms_concat_target_map.control.type                              =   createMapfile
+ms_concat_target_map.control.method                            =   mapfile_from_folder
+ms_concat_target_map.control.mapfile_dir                       =   input.output.mapfile_dir
+ms_concat_target_map.control.filename                          =   ms_concat_target.mapfile
+ms_concat_target_map.control.folder                            =   {{ job_directory }}
+ms_concat_target_map.control.pattern                           =   *ms_concat_target_?
+
 # run NDPPP on the target data
 ndppp_flag_target.control.type                                 =   dppp
-ndppp_flag_target.control.max_per_node                         =   {{ num_proc_per_node_limit }}
+ndppp_flag_target.control.max_per_node                         =   1
 ndppp_flag_target.control.inplace                              =   True
 ndppp_flag_target.control.error_tolerance                      =   {{ error_tolerance }}
 ndppp_flag_target.argument.numthreads                          =   {{ num_proc_per_node }}
@@ -309,7 +319,7 @@ ndppp_flag_target.argument.steps                               =   [flag]
 ndppp_flag_target.argument.flag.type                           =   aoflagger
 ndppp_flag_target.argument.flag.keepstatistics                 =   True
 ndppp_flag_target.argument.flag.strategy                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
-ndppp_flag_target.argument.flag.memoryperc                     =   90
+# ndppp_flag_target.argument.flag.memoryperc                     =   90
 
 # sort the target data by frequency into groups so that NDPPP can concatenate them
 sortmap_target.control.type                                    =   pythonplugin
@@ -424,7 +434,6 @@ h5_gsmsol_map.control.filename                                 =   h5_imp_gsmsol
 # # solve for phase-only calibration solutions
 # # solve and apply are seperate to allow to solve on a subset of baselines but apply to all
 gsmcal_solve.control.type                                      =   dppp
-gsmcal_solve.control.environment                               =   {OMP_NUM_THREADS: 4}
 gsmcal_solve.control.error_tolerance                           =   {{ error_tolerance }}
 gsmcal_solve.control.inplace                                   =   True
 gsmcal_solve.control.max_per_node                              =   {{ num_proc_per_node_limit }}
