@@ -20,6 +20,7 @@
 ! target_input_path        =  /data/scratch/drabent             ## specify the directory where your target data are stored
 ! target_input_pattern     =  L217457*SB00*.MS                  ## regular expression pattern of all your target files
 ! cal_values_directory     =  /data/scratch/drabent/cal_values  ## where the files with the calibration values from the calibrator pipeline are
+! h5parm                   =  {{ cal_values_directory }}/h5imp_cal_losoto.h5 ## where to find the h5parm of the calibrator parset
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor  ## path to your prefactor copy
@@ -71,7 +72,6 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ! results_directory        = {{ job_directory }}/results         ## location of the results
 ! inspection_directory     = {{ results_directory }}/inspection  ## directory where the inspection plots will be stored
 
-
 ########################################################
 ##                                                    ##
 ##   BEGIN PIPELINE: DO NOT UPDATE BELOW THIS LINE!   ##
@@ -120,7 +120,7 @@ trans.control.max_per_node      =  {{ num_proc_per_node }}
 trans.control.error_tolerance   =  {{ error_tolerance }}
 trans.control.mapfile_in        =  combine_data_target_map.output.mapfile
 trans.control.inputkey          =  indata
-trans.argument.flags            =  [indata, {{ cal_values_directory }}/h5imp_cal_losoto.h5]
+trans.argument.flags            =  [indata, {{ h5parm }}]
 trans.argument.ionex_server     =  {{ ionex_server }}
 trans.argument.ionex_prefix     =  {{ ionex_prefix }}
 trans.argument.ionexPath        =  {{ ionex_path }}
