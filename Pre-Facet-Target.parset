@@ -93,7 +93,7 @@ pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
 pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ms_concat_target_map, ndppp_flag_target, sortmap_target, do_sortmap_maps, dpppconcat]
-pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal, gsmcal_apply]
+pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal]
 
 
 #############################
@@ -174,12 +174,8 @@ ndppp_prep_target.argument.msin.baseline                       =   CS*&; RS*&; C
 ndppp_prep_target.argument.msout.datacolumn                    =   DATA
 ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
-# ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
-# ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
-# ndppp_prep_target.argument.msout.storagemanager.weightbitrate  =   12
-# ndppp_prep_target.argument.msout.storagemanager.distribution   =   "TruncatedGaussian"
-# ndppp_prep_target.argument.msout.storagemanager.disttruncation =   1.5
-# ndppp_prep_target.argument.msout.storagemanager.normalization  =   "AF"
+ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
+ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
 ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
 ndppp_prep_target.argument.flag.type                           =   preflagger
 ndppp_prep_target.argument.flag.baseline                       =   {{ flag_baselines }}
@@ -252,16 +248,13 @@ predict_ateam.control.mapfiles_in                              =   [ndppp_prep_t
 predict_ateam.control.inputkeys                                =   [msin,sourcedb]
 predict_ateam.control.inplace                                  =   True
 predict_ateam.control.max_per_node                             =   {{ num_proc_per_node_limit }}
-predict_ateam.argument.numthreads                              =   {{ max_dppp_threads }}
 predict_ateam.control.error_tolerance                          =   {{ error_tolerance }}
+predict_ateam.argument.numthreads                              =   {{ max_dppp_threads }}
 predict_ateam.argument.msin.datacolumn                         =   DATA
 predict_ateam.argument.msin.baseline                           =   [CR]S*&
 predict_ateam.argument.msout.datacolumn                        =   MODEL_DATA
+predict_ateam.argument.msout.storagemanager                    =   "Dysco"
 predict_ateam.argument.msout.storagemanager.databitrate        =   0
-predict_ateam.argument.msout.storagemanager.weightbitrate      =   12
-predict_ateam.argument.msout.storagemanager.distribution       =   "TruncatedGaussian"
-predict_ateam.argument.msout.storagemanager.disttruncation     =   1.5
-predict_ateam.argument.msout.storagemanager.normalization      =   "AF"
 predict_ateam.argument.steps                                   =   [predict]
 predict_ateam.argument.predict.type                            =   predict
 predict_ateam.argument.predict.operation                       =   replace
@@ -353,12 +346,8 @@ dpppconcat.argument.msin.orderms                               =   False   #/ co
 dpppconcat.argument.msout.datacolumn                           =   DATA
 dpppconcat.argument.msout.writefullresflag                     =   False
 dpppconcat.argument.msout.overwrite                            =   True
-# dpppconcat.argument.msout.storagemanager                       =   "Dysco"
-# dpppconcat.argument.msout.storagemanager.databitrate           =   0
-# dpppconcat.argument.msout.storagemanager.weightbitrate         =   12
-# dpppconcat.argument.msout.storagemanager.distribution          =   "TruncatedGaussian"
-# dpppconcat.argument.msout.storagemanager.disttruncation        =   1.5
-# dpppconcat.argument.msout.storagemanager.normalization         =   "AF"
+dpppconcat.argument.msout.storagemanager                       =   "Dysco"
+dpppconcat.argument.msout.storagemanager.databitrate           =   0
 dpppconcat.argument.steps                                      =   []
 
 
@@ -455,6 +444,7 @@ gsmcal_solve.argument.gaincal.parmdb                           =   gsmcal_parmma
 gsmcal_solve.argument.gaincal.usebeammodel                     =   True
 gsmcal_solve.argument.gaincal.usechannelfreq                   =   True
 gsmcal_solve.argument.gaincal.beammode                         =   array_factor
+gsmcal_solve.argument.gaincal.applysolution                    =   True
 
 ###########################
 ## Analyze cal           ##
@@ -532,26 +522,26 @@ h5exp_gsmcal.argument.outh5parm                                =   {{ cal_soluti
 ## apply the calibration      ##
 ################################
 # # solve and apply are separate to allow to solve on a subset of baselines but apply to all
-gsmcal_apply.control.type                                      =   dppp
-gsmcal_apply.control.error_tolerance                           =   {{ error_tolerance }}
-gsmcal_apply.control.inplace                                   =   True
-gsmcal_apply.control.max_per_node                              =   {{ num_proc_per_node_limit }}
-gsmcal_apply.argument.numthreads                               =   {{ max_dppp_threads }}
-gsmcal_apply.argument.msin                                     =   check_unflagged_map.output.mapfile
-gsmcal_apply.argument.msin.datacolumn                          =   DATA
-gsmcal_apply.argument.msout.datacolumn                         =   CORRECTED_DATA
-gsmcal_apply.argument.msout.writefullresflag                   =   False
-gsmcal_apply.argument.steps                                    =   [applycal]
-# gsmcal_apply.argument.msout.storagemanager                     =   "Dysco"
-# gsmcal_apply.argument.msout.storagemanager.databitrate         =   0
-# gsmcal_apply.argument.msout.storagemanager.weightbitrate       =   12
-# gsmcal_apply.argument.msout.storagemanager.distribution        =   "TruncatedGaussian"
-# gsmcal_apply.argument.msout.storagemanager.disttruncation      =   1.5
-# gsmcal_apply.argument.msout.storagemanager.normalization       =   "AF"
-gsmcal_apply.argument.applycal.type                            =   applycal
-gsmcal_apply.argument.applycal.correction                      =   phase000
-gsmcal_apply.argument.applycal.parmdb                          =   {{ cal_solutions }}
-gsmcal_apply.argument.applycal.solset                          =   target
+# gsmcal_apply.control.type                                      =   dppp
+# gsmcal_apply.control.error_tolerance                           =   {{ error_tolerance }}
+# gsmcal_apply.control.inplace                                   =   True
+# gsmcal_apply.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+# gsmcal_apply.argument.numthreads                               =   {{ max_dppp_threads }}
+# gsmcal_apply.argument.msin                                     =   check_unflagged_map.output.mapfile
+# gsmcal_apply.argument.msin.datacolumn                          =   DATA
+# gsmcal_apply.argument.msout.datacolumn                         =   CORRECTED_DATA
+# gsmcal_apply.argument.msout.writefullresflag                   =   False
+# gsmcal_apply.argument.steps                                    =   [applycal]
+# # gsmcal_apply.argument.msout.storagemanager                     =   "Dysco"
+# # gsmcal_apply.argument.msout.storagemanager.databitrate         =   0
+# # gsmcal_apply.argument.msout.storagemanager.weightbitrate       =   12
+# # gsmcal_apply.argument.msout.storagemanager.distribution        =   "TruncatedGaussian"
+# # gsmcal_apply.argument.msout.storagemanager.disttruncation      =   1.5
+# # gsmcal_apply.argument.msout.storagemanager.normalization       =   "AF"
+# gsmcal_apply.argument.applycal.type                            =   applycal
+# gsmcal_apply.argument.applycal.correction                      =   phase000
+# gsmcal_apply.argument.applycal.parmdb                          =   {{ cal_solutions }}
+# gsmcal_apply.argument.applycal.solset                          =   target
 
 
 ########################################################
