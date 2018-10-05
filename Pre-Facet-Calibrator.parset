@@ -83,7 +83,7 @@ pipeline.steps             =  [prep, PA, FR, bandpass, ion]
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ndppp_flag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, ndppp_flag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
 
 pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -480,7 +480,7 @@ prepare_losoto_bandpass.control.plotA1.prefix               =   {{ inspection_di
 prepare_losoto_bandpass.control.flag.operation              =   FLAG
 prepare_losoto_bandpass.control.flag.soltab                 =   sol000/amplitude000
 prepare_losoto_bandpass.control.flag.axesToFlag             =   [time]
-prepare_losoto_bandpass.control.flag.order                  =   [100] 
+prepare_losoto_bandpass.control.flag.order                  =   [100]
 prepare_losoto_bandpass.control.flag.maxCycles              =   1
 prepare_losoto_bandpass.control.flag.maxRms                 =   5
 prepare_losoto_bandpass.control.flag.replce                 =   False
@@ -588,7 +588,7 @@ prepare_losoto_ion.control.plotA1.prefix                    =   {{ inspection_di
 prepare_losoto_ion.control.flag.operation                   =   FLAG
 prepare_losoto_ion.control.flag.soltab                      =   sol000/amplitude000
 prepare_losoto_ion.control.flag.axesToFlag                  =   [time]
-prepare_losoto_ion.control.flag.order                       =   [100] 
+prepare_losoto_ion.control.flag.order                       =   [100]
 prepare_losoto_ion.control.flag.maxCycles                   =   1
 prepare_losoto_ion.control.flag.maxRms                      =   5
 prepare_losoto_ion.control.flag.replce                      =   False
