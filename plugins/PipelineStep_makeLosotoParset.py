@@ -15,7 +15,7 @@ def plugin_main(args, **kwargs):
     
 	for key in kwargs.keys():
 		keyword = key.split('.')[0]
-		option  = key.split('.')[-1]
+		option  = key.split(keyword + '.')[-1]
 		value   = kwargs[key]
 		if keyword in steps:
 			parset_dict[keyword][option] = value
