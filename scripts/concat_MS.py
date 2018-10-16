@@ -5,7 +5,7 @@ import re
 import pyrap.tables as pt
 import numpy
 
-max_length = 147
+#max_length = 147
 
 ########################################################################
 def input2strlist_nomapfile(invar):
@@ -26,7 +26,7 @@ def input2strlist_nomapfile(invar):
    return str_list
 
 ########################################################################
-def main(ms_input,ms_output):
+def main(ms_input,ms_output,max_length):
 
     """
     Virtuall concatenate subbands 
@@ -41,13 +41,10 @@ def main(ms_input,ms_output):
 
     """    
     filelist      = input2strlist_nomapfile(ms_input)
-    set_ranges    = list(numpy.arange(0, len(filelist), max_length))
+    set_ranges    = list(numpy.arange(0, len(filelist), int(max_length)))
     set_ranges.append(len(filelist))
     
-    print max_length
     for i in numpy.arange(len(set_ranges) - 1):
-        print i
-        print set_ranges[i],set_ranges[i + 1]
         pt.msconcat(filelist[set_ranges[i]:set_ranges[i + 1]], ms_output + '_' + str(i))
         pass
                  
@@ -56,15 +53,18 @@ def main(ms_input,ms_output):
 ########################################################################
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Virtuall concat subbands')
+    parser = argparse.ArgumentParser(description='Virtually concat subbands')
     
     parser.add_argument('MSfile', type=str, nargs='+',
                         help='One (or more MSs) that we want to concatenate.')
     parser.add_argument('MSout', type=str, 
                         help='Output MS file')
+    parser.add_argument('max_length', type=str, 
+                        help='Max length of concatenation')
+    
         
  
    
     args = parser.parse_args()
     
-    main(args.MSfile,args.MSout)
+    main(args.MSfile,args.MSout,args.max_length)

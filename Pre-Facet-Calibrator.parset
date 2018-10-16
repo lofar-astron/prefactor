@@ -20,6 +20,7 @@
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/               ## path to your prefactor copy
 ! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
+! aoflagger                =  /opt/cep/aoflagger/aoflagger-2.10.0/build/bin/aoflagger ## path to your aoflagger executable
 
 ##########################################
 ### parameters you may need to adjust   ##
@@ -29,6 +30,7 @@
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
 ! rfistrategy              =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
+! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
 
 # definitions for pipeline options
 ! 1st_order                =  ct,plotTEC,residuals                   ## Do not change! Only cal_ion should be edited if needed
@@ -83,7 +85,7 @@ pipeline.steps             =  [prep, PA, FR, bandpass, ion]
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, ndppp_flag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
 
 pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -147,7 +149,7 @@ combine_data_cal_map.control.mapfile_in                     =   ndppp_prep_cal.o
 ms_concat.control.type                                      =   pythonplugin
 ms_concat.control.executable                                =   {{ scripts }}/concat_MS.py
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
-ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey]
+ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey,{{ max_length }}]
 
 # generate a mapfile of all the concatenated data
 ms_concat_map.control.kind                                  =   plugin
@@ -158,19 +160,13 @@ ms_concat_map.control.filename                              =   ms_concat.mapfil
 ms_concat_map.control.folder                                =   {{ job_directory }}
 ms_concat_map.control.pattern                               =   *ms_concat_?
 
-# run NDPPP on the calibrator data
-ndppp_flag.control.type                                     =   dppp
-ndppp_flag.control.max_per_node                             =   1
-ndppp_flag.control.inplace                                  =   True
-ndppp_flag.control.error_tolerance                          =   {{ error_tolerance }}
-ndppp_flag.argument.numthreads                              =   {{ num_proc_per_node }}
-ndppp_flag.argument.msin                                    =   ms_concat.output.mapfile    # The input data.
-ndppp_flag.argument.msin.datacolumn                         =   DATA
-ndppp_flag.argument.steps                                   =   [flag]
-ndppp_flag.argument.flag.type                               =   aoflagger
-ndppp_flag.argument.flag.keepstatistics                     =   True
-ndppp_flag.argument.flag.strategy                           =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
-ndppp_flag.argument.flag.memoryperc                         =   90
+# run aoflagger on the concatenated data
+aoflag.control.kind                                         =   recipe
+aoflag.control.type                                         =   executable_args
+aoflag.control.executable                                   =   {{ aoflagger }}
+aoflag.control.max_per_node                                 =   1
+aoflag.control.error_tolerance                              =   {{ error_tolerance }}
+aoflag.argument.flags                                       =   [-v,-combine-spws,ms_concat_map.output.mapfile]
 
 # find automatically the calibrator sky model
 sky_cal.control.type                                        =   pythonplugin
@@ -468,7 +464,7 @@ h5imp_cal_bandpass.argument.outh5parm                       =   outh5parm
 # create losoto v2 parset file
 prepare_losoto_bandpass.control.kind                        =   plugin
 prepare_losoto_bandpass.control.type                        =   makeLosotoParset
-prepare_losoto_bandpass.control.steps                       =   [plotA1,flag,flagextend,plotA2,merge,bkp,bandpass,flagbp,plotB1,plotB2,plotB3,residualA,plotAr3]
+prepare_losoto_bandpass.control.steps                       =   [plotA1,flag,flagextend,flagbp,plotA2,merge,bandpass,plotB1,plotB2,plotB3]
 prepare_losoto_bandpass.control.filename                    =   input.output.job_directory/losoto.parset
 prepare_losoto_bandpass.control.global.ncpu                 =   {{ num_proc_per_node }}
 prepare_losoto_bandpass.control.plotA1.operation            =   PLOT
@@ -492,6 +488,11 @@ prepare_losoto_bandpass.control.flagextend.axesToExt        =   [freq,time]
 prepare_losoto_bandpass.control.flagextend.size             =   [50,100]
 prepare_losoto_bandpass.control.flagextend.percent          =   50
 prepare_losoto_bandpass.control.flagextend.maxCycles        =   3
+prepare_losoto_bandpass.control.flagbp.operation            =   FLAG
+prepare_losoto_bandpass.control.flagbp.soltab               =   sol000/amplitude000
+prepare_losoto_bandpass.control.flagbp.axesToFlag           =   [freq]
+prepare_losoto_bandpass.control.flagbp.order                =   [100]
+prepare_losoto_bandpass.control.flagbp.mode                 =   bandpass
 prepare_losoto_bandpass.control.plotA2.operation            =   PLOT
 prepare_losoto_bandpass.control.plotA2.soltab               =   sol000/amplitude000
 prepare_losoto_bandpass.control.plotA2.axesInPlot           =   [time,freq]
@@ -502,9 +503,9 @@ prepare_losoto_bandpass.control.merge.operation             =   REWEIGHT
 prepare_losoto_bandpass.control.merge.mode                  =   copy
 prepare_losoto_bandpass.control.merge.soltab                =   sol000/phase000
 prepare_losoto_bandpass.control.merge.soltabImport          =   amplitude000
-prepare_losoto_bandpass.control.bkp.operation               =   DUPLICATE
-prepare_losoto_bandpass.control.bkp.soltab                  =   sol000/amplitude000
-prepare_losoto_bandpass.control.bkp.soltabOut               =   amplitudeOrig000
+# prepare_losoto_bandpass.control.bkp.operation               =   DUPLICATE
+# prepare_losoto_bandpass.control.bkp.soltab                  =   sol000/amplitude000
+# prepare_losoto_bandpass.control.bkp.soltabOut               =   amplitudeOrig000
 prepare_losoto_bandpass.control.bandpass.operation          =   PREFACTOR_BANDPASS
 prepare_losoto_bandpass.control.bandpass.soltab             =   sol000/amplitude000
 prepare_losoto_bandpass.control.bandpass.outSoltabName      =   bandpass
@@ -513,11 +514,6 @@ prepare_losoto_bandpass.control.bandpass.interpolate        =   True
 prepare_losoto_bandpass.control.bandpass.removeTimeAxis     =   False
 prepare_losoto_bandpass.control.bandpass.autoFlag           =   False
 prepare_losoto_bandpass.control.bandpass.chanWidth          =   {{ avg_freqresolution }}
-prepare_losoto_bandpass.control.flagbp.operation            =   FLAG
-prepare_losoto_bandpass.control.flagbp.soltab               =   sol000/bandpass
-prepare_losoto_bandpass.control.flagbp.axesToFlag           =   [time]
-prepare_losoto_bandpass.control.flagbp.order                =   [100]
-prepare_losoto_bandpass.control.flagbp.mode                 =   bandpass
 prepare_losoto_bandpass.control.plotB1.operation            =   PLOT
 prepare_losoto_bandpass.control.plotB1.soltab               =   sol000/bandpass
 prepare_losoto_bandpass.control.plotB1.axesInPlot           =   [time,freq]

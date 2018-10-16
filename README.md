@@ -31,6 +31,7 @@ Software requirements:
 * LSMTool (see https://github.com/darafferty/LSMTool)
 * RMextract (see https://github.com/maaijke/RMextract)
 * Python (including matplotlib, scipy, and astropy)
+* AOFlagger (see https://sourceforge.net/p/aoflagger/wiki/Home/)
 * WSClean (for Initial-Subtract; version >= 2.5 -- see https://sourceforge.net/projects/wsclean)
   * for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
