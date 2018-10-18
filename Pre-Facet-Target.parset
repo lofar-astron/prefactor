@@ -305,10 +305,13 @@ ms_concat_target_map.control.pattern                           =   *ms_concat_ta
 # run aoflagger on the concatenated data
 aoflag.control.kind                                            =   recipe
 aoflag.control.type                                            =   executable_args
+aoflag.control.inplace                                         =   True
 aoflag.control.executable                                      =   {{ aoflagger }}
 aoflag.control.max_per_node                                    =   1
 aoflag.control.error_tolerance                                 =   {{ error_tolerance }}
-aoflag.argument.flags                                          =   [-v,-combine-spws,ms_concat_map.output.mapfile]
+aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.mapfile
+aoflag.control.inputkey                                        =   msin
+aoflag.argument.flags                                          =   [-v,-combine-spws,msin]
 
 # sort the target data by frequency into groups so that NDPPP can concatenate them
 sortmap_target.control.type                                    =   pythonplugin
@@ -450,8 +453,10 @@ h5imp_gsmcal.control.kind                                      =   recipe
 h5imp_gsmcal.control.type                                      =   executable_args
 h5imp_gsmcal.control.executable                                =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
+h5imp_gsmcal.control.mapfile_in                                =   h5_gsmsol_map.output.mapfile
+h5imp_gsmcal.control.inputkey                                  =   h5in
 h5imp_gsmcal.control.outputkey                                 =   outh5parm
-h5imp_gsmcal.argument.flags                                    =   [-c,h5_gsmsol_map.output.mapfile]
+h5imp_gsmcal.argument.flags                                    =   [-c,h5in]
 h5imp_gsmcal.argument.outh5parm                                =   outh5parm
 
 # create losoto v2 parset file
@@ -499,16 +504,22 @@ prepare_losoto_gsmcal.control.plotPd2.minmax                   =   [-3.14,3.14]
 # do the processing on the LoSoTo file
 process_losoto_gsmcal.control.kind                             =   recipe
 process_losoto_gsmcal.control.type                             =   executable_args
+process_losoto_gsmcal.control.inplace                          =   True
 process_losoto_gsmcal.control.executable                       =   {{ losoto_directory }}/bin/losoto
 process_losoto_gsmcal.control.max_per_node                     =   {{ num_proc_per_node }}
-process_losoto_gsmcal.argument.flags                           =   [h5imp_gsmcal.output.mapfile, input.output.job_directory/losoto.parset]
+process_losoto_gsmcal.control.mapfile_in                       =   h5imp_gsmcal.output.mapfile
+process_losoto_gsmcal.control.inputkey                         =   h5in
+process_losoto_gsmcal.argument.flags                           =   [h5in,input.output.job_directory/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_gsmcal.control.kind                                      =   recipe
 h5exp_gsmcal.control.type                                      =   executable_args
+h5exp_gsmcal.control.inplace                                   =   True
 h5exp_gsmcal.control.executable                                =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5exp_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
-h5exp_gsmcal.argument.flags                                    =   [h5imp_gsmcal.output.mapfile]
+h5exp_gsmcal.control.mapfile_in                                =   h5imp_gsmcal.output.mapfile
+h5exp_gsmcal.control.inputkey                                  =   h5in
+h5exp_gsmcal.argument.flags                                    =   [h5in]
 h5exp_gsmcal.argument.insoltab                                 =   phase000
 h5exp_gsmcal.argument.outsolset                                =   target
 h5exp_gsmcal.argument.outh5parm                                =   {{ cal_solutions }}
