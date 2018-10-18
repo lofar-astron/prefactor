@@ -163,10 +163,13 @@ ms_concat_map.control.pattern                               =   *ms_concat_?
 # run aoflagger on the concatenated data
 aoflag.control.kind                                         =   recipe
 aoflag.control.type                                         =   executable_args
+aoflag.control.inplace                                      =   True
 aoflag.control.executable                                   =   {{ aoflagger }}
 aoflag.control.max_per_node                                 =   1
 aoflag.control.error_tolerance                              =   {{ error_tolerance }}
-aoflag.argument.flags                                       =   [-v,-combine-spws,ms_concat_map.output.mapfile]
+aoflag.control.mapfile_in                                   =   ms_concat_map.output.mapfile
+aoflag.control.inputkey                                     =   msin
+aoflag.argument.flags                                       =   [-v,-combine-spws,msin]
 
 # find automatically the calibrator sky model
 sky_cal.control.type                                        =   pythonplugin
@@ -233,17 +236,23 @@ h5imp_cal_map.control.filename                              =   h5imp_cal_map.ma
 
 # baseline-dependent smooting
 smooth_data.control.type                                    =   executable_args
+smooth_data.control.inplace                                 =   True
 smooth_data.control.max_per_node                            =   {{ num_proc_per_node }}
 smooth_data.control.error_tolerance                         =   {{ error_tolerance }}
 smooth_data.control.executable                              =   {{ scripts }}/BLsmooth.py
-smooth_data.argument.flags                                  =   [-S,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
+smooth_data.control.mapfile_in                              =   ndppp_prep_cal.output.mapfile
+smooth_data.control.inputkey                                =   msin
+smooth_data.argument.flags                                  =   [-S,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,msin]
 
 # baseline-dependent smooting
 smooth_corrected.control.type                               =   executable_args
+smooth_corrected.control.inplace                            =   True
 smooth_corrected.control.max_per_node                       =   {{ num_proc_per_node }}
 smooth_corrected.control.error_tolerance                    =   {{ error_tolerance }}
 smooth_corrected.control.executable                         =   {{ scripts }}/BLsmooth.py
-smooth_corrected.argument.flags                             =   [-S,{{ do_smooth }},-r,-i,CORRECTED_DATA,-o,SMOOTHED_DATA,ndppp_prep_cal.output.mapfile]
+smooth_corrected.control.mapfile_in                         =   ndppp_prep_cal.output.mapfile
+smooth_corrected.control.inputkey                           =   msin
+smooth_corrected.argument.flags                             =   [-S,{{ do_smooth }},-r,-i,CORRECTED_DATA,-o,SMOOTHED_DATA,msin]
 
 # now run NDPPP on the averaged calibrator data
 calib_cal.control.type                                      =   dppp
@@ -275,8 +284,10 @@ h5imp_cal_PA.control.kind                                   =   recipe
 h5imp_cal_PA.control.type                                   =   executable_args
 h5imp_cal_PA.control.executable                             =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_cal_PA.control.error_tolerance                        =   {{ error_tolerance }}
+h5imp_cal_PA.control.mapfile_in                             =   h5imp_cal_map.output.mapfile
+h5imp_cal_PA.control.inputkey                               =   h5parm
 h5imp_cal_PA.control.outputkey                              =   outh5parm
-h5imp_cal_PA.argument.flags                                 =   [-c,h5imp_cal_map.output.mapfile]
+h5imp_cal_PA.argument.flags                                 =   [-c,h5parm]
 h5imp_cal_PA.argument.outh5parm                             =   outh5parm
 
 # create losoto v2 parset file
@@ -358,16 +369,22 @@ prepare_losoto_PA.control.plotPr2.minmax                    =   [-3.14,3.14]
 # do the processing on the LoSoTo file
 process_losoto_PA.control.kind                              =   recipe
 process_losoto_PA.control.type                              =   executable_args
+process_losoto_PA.control.inplace                           =   True
 process_losoto_PA.control.executable                        =   {{ losoto_directory }}/bin/losoto
 process_losoto_PA.control.max_per_node                      =   {{ num_proc_per_node }}
-process_losoto_PA.argument.flags                            =   [h5imp_cal_PA.output.mapfile, input.output.job_directory/losoto.parset]
+process_losoto_PA.control.mapfile_in                        =   h5imp_cal_PA.output.mapfile
+process_losoto_PA.control.inputkey                          =   h5in
+process_losoto_PA.argument.flags                            =   [h5in,input.output.job_directory/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_PA.control.kind                                   =   recipe
 h5exp_cal_PA.control.type                                   =   executable_args
+h5exp_cal_PA.control.inplace                                =   True
 h5exp_cal_PA.control.executable                             =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5exp_cal_PA.control.error_tolerance                        =   {{ error_tolerance }}
-h5exp_cal_PA.argument.flags                                 =   [h5imp_cal_PA.output.mapfile]
+h5exp_cal_PA.control.mapfile_in                             =   h5imp_cal_PA.output.mapfile
+h5exp_cal_PA.control.inputkey                               =   h5in
+h5exp_cal_PA.argument.flags                                 =   [h5in]
 h5exp_cal_PA.argument.insoltab                              =   polalign
 h5exp_cal_PA.argument.outh5parm                             =   {{ cal_solutions }}
 h5exp_cal_PA.argument.outsolset                             =   calibrator
@@ -381,8 +398,10 @@ h5imp_cal_FR.control.kind                                   =   recipe
 h5imp_cal_FR.control.type                                   =   executable_args
 h5imp_cal_FR.control.executable                             =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_cal_FR.control.error_tolerance                        =   {{ error_tolerance }}
+h5imp_cal_FR.control.mapfile_in                             =   h5imp_cal_map.output.mapfile
+h5imp_cal_FR.control.inputkey                               =   h5parm
 h5imp_cal_FR.control.outputkey                              =   outh5parm
-h5imp_cal_FR.argument.flags                                 =   [-c,h5imp_cal_map.output.mapfile]
+h5imp_cal_FR.argument.flags                                 =   [-c,h5parm]
 h5imp_cal_FR.argument.outh5parm                             =   outh5parm
 
 # create losoto v2 parset file
@@ -434,16 +453,22 @@ prepare_losoto_FR.control.plotFR.prefix                     =   {{ inspection_di
 # do the processing on the LoSoTo file
 process_losoto_FR.control.kind                              =   recipe
 process_losoto_FR.control.type                              =   executable_args
+process_losoto_FR.control.inplace                           =   True
 process_losoto_FR.control.executable                        =   {{ losoto_directory }}/bin/losoto
 process_losoto_FR.control.max_per_node                      =   {{ num_proc_per_node }}
-process_losoto_FR.argument.flags                            =   [h5imp_cal_FR.output.mapfile, input.output.job_directory/losoto.parset]
+process_losoto_FR.control.mapfile_in                        =   h5imp_cal_FR.output.mapfile
+process_losoto_FR.control.inputkey                          =   h5in
+process_losoto_FR.argument.flags                            =   [h5in,input.output.job_directory/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_FR.control.kind                                   =   recipe
 h5exp_cal_FR.control.type                                   =   executable_args
+h5exp_cal_FR.control.inplace                                =   True
 h5exp_cal_FR.control.executable                             =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5exp_cal_FR.control.error_tolerance                        =   {{ error_tolerance }}
-h5exp_cal_FR.argument.flags                                 =   [h5imp_cal_FR.output.mapfile]
+h5exp_cal_FR.control.mapfile_in                             =   h5imp_cal_FR.output.mapfile
+h5exp_cal_FR.control.inputkey                               =   h5in
+h5exp_cal_FR.argument.flags                                 =   [h5in]
 h5exp_cal_FR.argument.insoltab                              =   rotationmeasure000
 h5exp_cal_FR.argument.outh5parm                             =   {{ cal_solutions }}
 h5exp_cal_FR.argument.outsolset                             =   calibrator
@@ -457,8 +482,10 @@ h5imp_cal_bandpass.control.kind                             =   recipe
 h5imp_cal_bandpass.control.type                             =   executable_args
 h5imp_cal_bandpass.control.executable                       =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_cal_bandpass.control.error_tolerance                  =   {{ error_tolerance }}
+h5imp_cal_bandpass.control.mapfile_in                       =   h5imp_cal_map.output.mapfile
+h5imp_cal_bandpass.control.inputkey                         =   h5parm
 h5imp_cal_bandpass.control.outputkey                        =   outh5parm
-h5imp_cal_bandpass.argument.flags                           =   [-c,h5imp_cal_map.output.mapfile]
+h5imp_cal_bandpass.argument.flags                           =   [-c,h5parm]
 h5imp_cal_bandpass.argument.outh5parm                       =   outh5parm
 
 # create losoto v2 parset file
@@ -549,16 +576,22 @@ prepare_losoto_bandpass.control.plotAr3.prefix              =   {{ inspection_di
 # do the processing on the LoSoTo file
 process_losoto_bandpass.control.kind                        =   recipe
 process_losoto_bandpass.control.type                        =   executable_args
+process_losoto_bandpass.control.inplace                     =   True
 process_losoto_bandpass.control.executable                  =   {{ losoto_directory }}/bin/losoto
 process_losoto_bandpass.control.max_per_node                =   {{ num_proc_per_node }}
-process_losoto_bandpass.argument.flags                      =   [h5imp_cal_bandpass.output.mapfile, input.output.job_directory/losoto.parset]
+process_losoto_bandpass.control.mapfile_in                  =   h5imp_cal_bandpass.output.mapfile
+process_losoto_bandpass.control.inputkey                    =   h5in
+process_losoto_bandpass.argument.flags                      =   [h5in,input.output.job_directory/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_bandpass.control.kind                             =   recipe
 h5exp_cal_bandpass.control.type                             =   executable_args
+h5exp_cal_bandpass.control.inplace                          =   True
 h5exp_cal_bandpass.control.executable                       =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5exp_cal_bandpass.control.error_tolerance                  =   {{ error_tolerance }}
-h5exp_cal_bandpass.argument.flags                           =   [h5imp_cal_bandpass.output.mapfile]
+h5exp_cal_bandpass.control.mapfile_in                       =   h5imp_cal_bandpass.output.mapfile
+h5exp_cal_bandpass.control.inputkey                         =   h5in
+h5exp_cal_bandpass.argument.flags                           =   [h5in]
 h5exp_cal_bandpass.argument.insoltab                        =   bandpass
 h5exp_cal_bandpass.argument.outh5parm                       =   {{ cal_solutions }}
 h5exp_cal_bandpass.argument.outsolset                       =   calibrator
@@ -572,8 +605,10 @@ h5imp_cal_ion.control.kind                                  =   recipe
 h5imp_cal_ion.control.type                                  =   executable_args
 h5imp_cal_ion.control.executable                            =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5imp_cal_ion.control.error_tolerance                       =   {{ error_tolerance }}
+h5imp_cal_ion.control.mapfile_in                            =   h5imp_cal_map.output.mapfile
+h5imp_cal_ion.control.inputkey                              =   h5parm
 h5imp_cal_ion.control.outputkey                             =   outh5parm
-h5imp_cal_ion.argument.flags                                =   [-c,h5imp_cal_map.output.mapfile]
+h5imp_cal_ion.argument.flags                                =   [-c,h5parm]
 h5imp_cal_ion.argument.outh5parm                            =   outh5parm
 
 # create losoto v2 parset file
@@ -699,16 +734,22 @@ prepare_losoto_ion.control.plotPr3.minmax                   =   [-3.14,3.14]
 # do the processing on the LoSoTo file
 process_losoto_ion.control.kind                             =   recipe
 process_losoto_ion.control.type                             =   executable_args
+process_losoto_ion.control.inplace                          =   True
 process_losoto_ion.control.executable                       =   {{ losoto_directory }}/bin/losoto
 process_losoto_ion.control.max_per_node                     =   {{ num_proc_per_node }}
-process_losoto_ion.argument.flags                           =   [h5imp_cal_ion.output.mapfile, input.output.job_directory/losoto.parset]
+process_losoto_ion.control.mapfile_in                       =   h5imp_cal_ion.output.mapfile
+process_losoto_ion.control.inputkey                         =   h5in
+process_losoto_ion.argument.flags                           =   [h5in,input.output.job_directory/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_ion.control.kind                                  =   recipe
 h5exp_cal_ion.control.type                                  =   executable_args
+h5exp_cal_ion.control.inplace                               =   True
 h5exp_cal_ion.control.executable                            =   {{ losoto_directory }}/bin/H5parm_collector.py
 h5exp_cal_ion.control.error_tolerance                       =   {{ error_tolerance }}
-h5exp_cal_ion.argument.flags                                =   [h5imp_cal_ion.output.mapfile]
+h5exp_cal_ion.control.mapfile_in                            =   h5imp_cal_ion.output.mapfile
+h5exp_cal_ion.control.inputkey                              =   h5in
+h5exp_cal_ion.argument.flags                                =   [h5in]
 h5exp_cal_ion.argument.insoltab                             =   clock000
 h5exp_cal_ion.argument.outh5parm                            =   {{ cal_solutions }}
 h5exp_cal_ion.argument.outsolset                            =   calibrator
