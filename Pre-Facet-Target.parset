@@ -284,14 +284,14 @@ combine_target_map.control.kind                                =   plugin
 combine_target_map.control.type                                =   createMapfile
 combine_target_map.control.method                              =   mapfile_all_to_one
 combine_target_map.control.mapfile_dir                         =   input.output.mapfile_dir
-combine_target_map.control.filename                            =   combine_tar_map.mapfile
+combine_target_map.control.filename                            =   combine_target_map.mapfile
 combine_target_map.control.mapfile_in                          =   ndppp_prep_target.output.mapfile
 
 # virtually concatenate target subbands
 ms_concat_target.control.type                                  =   pythonplugin
 ms_concat_target.control.executable                            =   {{ scripts }}/concat_MS.py
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
-ms_concat_target.argument.flags                                =   [combine_target_map.output.mapfile,outputkey]
+ms_concat_target.argument.flags                                =   [combine_target_map.output.mapfile,outputkey,{{ max_length }}]
 
 # generate a mapfile of all the concatenated target data
 ms_concat_target_map.control.kind                              =   plugin
