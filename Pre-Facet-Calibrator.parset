@@ -149,16 +149,14 @@ combine_data_cal_map.control.mapfile_in                     =   ndppp_prep_cal.o
 ms_concat.control.type                                      =   pythonplugin
 ms_concat.control.executable                                =   {{ scripts }}/concat_MS.py
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
+ms_concat.argument.filename                                 =   concatmapfile.mapfile
+ms_concat.argument.mapfile_dir                              =   input.output.mapfile_dir
 ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey,{{ max_length }}]
 
-# generate a mapfile of all the concatenated data
+# convert the output of ms_concat into usable mapfiles
 ms_concat_map.control.kind                                  =   plugin
-ms_concat_map.control.type                                  =   createMapfile
-ms_concat_map.control.method                                =   mapfile_from_folder
-ms_concat_map.control.mapfile_dir                           =   input.output.mapfile_dir
-ms_concat_map.control.filename                              =   ms_concat.mapfile
-ms_concat_map.control.folder                                =   {{ job_directory }}
-ms_concat_map.control.pattern                               =   *ms_concat_?
+ms_concat_map.control.type                                  =   mapfilenamesFromMapfiles
+ms_concat_map.control.mapfile_concatmap                     =   ms_concat.output.concatmapfile.mapfile
 
 # run aoflagger on the concatenated data
 aoflag.control.kind                                         =   recipe
@@ -167,7 +165,7 @@ aoflag.control.inplace                                      =   True
 aoflag.control.executable                                   =   {{ aoflagger }}
 aoflag.control.max_per_node                                 =   1
 aoflag.control.error_tolerance                              =   {{ error_tolerance }}
-aoflag.control.mapfile_in                                   =   ms_concat_map.output.mapfile
+aoflag.control.mapfile_in                                   =   ms_concat_map.output.concatmap
 aoflag.control.inputkey                                     =   msin
 aoflag.argument.flags                                       =   [-v,-combine-spws,msin]
 

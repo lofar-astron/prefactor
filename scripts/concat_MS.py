@@ -4,12 +4,14 @@ import glob
 import re
 import pyrap.tables as pt
 import numpy
+import os
+from lofarpipe.support.data_map import DataMap, DataProduct
 
 #max_length = 147
 
 ########################################################################
 def input2strlist_nomapfile(invar):
-   """ 
+   """
    from bin/download_IONEX.py
    give the list of MSs from the list provided as a string
    """
@@ -26,11 +28,10 @@ def input2strlist_nomapfile(invar):
    return str_list
 
 ########################################################################
-def main(ms_input,ms_output,max_length):
+def main(ms_input, ms_output, max_length, filename=None, mapfile_dir=None):
 
     """
-    Virtuall concatenate subbands 
-  
+    Virtually concatenate subbands
 
     Parameters
     ----------
@@ -38,33 +39,45 @@ def main(ms_input,ms_output,max_length):
         String from the list (map) of the calibrator MSs
     ms_output : str
         String from the outut concatenated MS
+    max_length : str
+        Max length of file list to concatenate into one output MS
+    filename: str
+        Name of output mapfile
+    mapfile_dir : str
+        Directory for output mapfile
 
-    """    
+    """
     filelist      = input2strlist_nomapfile(ms_input)
     set_ranges    = list(numpy.arange(0, len(filelist), int(max_length)))
     set_ranges.append(len(filelist))
-    
+
+    map_out = DataMap([])
     for i in numpy.arange(len(set_ranges) - 1):
-        pt.msconcat(filelist[set_ranges[i]:set_ranges[i + 1]], ms_output + '_' + str(i))
-        pass
-                 
-    return { 'pattern' : ms_output.split('/')[-1] + '*'}
+        f = ms_output + '_' + str(i)
+        pt.msconcat(filelist[set_ranges[i]:set_ranges[i + 1]], f)
+        map_out.data.append(DataProduct('localhost', f, False))
+
+    fileid = os.path.join(mapfile_dir, filename)
+    map_out.save(fileid)
+    result = {'concatmapfile': fileid}
+
+    return result
 
 ########################################################################
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Virtually concat subbands')
-    
+
     parser.add_argument('MSfile', type=str, nargs='+',
                         help='One (or more MSs) that we want to concatenate.')
-    parser.add_argument('MSout', type=str, 
+    parser.add_argument('MSout', type=str,
                         help='Output MS file')
-    parser.add_argument('max_length', type=str, 
+    parser.add_argument('max_length', type=str,
                         help='Max length of concatenation')
-    
-        
- 
-   
+
+
+
+
     args = parser.parse_args()
-    
+
     main(args.MSfile,args.MSout,args.max_length)
