@@ -309,6 +309,7 @@ aoflag.control.max_per_node                                    =   1
 aoflag.control.error_tolerance                                 =   {{ error_tolerance }}
 aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.concatmap
 aoflag.control.inputkey                                        =   msin
+aoflag.argument.strategy                                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
 aoflag.argument.flags                                          =   [-v,-combine-spws,msin]
 
 # sort the target data by frequency into groups so that NDPPP can concatenate them
