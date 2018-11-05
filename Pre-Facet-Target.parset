@@ -18,8 +18,9 @@
 ! target_input_pattern     =  L228163*.MS                            ## regular expression pattern of all your calibrator files
 
 ## location of the software
-! prefactor_directory      =  /home/drabent/prefactor                ## path to your prefactor copy
+! prefactor_directory      =  /home/drabent/prefactor                ## path to your prefactor installation
 ! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
+! rmextract_directory      =  /home/drabent/rmextract                ## path to your local RMextract installation
 ! aoflagger                =  /opt/cep/aoflagger/aoflagger-2.10.0/build/bin/aoflagger ## path to your aoflagger executable
 
 ##########################################
@@ -129,7 +130,7 @@ combine_data_target_map.control.mapfile_in                     =   createmap_tar
 
 # get ionex files once for every day that is covered by one of the input MSs
 h5imp_RMextract.control.type                                   =   pythonplugin
-h5imp_RMextract.control.executable                             =   {{ scripts }}/createRMh5parm.py
+h5imp_RMextract.control.executable                             =   {{ rmextract_directory }}/bin/createRMh5parm.py
 h5imp_RMextract.control.error_tolerance                        =   {{ error_tolerance }}
 h5imp_RMextract.argument.flags                                 =   [combine_data_target_map.output.mapfile, {{ cal_solutions }}]
 h5imp_RMextract.argument.ionex_server                          =   {{ ionex_server }}
