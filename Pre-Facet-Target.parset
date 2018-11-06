@@ -28,9 +28,10 @@
 
 ! refant                   = 'CS001HBA0'                             ## name of the station that will be used as a reference for the phase-plots
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
+! filter_baselines         =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
 ! rfistrategy              =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
-! max_length               =  148                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
+! max_length               =  5                                      ## amount of subbands (calibrator) or chunks (target) to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to ~5 chunks for about 128 GB of RAM)
 ! min_unflagged_fraction   =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 
 # definitions for pipeline options
@@ -94,7 +95,7 @@ pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 # pipeline substeps
 pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
-pipeline.steps.concat      =  [combine_target_map, ms_concat_target, ms_concat_target_map, aoflag, sortmap_target, do_sortmap_maps, dpppconcat]
+pipeline.steps.concat      =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, aoflag]
 pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal]
 
 
@@ -126,7 +127,6 @@ combine_data_target_map.control.mapfile_in                     =   createmap_tar
 #############################
 ## RM target correction    ##
 #############################
-
 # get ionex files once for every day that is covered by one of the input MSs
 h5imp_RMextract.control.type                                   =   pythonplugin
 h5imp_RMextract.control.executable                             =   {{ scripts }}/createRMh5parm.py
@@ -163,6 +163,14 @@ process_losoto_RMextract.argument.flags                        =   [{{ cal_solut
 #############################
 ## Apply calibrator sols   ##
 #############################
+# check potential station mismatch
+check_station_mismatch.control.kind                            =   plugin
+check_station_mismatch.control.type                            =   compareStationList
+check_station_mismatch.control.mapfile_in                      =   combine_data_target_map.output.mapfile
+check_station_mismatch.control.h5parmdb                        =   {{ cal_solutions }}
+check_station_mismatch.control.solset_name                     =   calibrator
+check_station_mismatch.control.filter                          =   {{ filter_baselines }}
+
 # run NDPPP on the target data to flag, transfer calibrator values, and average
 ndppp_prep_target.control.type                                 =   dppp
 ndppp_prep_target.control.max_per_node                         =   {{ num_proc_per_node_limit }}
@@ -172,20 +180,20 @@ ndppp_prep_target.control.inputkeys                            =   [input_file]
 ndppp_prep_target.argument.numthreads                          =   {{ max_dppp_threads }}
 ndppp_prep_target.argument.msin                                =   input_file
 ndppp_prep_target.argument.msin.datacolumn                     =   DATA
-ndppp_prep_target.argument.msin.baseline                       =   CS*&; RS*&; CS*&RS*
+ndppp_prep_target.argument.msin.baseline                       =   check_station_mismatch.output.filter
 ndppp_prep_target.argument.msout.datacolumn                    =   DATA
 ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
 ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_target.argument.steps                               =   [flag,elev,filter,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
+ndppp_prep_target.argument.steps                               =   [flag,elev,flagamp,applyclock,applyPA,applybandpass,applybeam,applyRM,count,avg]
 ndppp_prep_target.argument.flag.type                           =   preflagger
 ndppp_prep_target.argument.flag.baseline                       =   {{ flag_baselines }}
 ndppp_prep_target.argument.elev.type                           =   preflagger
 ndppp_prep_target.argument.elev.elevation                      =   0deg..20deg
-ndppp_prep_target.argument.filter.type                         =   filter
-ndppp_prep_target.argument.filter.baseline                     =   CS*, RS*&&
-ndppp_prep_target.argument.filter.remove                       =   true                     # fully kick out the international stations.
+# ndppp_prep_target.argument.filter.type                         =   filter
+# ndppp_prep_target.argument.filter.baseline                     =   
+# ndppp_prep_target.argument.filter.remove                       =   true                     # fully kick out the international stations.
 ndppp_prep_target.argument.flagamp.type                        =   preflagger
 ndppp_prep_target.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_target.argument.applyclock.type                     =   applycal
@@ -253,7 +261,7 @@ predict_ateam.control.max_per_node                             =   {{ num_proc_p
 predict_ateam.control.error_tolerance                          =   {{ error_tolerance }}
 predict_ateam.argument.numthreads                              =   {{ max_dppp_threads }}
 predict_ateam.argument.msin.datacolumn                         =   DATA
-predict_ateam.argument.msin.baseline                           =   [CR]S*&
+# predict_ateam.argument.msin.baseline                           =   {{ filter_baselines }}
 predict_ateam.argument.msout.datacolumn                        =   MODEL_DATA
 predict_ateam.argument.msout.storagemanager                    =   "Dysco"
 predict_ateam.argument.msout.storagemanager.databitrate        =   0
@@ -286,32 +294,6 @@ combine_target_map.control.method                              =   mapfile_all_t
 combine_target_map.control.mapfile_dir                         =   input.output.mapfile_dir
 combine_target_map.control.filename                            =   combine_target_map.mapfile
 combine_target_map.control.mapfile_in                          =   ndppp_prep_target.output.mapfile
-
-# virtually concatenate target subbands
-ms_concat_target.control.type                                  =   pythonplugin
-ms_concat_target.control.executable                            =   {{ scripts }}/concat_MS.py
-ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
-ms_concat_target.argument.filename                             =   concatmapfile.mapfile
-ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
-ms_concat_target.argument.flags                                =   [combine_target_map.output.mapfile,outputkey,{{ max_length }}]
-
-# convert the output of ms_concat_target into usable mapfiles
-ms_concat_target_map.control.kind                              =   plugin
-ms_concat_target_map.control.type                              =   mapfilenamesFromMapfiles
-ms_concat_target_map.control.mapfile_concatmap                 =   ms_concat_target.output.concatmapfile.mapfile
-
-# run aoflagger on the concatenated data
-aoflag.control.kind                                            =   recipe
-aoflag.control.type                                            =   executable_args
-aoflag.control.inplace                                         =   True
-aoflag.control.executable                                      =   {{ aoflagger }}
-aoflag.control.max_per_node                                    =   1
-aoflag.control.error_tolerance                                 =   {{ error_tolerance }}
-aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.concatmap
-aoflag.control.inputkey                                        =   msin
-aoflag.control.args_format                                     =   wsclean
-aoflag.argument.strategy                                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                          =   [-v,-combine-spws,msin]
 
 # sort the target data by frequency into groups so that NDPPP can concatenate them
 sortmap_target.control.type                                    =   pythonplugin
@@ -349,6 +331,39 @@ dpppconcat.argument.msout.storagemanager                       =   "Dysco"
 dpppconcat.argument.msout.storagemanager.databitrate           =   0
 dpppconcat.argument.steps                                      =   []
 
+# combine all entries into one mapfile, for the sortmap script
+combine_concat_map.control.kind                                =   plugin
+combine_concat_map.control.type                                =   createMapfile
+combine_concat_map.control.method                              =   mapfile_all_to_one
+combine_concat_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_concat_map.control.filename                            =   combine_concat_map.mapfile
+combine_concat_map.control.mapfile_in                          =   do_sortmap_maps.output.groupmap
+
+# virtually concatenate target subbands
+ms_concat_target.control.type                                  =   pythonplugin
+ms_concat_target.control.executable                            =   {{ scripts }}/concat_MS.py
+ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
+ms_concat_target.argument.filename                             =   concatmapfile.mapfile
+ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
+ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ max_length }}]
+
+# convert the output of ms_concat_target into usable mapfiles
+ms_concat_target_map.control.kind                              =   plugin
+ms_concat_target_map.control.type                              =   mapfilenamesFromMapfiles
+ms_concat_target_map.control.mapfile_concatmap                 =   ms_concat_target.output.concatmapfile.mapfile
+
+# run aoflagger on the concatenated data
+aoflag.control.kind                                            =   recipe
+aoflag.control.type                                            =   executable_args
+aoflag.control.inplace                                         =   True
+aoflag.control.executable                                      =   {{ aoflagger }}
+aoflag.control.max_per_node                                    =   1
+aoflag.control.error_tolerance                                 =   {{ error_tolerance }}
+aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.concatmap
+aoflag.control.inputkey                                        =   msin
+aoflag.control.args_format                                     =   wsclean
+aoflag.argument.strategy                                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
+aoflag.argument.flags                                          =   [-v,-combine-spws,msin]
 
 #############################
 ##     phasecal target     ##
@@ -428,7 +443,7 @@ gsmcal_solve.control.max_per_node                              =   {{ num_proc_p
 gsmcal_solve.argument.numthreads                               =   {{ max_dppp_threads }}
 gsmcal_solve.argument.msin                                     =   check_unflagged_map.output.mapfile
 gsmcal_solve.argument.msin.datacolumn                          =   DATA
-gsmcal_solve.argument.msin.baseline                            =   CS*&; RS*&; CS*&RS*
+# gsmcal_solve.argument.msin.baseline                            =   {{ filter_baselines }}
 gsmcal_solve.argument.msout.datacolumn                         =   CORRECTED_DATA
 gsmcal_solve.argument.steps                                    =   [filter,gaincal]
 gsmcal_solve.argument.filter.type                              =   filter
@@ -526,29 +541,30 @@ h5exp_gsmcal.argument.outh5parm                                =   {{ cal_soluti
 
 
 ################################
-## apply the calibration      ##
+## final step (EXPERIMENTAL)  ##
 ################################
-# # solve and apply are separate to allow to solve on a subset of baselines but apply to all
-# gsmcal_apply.control.type                                      =   dppp
-# gsmcal_apply.control.error_tolerance                           =   {{ error_tolerance }}
-# gsmcal_apply.control.inplace                                   =   True
-# gsmcal_apply.control.max_per_node                              =   {{ num_proc_per_node_limit }}
-# gsmcal_apply.argument.numthreads                               =   {{ max_dppp_threads }}
-# gsmcal_apply.argument.msin                                     =   check_unflagged_map.output.mapfile
-# gsmcal_apply.argument.msin.datacolumn                          =   DATA
-# gsmcal_apply.argument.msout.datacolumn                         =   CORRECTED_DATA
-# gsmcal_apply.argument.msout.writefullresflag                   =   False
-# gsmcal_apply.argument.steps                                    =   [applycal]
-# # gsmcal_apply.argument.msout.storagemanager                     =   "Dysco"
-# # gsmcal_apply.argument.msout.storagemanager.databitrate         =   0
-# # gsmcal_apply.argument.msout.storagemanager.weightbitrate       =   12
-# # gsmcal_apply.argument.msout.storagemanager.distribution        =   "TruncatedGaussian"
-# # gsmcal_apply.argument.msout.storagemanager.disttruncation      =   1.5
-# # gsmcal_apply.argument.msout.storagemanager.normalization       =   "AF"
-# gsmcal_apply.argument.applycal.type                            =   applycal
-# gsmcal_apply.argument.applycal.correction                      =   phase000
-# gsmcal_apply.argument.applycal.parmdb                          =   {{ cal_solutions }}
-# gsmcal_apply.argument.applycal.solset                          =   target
+# solve/store direction-independent phase-only self-calibration corrected UV-data to a fully Dysco compressed new MS
+gsmcal_solve2.control.type                                     =   dppp
+gsmcal_solve2.control.error_tolerance                          =   {{ error_tolerance }}
+gsmcal_solve2.control.max_per_node                             =   {{ num_proc_per_node_limit }}
+gsmcal_solve2.argument.numthreads                              =   {{ max_dppp_threads }}
+gsmcal_solve2.argument.msin                                    =   check_unflagged_map.output.mapfile
+gsmcal_solve2.argument.msin.datacolumn                         =   DATA
+gsmcal_solve2.argument.msout.storagemanager                    =   "Dysco"
+gsmcal_solve2.argument.steps                                   =   [filter,gaincal]
+gsmcal_solve2.argument.filter.type                             =   filter
+gsmcal_solve2.argument.filter.blrange                          =   [150, 999999]
+gsmcal_solve2.argument.gaincal.type                            =   gaincal
+gsmcal_solve2.argument.gaincal.maxiter                         =   50
+gsmcal_solve2.argument.gaincal.caltype                         =   phaseonly
+gsmcal_solve2.argument.gaincal.nchan                           =   0
+gsmcal_solve2.argument.gaincal.solint                          =   1
+gsmcal_solve2.argument.gaincal.sourcedb                        =   expand_sourcedb_target.output.mapfile
+gsmcal_solve2.argument.gaincal.parmdb                          =   gsmcal_parmmap.output.mapfile
+gsmcal_solve2.argument.gaincal.usebeammodel                    =   True
+gsmcal_solve2.argument.gaincal.usechannelfreq                  =   True
+gsmcal_solve2.argument.gaincal.beammode                        =   array_factor
+gsmcal_solve2.argument.gaincal.applysolution                   =   True
 
 
 ########################################################
