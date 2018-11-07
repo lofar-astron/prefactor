@@ -93,7 +93,7 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 pipeline.steps             =  [prep, {{ substep }} concat, gsmcal]
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
+pipeline.steps.prep        =  [mk_targ_values_dir, createmap_target, combine_data_target_map, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, check_station_mismatch, ndppp_prep_target]
 pipeline.steps.clipATeam   =  [create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, predict_ateam, ateamcliptar]
 pipeline.steps.concat      =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, aoflag]
 pipeline.steps.gsmcal      =  [check_unflagged, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, gsmcal_solve, h5imp_gsmcal, prepare_losoto_gsmcal, process_losoto_gsmcal, h5exp_gsmcal]
@@ -166,7 +166,7 @@ process_losoto_RMextract.argument.flags                        =   [{{ cal_solut
 # check potential station mismatch
 check_station_mismatch.control.kind                            =   plugin
 check_station_mismatch.control.type                            =   compareStationList
-check_station_mismatch.control.mapfile_in                      =   combine_data_target_map.output.mapfile
+check_station_mismatch.control.mapfile_in                      =   createmap_target.output.mapfile
 check_station_mismatch.control.h5parmdb                        =   {{ cal_solutions }}
 check_station_mismatch.control.solset_name                     =   calibrator
 check_station_mismatch.control.filter                          =   {{ filter_baselines }}

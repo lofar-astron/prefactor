@@ -1,6 +1,7 @@
 from lofarpipe.support.data_map import DataMap, DataProduct
 import pyrap.tables as pt
 from losoto.h5parm import h5parm
+import logging
 
 def plugin_main(args, **kwargs):
     """
@@ -23,14 +24,16 @@ def plugin_main(args, **kwargs):
     result : dict
         Output station names to filter
     """
-    mapfile_in     = kwargs['infile']
+    mapfile_in     = kwargs['mapfile_in']
     h5parmdb       = kwargs['h5parmdb']
     solset_name    = kwargs['solset_name']
     filter         = kwargs['filter']
     data           = DataMap.load(mapfile_in)
+    mslist         = [data[i].file for i in xrange(len(data))]
        
+   
     
-    mslist      = MSfiles.lstrip('[').rstrip(']').replace(' ','').replace("'","").split(',')
+    #mslist      = MSfiles.lstrip('[').rstrip(']').replace(' ','').replace("'","").split(',')
     
     if len(mslist) == 0:
         raise ValueError("Did not find any existing directory in input MS list!")
@@ -57,7 +60,7 @@ def plugin_main(args, **kwargs):
         pass
     
     ## return results
-    result = {'filter':filter}
-    return filter
+    result = {'filter':str(filter)}
+    return result
     
     pass    
