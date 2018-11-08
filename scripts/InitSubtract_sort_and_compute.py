@@ -301,6 +301,9 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
                 print "InitSubtract_sort_and_compute.py: Using y-axis stretch of:",y_axis_stretch
                 y_axis_stretch_lowres = y_axis_stretch
                 y_axis_stretch_highres = y_axis_stretch
+        else:
+            y_axis_stretch_lowres = 1.0
+            y_axis_stretch_highres = 1.0
 
         # Adjust sizes so that we get the correct ones below
         if not apply_y_axis_stretch_highres:

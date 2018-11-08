@@ -129,6 +129,8 @@ do_magic.argument.fieldsize_highres             =  {{ fieldsize_highres }}
 do_magic.argument.fieldsize_lowres              =  {{ fieldsize_lowres }}
 do_magic.argument.image_padding                 =  {{ image_padding }}
 do_magic.argument.calc_y_axis_stretch           =  False
+do_magic.argument.apply_y_axis_stretch_highres  =  False
+do_magic.argument.apply_y_axis_stretch_lowres   =  True
 
 # convert the output of do_magic into usable mapfiles, len = 1 / different
 do_magic_maps.control.kind                           =  plugin
