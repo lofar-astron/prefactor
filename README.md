@@ -21,9 +21,8 @@ There are several pipeline parsets in this repository:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
 * Initial-Subtract-Fast.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
-* Initial-Subtract-IDG.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean
-* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
-* Initial-Subtract-Deep.parset : Same as Initial-Subtract.parset, but it does only one image of the full bandwidth instead of imaging the bands separately.
+* Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean
+* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
 
 Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
