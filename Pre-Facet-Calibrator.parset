@@ -32,7 +32,7 @@
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
 ! rfistrategy              =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
-! max2interpolate          =  100                                    ## amount of channels in which interpolation should be performed for deriving the bandpass
+! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
 
 # definitions for pipeline options
@@ -246,7 +246,7 @@ predict_cal.argument.msout.storagemanager                   =   "Dysco"
 predict_cal.argument.msout.storagemanager.databitrate       =   0
 predict_cal.argument.steps                                  =   [predict]
 predict_cal.argument.predict.type                           =   predict
-predict_cal.argument.predict.sourcedb                       =   expand_sourcedb.output.mapfile
+predict_cal.argument.predict.sourcedb                       =   sourcedb
 predict_cal.argument.predict.sources                        =   []
 predict_cal.argument.predict.usebeammodel                   =   False # TODO: put to true for large sky
 predict_cal.argument.predict.usechannelfreq                 =   False
@@ -302,8 +302,8 @@ calib_cal.argument.msin.datacolumn                          =   SMOOTHED_DATA
 calib_cal.argument.steps                                    =   [solve]
 calib_cal.argument.solve.type                               =   ddecal
 calib_cal.argument.solve.mode                               =   rotation+diagonal
-calib_cal.argument.solve.h5parm                             =   calib_cal_parmmap.output.mapfile
-calib_cal.argument.solve.sourcedb                           =   expand_sourcedb.output.mapfile
+calib_cal.argument.solve.h5parm                             =   h5parm
+calib_cal.argument.solve.sourcedb                           =   sourcedb
 calib_cal.argument.solve.uvlambdamin                        =   300
 calib_cal.argument.solve.maxiter                            =   50
 calib_cal.argument.solve.nchan                              =   1
