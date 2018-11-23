@@ -814,7 +814,7 @@ prepare_losoto_ion.control.plotPr3.refAnt                   =   {{ refant }}
 prepare_losoto_ion.control.plotPr3.minmax                   =   [-3.14,3.14]
 prepare_losoto_ion.control.flagstation.operation            =   FLAGSTATION
 prepare_losoto_ion.control.flagstation.soltab               =   sol000/phase000
-prepare_losoto_ion.control.flagstation.mode                 =   phaseresid
+prepare_losoto_ion.control.flagstation.mode                 =   resid
 prepare_losoto_ion.control.flagstation.soltabExport         =   clock000
 
 # do the processing on the LoSoTo file
