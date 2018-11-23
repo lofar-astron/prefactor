@@ -33,6 +33,7 @@
 ! rfistrategy              =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
 ! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
+! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
 
 # definitions for pipeline options
@@ -42,7 +43,6 @@
 ! 3rd_order                =  ct3,plotTEC3,residuals3                ## Do not change! Only cal_ion should be edited if needed
 ! initial_flagging         =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
 ! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects
-
 
 ##########################################
 ### parameters for pipeline performance ##
@@ -93,7 +93,7 @@ pipeline.steps             =  [prep, PA, FR, bandpass, ion]
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map, interp_cal]
 
 pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -139,7 +139,7 @@ ndppp_prep_cal.argument.msout.writefullresflag              =   False
 ndppp_prep_cal.argument.msout.overwrite                     =   True
 ndppp_prep_cal.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_cal.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_cal.argument.steps                               =   [{{ initial_flagging }},avg]
+ndppp_prep_cal.argument.steps                               =   [{{ initial_flagging }},interp,avg]
 ndppp_prep_cal.argument.flag.type                           =   preflagger
 ndppp_prep_cal.argument.flag.baseline                       =   {{ flag_baselines }}
 ndppp_prep_cal.argument.flagedge.type                       =   preflagger
@@ -152,6 +152,8 @@ ndppp_prep_cal.argument.elev.elevation                      =   0deg..20deg
 # ndppp_prep_cal.argument.filter.type                         =   filter
 # ndppp_prep_cal.argument.filter.baseline                     =   CS*, RS*&&
 # ndppp_prep_cal.argument.filter.remove                       =   true                     # fully kick out the international stations.
+ndppp_prep_cal.argument.interp.type                         =   interpolate
+ndppp_prep_cal.argument.interp.windowsize                   =   {{ interp_windowsize }}
 ndppp_prep_cal.argument.avg.type                            =   average
 ndppp_prep_cal.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_cal.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
@@ -257,7 +259,7 @@ calib_cal_parmmap.control.kind                              =   plugin
 calib_cal_parmmap.control.type                              =   createMapfile
 calib_cal_parmmap.control.method                            =   add_suffix_to_file
 calib_cal_parmmap.control.mapfile_in                        =   ndppp_prep_cal.output.mapfile
-calib_cal_parmmap.control.add_suffix_to_file                =   .h5
+calib_cal_parmmap.control.add_suffix_to_file                =   /instrument.h5
 calib_cal_parmmap.control.mapfile_dir                       =   input.output.mapfile_dir
 calib_cal_parmmap.control.filename                          =   calib_cal_h5parms.mapfile
 
@@ -268,6 +270,23 @@ h5imp_cal_map.control.mapfile_in                            =   calib_cal_parmma
 h5imp_cal_map.control.mapfile_dir                           =   input.output.mapfile_dir
 h5imp_cal_map.control.filename                              =   h5imp_cal_map.mapfile
 
+# interpolate after flagging but before smoothing
+interp_cal.control.type                                     =   dppp
+interp_cal.control.inplace                                  =   True
+interp_cal.control.max_per_node                             =   {{ num_proc_per_node_limit }}
+interp_cal.control.error_tolerance                          =   {{ error_tolerance }}
+interp_cal.control.mapfile_in                               =   ndppp_prep_cal.output.mapfile
+interp_cal.control.inputkey                                 =   msfile
+interp_cal.argument.msin                                    =   msfile
+interp_cal.argument.numthreads                              =   {{ max_dppp_threads }}
+interp_cal.argument.msin.datacolumn                         =   DATA
+interp_cal.argument.msout.datacolumn                        =   INTERP_DATA
+interp_cal.argument.msout.storagemanager                    =   "Dysco"
+interp_cal.argument.msout.storagemanager.databitrate        =   0
+interp_cal.argument.steps                                   =   [interp]
+interp_cal.argument.interp.type                             =   interpolate
+interp_cal.argument.interp.windowsize                       =   {{ interp_windowsize }}
+
 # baseline-dependent smooting
 smooth_data.control.type                                    =   executable_args
 smooth_data.control.inplace                                 =   True
@@ -276,7 +295,7 @@ smooth_data.control.error_tolerance                         =   {{ error_toleran
 smooth_data.control.executable                              =   {{ scripts }}/BLsmooth.py
 smooth_data.control.mapfile_in                              =   ndppp_prep_cal.output.mapfile
 smooth_data.control.inputkey                                =   msin
-smooth_data.argument.flags                                  =   [-S,{{ do_smooth }},-r,-i,DATA,-o,SMOOTHED_DATA,msin]
+smooth_data.argument.flags                                  =   [-S,{{ do_smooth }},-r,-i,INTERP_DATA,-o,SMOOTHED_DATA,msin]
 
 # baseline-dependent smooting
 smooth_corrected.control.type                               =   executable_args
@@ -830,10 +849,10 @@ apply_PA.control.error_tolerance                            =   {{ error_toleran
 apply_PA.control.inplace                                    =   True
 apply_PA.control.max_per_node                               =   {{ num_proc_per_node_limit }}
 apply_PA.control.mapfile_in                                 =   ndppp_prep_cal.output.mapfile
-apply_PA.control.inputkeys                                  =   msfile
+apply_PA.control.inputkey                                   =   msfile
 apply_PA.argument.msin                                      =   msfile
 apply_PA.argument.numthreads                                =   {{ max_dppp_threads }}
-apply_PA.argument.msin.datacolumn                           =   DATA
+apply_PA.argument.msin.datacolumn                           =   INTERP_DATA
 apply_PA.argument.msout.datacolumn                          =   CORRECTED_DATA
 apply_PA.argument.msout.storagemanager                      =   "Dysco"
 apply_PA.argument.msout.storagemanager.databitrate          =   0
@@ -848,7 +867,7 @@ apply_bandpass.control.error_tolerance                      =   {{ error_toleran
 apply_bandpass.control.inplace                              =   True
 apply_bandpass.control.max_per_node                         =   {{ num_proc_per_node_limit }}
 apply_bandpass.control.mapfile_in                           =   ndppp_prep_cal.output.mapfile
-apply_bandpass.control.inputkeys                            =   msfile
+apply_bandpass.control.inputkey                             =   msfile
 apply_bandpass.argument.msin                                =   msfile
 apply_bandpass.argument.numthreads                          =   {{ max_dppp_threads }}
 apply_bandpass.argument.msin.datacolumn                     =   CORRECTED_DATA
@@ -867,7 +886,7 @@ apply_beam.control.error_tolerance                          =   {{ error_toleran
 apply_beam.control.inplace                                  =   True
 apply_beam.control.max_per_node                             =   {{ num_proc_per_node_limit }}
 apply_beam.control.mapfile_in                               =   ndppp_prep_cal.output.mapfile
-apply_beam.control.inputkeys                                =   msfile
+apply_beam.control.inputkey                                 =   msfile
 apply_beam.argument.msin                                    =   msfile
 apply_beam.argument.numthreads                              =   {{ max_dppp_threads }}
 apply_beam.argument.msin.datacolumn                         =   CORRECTED_DATA
@@ -887,10 +906,9 @@ apply_FR.control.error_tolerance                            =   {{ error_toleran
 apply_FR.control.inplace                                    =   True
 apply_FR.control.max_per_node                               =   {{ num_proc_per_node_limit }}
 apply_FR.control.mapfile_in                                 =   ndppp_prep_cal.output.mapfile
-apply_FR.control.inputkeys                                  =   msfile
+apply_FR.control.inputkey                                   =   msfile
 apply_FR.argument.msin                                      =   msfile
 apply_FR.argument.numthreads                                =   {{ max_dppp_threads }}
-apply_FR.argument.msin                                      =   ndppp_prep_cal.output.mapfile
 apply_FR.argument.msin.datacolumn                           =   CORRECTED_DATA
 apply_FR.argument.msout.datacolumn                          =   CORRECTED_DATA
 apply_FR.argument.msout.storagemanager                      =   "Dysco"
