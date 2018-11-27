@@ -58,7 +58,10 @@ The pipeline consists of the following steps:
     Run DPPP to concatenate the data. Concatenating the data speeds up gridding
     and degridding with IDG by factors of several.
 ``wsclean_high_deep``
-    Image the data with WSClean+IDG.
+    Image the data with WSClean+IDG. A typical HBA image looks like the one below.
+
+    .. image:: image_pipeline_example.png
+
 ``copy_output_images``
     Copy the image to the output filenames expected for feedback.
 ``make_image_metadata``
