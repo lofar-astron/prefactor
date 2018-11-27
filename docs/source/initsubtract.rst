@@ -5,7 +5,8 @@ Intial-subtract pipeline
 
 This pipeline images the full FoV (and 1st side-lobe) at two resolutions and at
 multiple frequencies, generating a sky-model and subtracting it from the
-visibilities. The parset is named one of ``Initial-Subtract.parset``,
+visibilities. This pipeline need only be run if you want to use Factor to do the
+direction-dependent imaging. The parset is named one of ``Initial-Subtract.parset``,
 ``Initial-Subtract-IDG.parset``, or ``Initial-Subtract-IDG-LowMemory.parset``,
 depending on whether one wants to use IDG with WSClean. IDG is generally much
 faster if you have GPUs.
@@ -90,11 +91,105 @@ Steps
 
     .. image:: initsub_high_image.png
 
+``mask_high``
+    Make masks for the high-res images. Masks are used to exclude artifacts from
+    being included in the subtract steps.
+``mk_inspect_dir``
+    Create the inspection_directory if needed.
+``copy_mask``
+    Copy the mask images to where we want them.
+``plot_im_high``
+    Plot the high-res image and mask as png files. Such an image is show above.
+``move_high``
+    Move the high-res images to where we want them.
+``create_maxsize_high_map``
+    Make a mapfile with maximum image size.
+``pad_model_high``
+    Pad the model images to a uniform size.
+``pad_mask_high``
+    Pad the mask images to a uniform size.
+``combine_model_high_mapfile``
+    Compress the model_high mapfile.
+``expand_model_high``
+    Expand the model_high mapfile so that there is one entry for every band.
+``combine_mask_high_mapfile``
+    Compress the mask_high mapfile.
+``expand_mask_high``
+    Expand the mask high mapfile so that there is one entry for every band.
+``fits_to_bbs_high``
+    Convert high-res model images to sky models that are understood by DPPP.
+``make_sourcedb_high``
+    Make sourcedbs from the high-res sky models.
+``expand_sourcedb_high``
+    Expand the sourcedb mapfile so that there is one entry for every file.
+``subtract_high``
+    Predict, corrupt, and subtract the high-resolution model. The subtraction is
+    done from the DATA column to the SUBTRACTED_DATA_HIGH column. The SUBTRACTED_DATA_HIGH
+    column is imaged later in the ``wsclean_low`` step to pick up any emission missed in
+    the high-resolution image.
+``select_correct_high_files``
+    Select files spread over the full bandwidth for imaging.
+``select_h5parm``
+    Adjust the dir-indep h5parm mapfile to match the selected bands.
+``select_freqstep``
+    Adjust the freqstep mapfile to match the selected bands.
+``select_timestep``
+    Adjust the timestep mapfile to match the selected bands.
+``correct_high``
+    Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging.
+``regroup_map``
+    Re-group mapfile to have one group per band.
+``select_low_size``
+    Adjust the low size mapfile to match the selected bands.
+``select_low_nwavelengths``
+    Adjust the low nwavelengths mapfile to match the selected bands.
 ``wsclean_low``
-    Image the data with WSClean to make the low-resolution images. The images will
-    automatically be stretched along the y-axis to account for the elongation of the
-    primary beam as a function of average elevation. A typical image at
-    lower Declination (+7 degrees) looks like the one below.
+    Image the data (after subtraction of the high-resolution model) with WSClean
+    to make the low-resolution images. The images will automatically be
+    stretched along the y-axis to account for the elongation of the primary beam
+    as a function of average elevation. A typical image at lower Declination (+7
+    degrees) looks like the one below.
 
     .. image:: initsub_low_image.png
 
+``mask_low``
+    Make masks for the low-res images. Masks are used to exclude artifacts from
+    being included in the subtract steps.
+``plot_im_low``
+    Plot the low-res image and mask as png files. Such an image is show above.
+``move_low``
+    Move the low-res images to where we want them.
+``create_maxsize_low_map``
+    Make a mapfile with maximum image size.
+``pad_model_low``
+    Pad the model images to a uniform size.
+``pad_mask_low``
+    Pad the mask images to a uniform size.
+``combine_model_low_mapfile``
+    Compress the model_low mapfile.
+``expand_model_low``
+    Expand the model_low mapfile so that there is one entry for every band.
+``combine_mask_low_mapfile``
+    Compress the mask_low mapfile.
+``expand_mask_low``
+    Expand the mask low mapfile so that there is one entry for every band.
+``fits_to_bbs_low``
+    Convert low-res model images to sky models.
+``make_sourcedb_low``
+    Make sourcedbs from the low-res sky models.
+``expand_sourcedb_low``
+    Expand the sourcedb mapfile so that there is one entry for every file.
+``subtract_low``
+    Predict, corrupt, and subtract the low-resolution model. The subtraction is
+    done from the SUBTRACTED_DATA_HIGH column to the SUBTRACTED_DATA_ALL column.
+    Therefore, the SUBTRACTED_DATA_ALL column contains the final residual data needed
+    for Factor.
+``merge``
+    Merge the high-res and low-res sky models together. These sky models are used
+    by Factor to add sources back before calibration.
+``copy_skymodels``
+    Copy the merged sky models to the directory with the input data.
+``createmap_plots``
+    Create a map with the generated plots.
+``move_plots``
+    Move the plots to the inpection directory.
