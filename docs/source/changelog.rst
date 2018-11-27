@@ -8,6 +8,8 @@ Version 3.0
 -----------
 
     * Major overhaul of calibrator and target pipelines
+    * Addition of production versions of calibrator, target, and image pipelines
+    * Documentation moved to http://www.astron.nl/citt/prefactor
 
 Version 2.0
 -----------
