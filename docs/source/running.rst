@@ -16,8 +16,8 @@ genericpipeline script, e.g.::
 
 While the pipeline runs, in the specified ``runtime_directory`` (see previous
 section) new files are generated in a directory named after the parset name (e.g.,
-if you are running ``My_prefactor_calibrator.parset`` a dir ``My_prefactor_calibrator``
-will appear in your ``runtime_directory``)::
+if you are running ``My_prefactor_calibrator.parset`` a directory named
+``My_prefactor_calibrator`` will appear in your ``runtime_directory``)::
 
     $ ls My_prefactor_calibrator/
     logs  mapfiles parsets statefile

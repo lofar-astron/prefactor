@@ -1,6 +1,6 @@
 .. _help:
 
-Getting Help
+Getting help
 ============
 
 Bugs that are encountered during a Prefactor run can be reported on the
