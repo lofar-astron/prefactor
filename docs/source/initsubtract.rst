@@ -3,8 +3,12 @@
 Intial-subtract pipeline
 ========================
 
-This pipeline images the full FoV (and 1st side-lobe), generating a sky-model
-and subtracting it from the visibilities.
+This pipeline images the full FoV (and 1st side-lobe) at two resolutions and at
+multiple frequencies, generating a sky-model and subtracting it from the
+visibilities. The parset is named one of ``Initial-Subtract.parset``,
+``Initial-Subtract-IDG.parset``, or ``Initial-Subtract-IDG-LowMemory.parset``,
+depending on whether one wants to use IDG with WSClean. IDG is generally much
+faster if you have GPUs.
 
 .. note::
 

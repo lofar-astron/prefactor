@@ -3,8 +3,9 @@
 Image pipeline
 ==============
 
-This pipeline produces an image of the full FOV, using the full bandwidth. It is intended primarily
-for use in production.
+This pipeline produces an image of the full FOV, using the full bandwidth. The
+parset is named ``Pre-Facet-Image.parset``. It is intended primarily for use in
+production.
 
 Options
 -------
