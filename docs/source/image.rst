@@ -6,7 +6,8 @@ Image pipeline
 This pipeline produces an image of the full FOV, using the full bandwidth. It is intended primarily
 for use in production.
 
-The options for this pipeline are as follows:
+Options
+-------
 
 ``! data_input_filenames``
     List of input MS filenames (full path).
@@ -35,7 +36,8 @@ The options for this pipeline are as follows:
     Output image root name. The image will be named ``image_rootname-MFS-image.fits``.
 
 
-The pipeline consists of the following steps:
+Steps
+-----
 
 ``create_ms_map``
     Generate a mapfile of all the target data. The files must be supplied as a
