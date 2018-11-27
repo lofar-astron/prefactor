@@ -3,7 +3,7 @@
 Editing the pipeline parset
 ===========================
 
-The pipeline parsets available in the prefactor directory (those files ending
+The pipeline parsets available in the Prefactor directory (those files ending
 with .parset) are templates of genericpipeline parsets and need some small
 editing before they can be run. To avoid confusion you should make a copy of the
 parset that you want to run and give it a descriptive name. All parameters that

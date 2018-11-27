@@ -1,6 +1,6 @@
 .. _capabilities:
 
-Capabilities of prefactor
+Capabilities of Prefactor
 =========================
 
 Prefactor derives and corrects for direction-independent effects in LOFAR data,
