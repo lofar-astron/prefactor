@@ -1,5 +1,5 @@
 ##################################################################################
-# Initial-Subtract-Fast Pipeline                                                 #
+# Initial-Subtract Pipeline                                                      #
 #                                                                                #
 # Pipeline to do the initial subtraction of all sources:                         #
 # - requires LOFAR software version  >= 2.17                                     #
@@ -21,22 +21,8 @@
 #   - the LOFAR beam towards the phase center corrected                          #
 # - in the CORRECTED_DATA column:                                                #
 #   - the DATA calibrated with the gains                                         #
-# - the direction-indepndent h5parm                                                #
+# - the direction-indepndent h5parm                                              #
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.             #
-#                                                                                #
-# Fast version:                                                                  #
-# - ~ 6 times faster than the normal Initial-Subtract pipeline with default      #
-#   parameters                                                                   #
-# - only a part of the full bandwidth is imaged and model components are         #
-#   interpolated to all frequencies                                              #
-# - only one high-res and one low-res image is made for each band imaged, with   #
-#   a mask used to filter the clean components so that they are (mostly) real    #
-#   sources                                                                      #
-# - WSClean's baseline-dependent averaging is used to speed up imaging           #
-# - WSClean's auto masking is used to reduce the number of artifacts included    #
-#   in the subtracted model                                                      #
-# - Rectangular images are made to speed up imaging at lower declinations (where #
-#   the primary beam is elongated N-S)                                           #
 ##################################################################################
 
 ##########################################
