@@ -1,7 +1,7 @@
 .. _parset:
 
-Edit the pipeline parset
-========================
+Editing the pipeline parset
+===========================
 
 The pipeline parsets available in the prefactor directory (those files ending
 with .parset) are templates of genericpipeline parsets and need some small
