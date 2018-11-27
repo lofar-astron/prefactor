@@ -54,11 +54,3 @@ The Prefactor Pipelines
    target
    image
    initsubtract
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
