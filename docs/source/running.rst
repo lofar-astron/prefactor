@@ -11,7 +11,7 @@ genericpipeline script, e.g.::
 .. note::
 
     The -d option is recommended: it does make the log-files extremely large
-    (many megabytes), but without it often the important information why a
+    (many megabytes), but without it, often the important information as to why a
     pipeline run fails is not included.
 
 While the pipeline runs, in the specified ``runtime_directory`` (see previous
@@ -31,13 +31,13 @@ These contain all the output from the processes the pipeline called and
 diagnostic information about the pipeline. So they are useful to follow the
 status of the process and possibly identify reasons why a process crashed.
 
-While running the pipeline writes a statefile in the runtime_directory, with all
+While running the pipeline writes a statefile in the ``runtime_directory``, with all
 the step which were successfully executed. If the pipeline stops for whatever
 reason, you can re-run the same command and it will skip all the steps that are
 already done and only work on those which are still missing.
 
-The intermediate data files of the pipeline are written in the working_directory
-specified in the pipeline.cfg.
+The intermediate data files of the pipeline are written in the ``working_directory``
+specified in the ``pipeline.cfg``.
 
 
 Stopping and re-starting the pipeline
