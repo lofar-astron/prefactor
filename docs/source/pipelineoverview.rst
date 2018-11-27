@@ -1,7 +1,7 @@
 .. _pipeline_overview:
 
-The pipelines of prefactor
-==========================
+Pipeline overview
+=================
 
 Prefactor contains pipeline parsets for the tasks needed to prepare the data for facet calibration:
 
