@@ -6,7 +6,7 @@
 Prefactor: Preprocessing for Facet Calibration for LOFAR
 ========================================================
 
-Preactor consists of parsets for the genericpipeline (see
+Preactor consists of parsets and Python scripts for the genericpipeline (see
 http://www.astron.nl/citt/genericpipeline) that do the first calibration of
 LOFAR data. Originally in order to prepare said data for the Factor facet
 calibration, but also useful if you don't plan to run Factor.
