@@ -6,10 +6,21 @@
 Prefactor: Preprocessing for Facet Calibration for LOFAR
 ========================================================
 
-Preactor consists of parsets and Python scripts for the genericpipeline (see
-http://www.astron.nl/citt/genericpipeline) that do the first calibration of
-LOFAR data. Originally in order to prepare said data for the Factor facet
-calibration, but also useful if you don't plan to run Factor.
+**prefactor** is a pipeline to correct for various instrumental and ionospheric efforts in both **LOFAR HBA** an **LOFAR LBA** observations.
+
+It includes:
+
+- removal of clock offsets between core and remote stations (using clock-TEC separation)
+- correction of the polarization alignment between XX and YY
+- robust time-independent bandpass correction
+- ionospheric RM corrections with `RMextract`_
+- removal of the element beam
+- advanced flagging and interpolation of bad data
+- mitigation of broad-band RFI and bad stations
+- direction-independent phase correction of the target, using a global sky model from `TGSS ADR`_
+- detailled diagnostics
+
+It will prepare your data so that you will be able to use any direction-dependent calibration software, like `factor`_ or `killMS`_.
 
 Introduction
 ------------
@@ -54,3 +65,9 @@ The Prefactor Pipelines
    target
    image
    initsubtract
+
+
+.. _TGSS ADR: https://http://tgssadr.strw.leidenuniv.nl/
+.. _RMextract: https://github.com/lofar-astron/RMextract/
+.. _factor: https://github.com/lofar-astron/factor/
+.. _killMS: https://github.com/saopicc/killMS/
