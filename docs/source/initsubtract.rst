@@ -1,7 +1,7 @@
 .. _initsubtract_pipeline:
 
-Intial-subtract pipeline
-========================
+Initial-subtract pipeline
+=========================
 
 This pipeline images the full FoV (and 1st side-lobe) at two resolutions and at
 multiple frequencies, generating a sky-model and subtracting it from the
