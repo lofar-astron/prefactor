@@ -30,7 +30,7 @@
 ! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! filter_baselines         =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
-! rfistrategy              =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
+! rfistrategy              =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
 ! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
@@ -159,7 +159,7 @@ ndppp_prep_cal.argument.avg.timeresolution                  =   {{ avg_timeresol
 ndppp_prep_cal.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
 ndppp_prep_cal.argument.flagamp.type                        =   preflagger
 ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
-# ndppp_prep_cal.argument.demix.type                          =   demixer 
+# ndppp_prep_cal.argument.demix.type                          =   demixer
 # ndppp_prep_cal.argument.demix.demixfreqstep                 =   16
 # ndppp_prep_cal.argument.demix.demixtimestep                 =   10
 # ndppp_prep_cal.argument.demix.ignoretarget                  =   True
@@ -202,7 +202,7 @@ aoflag.control.error_tolerance                              =   {{ error_toleran
 aoflag.control.mapfile_in                                   =   ms_concat_map.output.concatmap
 aoflag.control.inputkey                                     =   msin
 aoflag.control.args_format                                  =   wsclean
-aoflag.argument.strategy                                    =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
+aoflag.argument.strategy                                    =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
 aoflag.argument.flags                                       =   [-v,-memory-read,-combine-spws,msin]
 
 # find automatically the calibrator sky model
