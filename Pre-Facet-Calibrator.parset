@@ -36,12 +36,18 @@
 ! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
 
+# demixing options (only used if demix step is added to the prep_cal_strategy variable)
+! demix_sources            =  [CasA,CygA]                            ## choose sources to demix (provided as list)
+! demix_target             =  ""                                     ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
+! demix_freqstep           =  16                                     ## number of channels to average when demixing.
+! demix_timestep           =  10                                     ## number of time slots to average when demixing
+
 # definitions for pipeline options
 ! default_flagging         =  flag,elev,flagamp                      ## regular flagging after pre-processing by the observatory pipelines
-! raw_flagging             =  flagedge,aoflag,{{ default_flagging }} ## full flagging (usually necessary for raw data)
+! raw_flagging             =  flagedge,aoflag,{{ default_flagging }} ## full flagging (usually only necessary for raw data)
 ! 1st_order                =  ct,plotTEC,residuals                   ## Do not change! Only cal_ion should be edited if needed
 ! 3rd_order                =  ct3,plotTEC3,residuals3                ## Do not change! Only cal_ion should be edited if needed
-! initial_flagging         =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
+! prep_cal_strategy        =  {{ default_flagging }},demix           ## choose {{ raw_flagging }} if you process raw data, add demix if you want to enable demixing (use comma to separate)
 ! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects
 
 ##########################################
@@ -93,7 +99,7 @@ pipeline.steps             =  [prep, PA, FR, bandpass, ion]
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map, interp_cal]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map, interp_cal]
 
 pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -101,9 +107,9 @@ pipeline.steps.bandpass    =  [smooth_corrected, calib_cal, h5imp_cal_bandpass, 
 pipeline.steps.ion         =  [smooth_corrected, calib_cal, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
 
 
-#############################
-## Prepare calibrator part ##
-#############################
+###############################
+## Prepare calibrator part 1 ##
+###############################
 # create the cal_values_directory if needed
 mk_cal_values_dir.control.kind                              =   plugin
 mk_cal_values_dir.control.type                              =   makeDirectory
@@ -118,6 +124,10 @@ createmap_cal.control.filename                              =   createmap_cal.ma
 createmap_cal.control.folder                                =   {{ cal_input_path }}
 createmap_cal.control.pattern                               =   {{ cal_input_pattern }}
 
+
+#############################
+## Prepare for demixing    ##
+#############################
 # generate a mapfile of all the calibrator data
 createmap_instcal.control.kind                              =   plugin
 createmap_instcal.control.type                              =   changeMapfile
@@ -125,6 +135,38 @@ createmap_instcal.control.mapfile_in                        =   createmap_cal.ou
 createmap_instcal.control.join_files                        =   instrument
 createmap_instcal.control.newname                           =   createmap_instcal.mapfile
 
+# create a mapfile with the A-Team skymodel, length = 1
+create_ateam_model_map.control.kind                         =   plugin
+create_ateam_model_map.control.type                         =   addListMapfile
+create_ateam_model_map.control.hosts                        =   ['localhost']
+create_ateam_model_map.control.files                        =   [ {{ prefactor_directory }}/skymodels/Ateam_LBA_CC.skymodel ]
+create_ateam_model_map.control.mapfile_dir                  =   input.output.mapfile_dir
+create_ateam_model_map.control.filename                     =   ateam_model_name.mapfile
+
+# make sourcedbs from the A-Team skymodel, length = 1
+make_sourcedb_ateam.control.kind                            =   recipe
+make_sourcedb_ateam.control.type                            =   executable_args
+make_sourcedb_ateam.control.executable                      =   {{ lofar_directory }}/bin/makesourcedb
+make_sourcedb_ateam.control.error_tolerance                 =   {{ error_tolerance }}
+make_sourcedb_ateam.control.args_format                     =   lofar
+make_sourcedb_ateam.control.outputkey                       =   out
+make_sourcedb_ateam.control.mapfile_in                      =   create_ateam_model_map.output.mapfile
+make_sourcedb_ateam.control.inputkey                        =   in
+make_sourcedb_ateam.argument.format                         =   <
+make_sourcedb_ateam.argument.outtype                        =   blob
+
+# expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
+expand_sourcedb_ateam.control.kind                          =   plugin
+expand_sourcedb_ateam.control.type                          =   expandMapfile
+expand_sourcedb_ateam.control.mapfile_in                    =   make_sourcedb_ateam.output.mapfile
+expand_sourcedb_ateam.control.mapfile_to_match              =   createmap_cal.output.mapfile
+expand_sourcedb_ateam.control.mapfile_dir                   =   input.output.mapfile_dir
+expand_sourcedb_ateam.control.filename                      =   expand_sourcedb_ateam.datamap
+
+
+###############################
+## Prepare calibrator part 2 ##
+###############################
 # run NDPPP on the calibrator data
 ndppp_prep_cal.control.type                                 =   dppp
 ndppp_prep_cal.control.max_per_node                         =   {{ num_proc_per_node_limit }}
@@ -139,7 +181,7 @@ ndppp_prep_cal.argument.msout.writefullresflag              =   False
 ndppp_prep_cal.argument.msout.overwrite                     =   True
 ndppp_prep_cal.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_cal.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_cal.argument.steps                               =   [{{ initial_flagging }},interp,avg]
+ndppp_prep_cal.argument.steps                               =   [{{ prep_cal_strategy }},interp,avg]
 ndppp_prep_cal.argument.flag.type                           =   preflagger
 ndppp_prep_cal.argument.flag.baseline                       =   {{ flag_baselines }}
 ndppp_prep_cal.argument.flagedge.type                       =   preflagger
@@ -149,9 +191,6 @@ ndppp_prep_cal.argument.aoflag.memoryperc                   =   10
 ndppp_prep_cal.argument.aoflag.keepstatistics               =   false
 ndppp_prep_cal.argument.elev.type                           =   preflagger
 ndppp_prep_cal.argument.elev.elevation                      =   0deg..20deg
-# ndppp_prep_cal.argument.filter.type                         =   filter
-# ndppp_prep_cal.argument.filter.baseline                     =   CS*, RS*&&
-# ndppp_prep_cal.argument.filter.remove                       =   true                     # fully kick out the international stations.
 ndppp_prep_cal.argument.interp.type                         =   interpolate
 ndppp_prep_cal.argument.interp.windowsize                   =   {{ interp_windowsize }}
 ndppp_prep_cal.argument.avg.type                            =   average
@@ -159,17 +198,17 @@ ndppp_prep_cal.argument.avg.timeresolution                  =   {{ avg_timeresol
 ndppp_prep_cal.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
 ndppp_prep_cal.argument.flagamp.type                        =   preflagger
 ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
-# ndppp_prep_cal.argument.demix.type                          =   demixer
-# ndppp_prep_cal.argument.demix.demixfreqstep                 =   16
-# ndppp_prep_cal.argument.demix.demixtimestep                 =   10
-# ndppp_prep_cal.argument.demix.ignoretarget                  =   True
-# ndppp_prep_cal.argument.demix.targetsource                  =   ""
-# ndppp_prep_cal.argument.demix.subtractsources               =   {{ demix_sources }}
-# ndppp_prep_cal.argument.demix.ntimechunk                    =   {{ max_per_node }}
-# ndppp_prep_cal.argument.demix.skymodel                      =   /home/fdg/scripts/model/demix_all.skydb
-# ndppp_prep_cal.argument.demix.freqstep                      =   16
-# ndppp_prep_cal.argument.demix.timestep                      =   1
-# ndppp_prep_cal.argument.demix.instrumentmodel               =   createmap_instcal.output.mapfile
+ndppp_prep_cal.argument.demix.type                          =   demixer 
+ndppp_prep_cal.argument.demix.demixfreqstep                 =   {{ demix_freqstep }}
+ndppp_prep_cal.argument.demix.demixtimestep                 =   {{ demix_timestep }}
+ndppp_prep_cal.argument.demix.ignoretarget                  =   False
+ndppp_prep_cal.argument.demix.targetsource                  =   {{ demix_target }}
+ndppp_prep_cal.argument.demix.subtractsources               =   {{ demix_sources }}
+ndppp_prep_cal.argument.demix.ntimechunk                    =   {{ max_dppp_threads }}
+ndppp_prep_cal.argument.demix.skymodel                      =   expand_sourcedb_ateam.output.mapfile
+ndppp_prep_cal.argument.demix.freqstep                      =   1
+ndppp_prep_cal.argument.demix.timestep                      =   1
+ndppp_prep_cal.argument.demix.instrumentmodel               =   createmap_instcal.output.mapfile
 
 # combine all entries into one mapfile (just for the find_skymodel_cal_auto script)
 combine_data_cal_map.control.kind                           =   plugin

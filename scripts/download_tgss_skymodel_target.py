@@ -109,7 +109,10 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True"):
     [RATar,DECTar]=grab_coord_MS(input2strlist_nomapfile(ms_input)[0])
         
     # Downloading the skymodel
-    os.system("wget -O "+SkymodelPath+ " \'http://tgssadr.strw.leidenuniv.nl/cgi-bin/gsmv3.cgi?coord="+str(RATar)+","+str(DECTar)+"&radius="+Radius+"&unit=deg&deconv=y\' ")
+    errorcode = 1
+    while errorcode != 0:
+        errorcode = os.system("wget -O "+SkymodelPath+ " \'http://tgssadr.strw.leidenuniv.nl/cgi-bin/gsmv3.cgi?coord="+str(RATar)+","+str(DECTar)+"&radius="+Radius+"&unit=deg&deconv=y\' ")
+        pass
 
     if not os.path.isfile(SkymodelPath):
         raise IOError("download_tgss_skymodel_target: Path: \"%s\" does not exist after trying to download TGSS skymodel."%(SkymodelPath))
