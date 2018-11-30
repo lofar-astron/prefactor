@@ -64,7 +64,8 @@ Steps
     input to the next step.
 ``do_magic``
     Compute frequency groupings, image sizes, and averaging values using the MS
-    files from the previous step.
+    files from the previous step. The image size is calculated from the FWHM of the
+    primary beam at the lowest frequency at the mean elevation of the observation.
 ``do_magic_maps``
     Convert the output of do_magic into usable mapfiles.
 ``create_h5parm_map``
