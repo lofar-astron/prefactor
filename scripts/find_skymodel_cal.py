@@ -4,6 +4,7 @@ import glob
 import pyrap.tables as pt
 import math
 import lsmtool
+import numpy
     
 def grab_pointing(MS):
     """
@@ -26,6 +27,7 @@ def grab_pointing(MS):
     return ra, dec
 
     
+
 ########################################################################
 
 def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
@@ -35,10 +37,12 @@ def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
     s = lsmtool.load(skymodel)
     dist_deg = s.getDistance(ra, dec)
     if any(dist_deg * 60.0 < max_separation_arcmin):
-        return True
+        patch_position = int(numpy.where(dist_deg * 60 < max_separation_arcmin)[0][0])
+        patch_name = s.getPatchNames()[patch_position]
+        return (True, patch_name)
         pass
     else:
-        return False
+        return (False, '')
         pass
     pass
 
@@ -74,9 +78,10 @@ def find_skymodel(ra, dec, PathSkyMod, extensionSky = ".skymodel", max_separatio
     skymodels = [s for s in skymodels if 'A-Team' not in s]
     
     for skymodel in skymodels:
-        if check_skymodel(skymodel, ra, dec, max_separation_arcmin):
+        check = check_skymodel(skymodel, ra, dec, max_separation_arcmin)
+        if check[0]:
             print "The following skymodel will be used for the calibrator: " + skymodel.split("/")[-1] + " (in " + PathSkyMod + ")"
-            return skymodel
+            return (skymodel, check[-1])
             pass
         else:
             pass
@@ -133,8 +138,8 @@ def main(ms_input, DirSkymodelCal, extensionSky=".skymodel", max_separation_arcm
         
     elif os.path.isdir(DirSkymodelCal):
         ra, dec = grab_pointing(input2strlist_nomapfile(ms_input)[0])
-        skymodelCal = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, max_separation_arcmin)
-        return { 'SkymodelCal' : skymodelCal }
+        skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, max_separation_arcmin)
+        return { 'SkymodelCal' : skymodelCal, 'SkymodelName': skymodelName}
     else:
         raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal))
 

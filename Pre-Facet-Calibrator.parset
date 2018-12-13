@@ -12,15 +12,14 @@
 ##########################################
 ### parameters you will need to adjust. ##
 ##########################################
-
 ## information about the calibrator data
 ! cal_input_path           =  /data/scratch/drabent                  ## specify the directory where your calibrator data is stored
-! cal_input_pattern        =  L228161*.MS                            ## regular expression pattern of all your calibrator files
+! cal_input_pattern        =  L123684*.MS                            ## regular expression pattern of all your calibrator files
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/               ## path to your prefactor copy
 ! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
-! aoflagger                =  /opt/cep/aoflagger/aoflagger-2.10.0/build/bin/aoflagger ## path to your aoflagger executable
+! aoflagger                =  /home/drabent/aoflagger/bin/aoflagger  ## path to your aoflagger executable
 
 ##########################################
 ### parameters you may need to adjust   ##
@@ -34,6 +33,8 @@
 ! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
 ! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
+! ampRange                 =  [0.000001,0.01]                        ## range of median amplitudes accepted per station
+! skip_international       =  False                                  ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
@@ -42,13 +43,19 @@
 ! demix_freqstep           =  16                                     ## number of channels to average when demixing.
 ! demix_timestep           =  10                                     ## number of time slots to average when demixing
 
-# definitions for pipeline options
-! default_flagging         =  flag,elev,flagamp                      ## regular flagging after pre-processing by the observatory pipelines
+# definitions for pipeline options -- do not change!
+! default_flagging         =  flagbaseline,flagelev,flagamp          ## regular flagging after pre-processing by the observatory pipelines
 ! raw_flagging             =  flagedge,aoflag,{{ default_flagging }} ## full flagging (usually only necessary for raw data)
 ! 1st_order                =  ct,plotTEC,residuals                   ## Do not change! Only cal_ion should be edited if needed
 ! 3rd_order                =  ct3,plotTEC3,residuals3                ## Do not change! Only cal_ion should be edited if needed
-! prep_cal_strategy        =  {{ default_flagging }},demix           ## choose {{ raw_flagging }} if you process raw data, add demix if you want to enable demixing (use comma to separate)
-! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects
+! demix                    =  demix,                                 ## Do not change! Only demix_step should be edited if needed
+! none                     =                                         ## Do not change!
+
+# pipeline options
+! initial_flagging         =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
+! demix_step               =  {{ none }}                             ## choose {{ demix }} if you want to demix
+! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects (may be useful for LBA < 35 MHz)
+! tables2export            =  clock000                               ## comma-separated list of tables to export from the ionospheric calibration step (cal_ion)
 
 ##########################################
 ### parameters for pipeline performance ##
@@ -95,25 +102,21 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps             =  [prep, PA, FR, bandpass, ion]
+pipeline.steps             =  [createmap_cal, prep, PA, FR, bandpass, ion, finalize]
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_cal, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, predict_cal, calib_cal_parmmap, h5imp_cal_map, interp_cal]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, h5imp_cal_map, interp_cal, smooth_data, predict_cal]
 
-pipeline.steps.PA          =  [smooth_data, calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
+pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
 pipeline.steps.bandpass    =  [smooth_corrected, calib_cal, h5imp_cal_bandpass, prepare_losoto_bandpass, process_losoto_bandpass, h5exp_cal_bandpass, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
-
+pipeline.steps.finalize    =  [h5parm_name]
 
 ###############################
-## Prepare calibrator part 1 ##
+## Mapping calibrator files  ##
 ###############################
-# create the cal_values_directory if needed
-mk_cal_values_dir.control.kind                              =   plugin
-mk_cal_values_dir.control.type                              =   makeDirectory
-mk_cal_values_dir.control.directory                         =   {{ cal_values_directory }}
 
 # generate a mapfile of all the calibrator data
 createmap_cal.control.kind                                  =   plugin
@@ -165,8 +168,13 @@ expand_sourcedb_ateam.control.filename                      =   expand_sourcedb_
 
 
 ###############################
-## Prepare calibrator part 2 ##
+## Prepare calibrator        ##
 ###############################
+# create the cal_values_directory if needed
+mk_cal_values_dir.control.kind                              =   plugin
+mk_cal_values_dir.control.type                              =   makeDirectory
+mk_cal_values_dir.control.directory                         =   {{ cal_values_directory }}
+
 # run NDPPP on the calibrator data
 ndppp_prep_cal.control.type                                 =   dppp
 ndppp_prep_cal.control.max_per_node                         =   {{ num_proc_per_node_limit }}
@@ -181,23 +189,23 @@ ndppp_prep_cal.argument.msout.writefullresflag              =   False
 ndppp_prep_cal.argument.msout.overwrite                     =   True
 ndppp_prep_cal.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_cal.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_cal.argument.steps                               =   [{{ prep_cal_strategy }},interp,avg]
-ndppp_prep_cal.argument.flag.type                           =   preflagger
-ndppp_prep_cal.argument.flag.baseline                       =   {{ flag_baselines }}
+ndppp_prep_cal.argument.steps                               =   [{{ initial_flagging }},{{ demix_step }}interp,avg]
 ndppp_prep_cal.argument.flagedge.type                       =   preflagger
 ndppp_prep_cal.argument.flagedge.chan                       =   [0..nchan/32-1,31*nchan/32..nchan-1] # we are running on a single subband
 ndppp_prep_cal.argument.aoflag.type                         =   aoflagger
 ndppp_prep_cal.argument.aoflag.memoryperc                   =   10
 ndppp_prep_cal.argument.aoflag.keepstatistics               =   false
-ndppp_prep_cal.argument.elev.type                           =   preflagger
-ndppp_prep_cal.argument.elev.elevation                      =   0deg..20deg
+ndppp_prep_cal.argument.flagbaseline.type                   =   preflagger
+ndppp_prep_cal.argument.flagbaseline.baseline               =   {{ flag_baselines }}
+ndppp_prep_cal.argument.flagelev.type                       =   preflagger
+ndppp_prep_cal.argument.flagelev.elevation                  =   0deg..20deg
+ndppp_prep_cal.argument.flagamp.type                        =   preflagger
+ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_cal.argument.interp.type                         =   interpolate
 ndppp_prep_cal.argument.interp.windowsize                   =   {{ interp_windowsize }}
 ndppp_prep_cal.argument.avg.type                            =   average
 ndppp_prep_cal.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_cal.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
-ndppp_prep_cal.argument.flagamp.type                        =   preflagger
-ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_cal.argument.demix.type                          =   demixer 
 ndppp_prep_cal.argument.demix.demixfreqstep                 =   {{ demix_freqstep }}
 ndppp_prep_cal.argument.demix.demixtimestep                 =   {{ demix_timestep }}
@@ -271,28 +279,6 @@ expand_sourcedb.control.mapfile_to_match                    =   ndppp_prep_cal.o
 expand_sourcedb.control.mapfile_dir                         =   input.output.mapfile_dir
 expand_sourcedb.control.filename                            =   expand_sourcedb.mapfile
 
-# predict to save time
-predict_cal.control.type                                    =   dppp
-predict_cal.control.inplace                                 =   True
-predict_cal.control.max_per_node                            =   {{ num_proc_per_node_limit }}
-predict_cal.control.error_tolerance                         =   {{ error_tolerance }}
-predict_cal.control.mapfiles_in                             =   [ndppp_prep_cal.output.mapfile,expand_sourcedb.output.mapfile]
-predict_cal.control.inputkeys                               =   [msfile,sourcedb]
-predict_cal.argument.msin                                   =   msfile
-predict_cal.argument.numthreads                             =   {{ max_dppp_threads }}
-predict_cal.argument.msin.datacolumn                        =   DATA
-# predict_cal.argument.msin.baseline                          =   {{ filter_baselines }}
-predict_cal.argument.msout.datacolumn                       =   MODEL_DATA
-predict_cal.argument.msout.storagemanager                   =   "Dysco"
-predict_cal.argument.msout.storagemanager.databitrate       =   0
-predict_cal.argument.steps                                  =   [predict]
-predict_cal.argument.predict.type                           =   predict
-predict_cal.argument.predict.sourcedb                       =   sourcedb
-predict_cal.argument.predict.sources                        =   []
-predict_cal.argument.predict.usebeammodel                   =   False # TODO: put to true for large sky
-predict_cal.argument.predict.usechannelfreq                 =   False
-predict_cal.argument.predict.beammode                       =   array_factor
-
 # generate mapfile with the h5parm names to be used in the calib_cal steps
 calib_cal_parmmap.control.kind                              =   plugin
 calib_cal_parmmap.control.type                              =   createMapfile
@@ -346,22 +332,45 @@ smooth_corrected.control.mapfile_in                         =   ndppp_prep_cal.o
 smooth_corrected.control.inputkey                           =   msin
 smooth_corrected.argument.flags                             =   [-S,{{ do_smooth }},-r,-i,CORRECTED_DATA,-o,SMOOTHED_DATA,msin]
 
-# now run NDPPP on the averaged calibrator data
+# predict to save time
+predict_cal.control.type                                    =   dppp
+predict_cal.control.inplace                                 =   True
+predict_cal.control.max_per_node                            =   {{ num_proc_per_node_limit }}
+predict_cal.control.error_tolerance                         =   {{ error_tolerance }}
+predict_cal.control.mapfiles_in                             =   [ndppp_prep_cal.output.mapfile,expand_sourcedb.output.mapfile]
+predict_cal.control.inputkeys                               =   [msfile,sourcedb]
+predict_cal.argument.msin                                   =   msfile
+predict_cal.argument.numthreads                             =   {{ max_dppp_threads }}
+predict_cal.argument.msin.datacolumn                        =   SMOOTHED_DATA
+predict_cal.argument.msout.datacolumn                       =   MODEL_DATA
+predict_cal.argument.msout.storagemanager                   =   "Dysco"
+predict_cal.argument.msout.storagemanager.databitrate       =   0
+predict_cal.argument.steps                                  =   [predict]
+predict_cal.argument.predict.type                           =   predict
+predict_cal.argument.predict.sourcedb                       =   sourcedb
+predict_cal.argument.predict.sources                        =   []
+predict_cal.argument.predict.usebeammodel                   =   False # TODO: put to true for large sky
+predict_cal.argument.predict.usechannelfreq                 =   False
+predict_cal.argument.predict.beammode                       =   array_factor
+
+# now run NDPPP on the averaged calibrator data (rotation+diagonal)
 calib_cal.control.type                                      =   dppp
 calib_cal.control.inplace                                   =   True
 calib_cal.control.max_per_node                              =   {{ num_proc_per_node_limit }}
 calib_cal.control.error_tolerance                           =   {{ error_tolerance }}
-calib_cal.control.mapfiles_in                               =   [ndppp_prep_cal.output.mapfile,expand_sourcedb.output.mapfile,calib_cal_parmmap.output.mapfile]
-calib_cal.control.inputkeys                                 =   [msfile,sourcedb,h5parm]
+# calib_cal.control.mapfiles_in                               =   [ndppp_prep_cal.output.mapfile,expand_sourcedb.output.mapfile,calib_cal_parmmap.output.mapfile]
+# calib_cal.control.inputkeys                                 =   [msfile,sourcedb,h5parm]
+calib_cal.control.mapfiles_in                               =   [ndppp_prep_cal.output.mapfile,calib_cal_parmmap.output.mapfile]
+calib_cal.control.inputkeys                                 =   [msfile,h5parm]
 calib_cal.argument.msin                                     =   msfile
 calib_cal.argument.numthreads                               =   {{ max_dppp_threads }}
 calib_cal.argument.msin.datacolumn                          =   SMOOTHED_DATA
-# calib_cal.argument.msin.baseline                            =   {{ filter_baselines }}
 calib_cal.argument.steps                                    =   [solve]
 calib_cal.argument.solve.type                               =   ddecal
 calib_cal.argument.solve.mode                               =   rotation+diagonal
 calib_cal.argument.solve.h5parm                             =   h5parm
-calib_cal.argument.solve.sourcedb                           =   sourcedb
+calib_cal.argument.solve.usemodelcolumn                     =   True
+# calib_cal.argument.solve.sourcedb                           =   sourcedb
 calib_cal.argument.solve.uvlambdamin                        =   300
 calib_cal.argument.solve.maxiter                            =   50
 calib_cal.argument.solve.nchan                              =   1
@@ -369,6 +378,28 @@ calib_cal.argument.solve.solint                             =   1
 calib_cal.argument.solve.propagatesolutions                 =   True
 calib_cal.argument.solve.tolerance                          =   1e-3
 
+# # now run NDPPP on the averaged calibrator data (diagonal only)
+# calib_cal2.control.type                                     =   dppp
+# calib_cal2.control.inplace                                  =   True
+# calib_cal2.control.max_per_node                             =   {{ num_proc_per_node_limit }}
+# calib_cal2.control.error_tolerance                          =   {{ error_tolerance }}
+# calib_cal2.control.mapfiles_in                              =   [ndppp_prep_cal.output.mapfile,expand_sourcedb.output.mapfile,calib_cal_parmmap.output.mapfile]
+# calib_cal2.control.inputkeys                                =   [msfile,sourcedb,h5parm]
+# calib_cal2.argument.msin                                    =   msfile
+# calib_cal2.argument.numthreads                              =   {{ max_dppp_threads }}
+# calib_cal2.argument.msin.datacolumn                         =   SMOOTHED_DATA
+# calib_cal2.argument.steps                                   =   [solve]
+# calib_cal2.argument.solve.type                              =   ddecal
+# calib_cal2.argument.solve.mode                              =   rotation+diagonal
+# calib_cal2.argument.solve.h5parm                            =   h5parm
+# calib_cal2.argument.solve.usemodelcolumn                    =   True
+# # calib_cal2.argument.solve.sourcedb                          =   sourcedb
+# calib_cal2.argument.solve.uvlambdamin                       =   300
+# calib_cal2.argument.solve.maxiter                           =   50
+# calib_cal2.argument.solve.nchan                             =   1
+# calib_cal2.argument.solve.solint                            =   1
+# calib_cal2.argument.solve.propagatesolutions                =   True
+# calib_cal2.argument.solve.tolerance                         =   1e-3
 
 ###########################
 ## calibrate Pol. Align  ##
@@ -482,7 +513,6 @@ h5exp_cal_PA.argument.flags                                 =   [h5in]
 h5exp_cal_PA.argument.insoltab                              =   polalign
 h5exp_cal_PA.argument.outh5parm                             =   {{ cal_solutions }}
 h5exp_cal_PA.argument.outsolset                             =   calibrator
-
 
 ################################
 ## calibrate Farady Rotation  ##
@@ -635,6 +665,8 @@ prepare_losoto_bandpass.control.flagextend.maxCycles        =   3
 prepare_losoto_bandpass.control.flagbp.operation            =   FLAGSTATION
 prepare_losoto_bandpass.control.flagbp.soltab               =   sol000/amplitude000
 prepare_losoto_bandpass.control.flagbp.mode                 =   bandpass
+prepare_losoto_bandpass.control.flagbp.ampRange             =   {{ ampRange }}
+prepare_losoto_bandpass.control.flagbp.skipInternational    =   {{ skip_international }}
 prepare_losoto_bandpass.control.plotA2.operation            =   PLOT
 prepare_losoto_bandpass.control.plotA2.soltab               =   sol000/amplitude000
 prepare_losoto_bandpass.control.plotA2.axesInPlot           =   [time,freq]
@@ -875,9 +907,10 @@ h5exp_cal_ion.control.error_tolerance                       =   {{ error_toleran
 h5exp_cal_ion.control.mapfile_in                            =   h5imp_cal_ion.output.mapfile
 h5exp_cal_ion.control.inputkey                              =   h5in
 h5exp_cal_ion.argument.flags                                =   [h5in]
-h5exp_cal_ion.argument.insoltab                             =   clock000
+h5exp_cal_ion.argument.insoltab                             =   {{ tables2export }}
 h5exp_cal_ion.argument.outh5parm                            =   {{ cal_solutions }}
 h5exp_cal_ion.argument.outsolset                            =   calibrator
+
 
 ################################
 ## applying the results       ##
@@ -956,6 +989,19 @@ apply_FR.argument.steps                                     =   [applyFR]
 apply_FR.argument.applyFR.type                              =   applycal
 apply_FR.argument.applyFR.correction                        =   rotationmeasure000
 apply_FR.argument.applyFR.parmdb                            =   {{ cal_solutions }}
+
+
+################################
+## finalizing the results     ##
+################################
+# set the pointing direction
+h5parm_name.control.type                                    =   pythonplugin
+h5parm_name.control.executable                              =   {{ scripts }}/h5parm_pointingname.py
+h5parm_name.control.error_tolerance                         =   {{ error_tolerance }}
+h5parm_name.argument.flags                                  =   [{{ cal_solutions }}]]
+h5parm_name.argument.solsetName                             =   calibrator
+h5parm_name.argument.pointing                               =   sky_cal.output.SkymodelName.mapfile
+
 
 ########################################################
 ##                                                    ##
