@@ -145,6 +145,9 @@ User-defined parameter configuration
 - ``interp_windowsize``: size of the window over which a value is interpolated. Should be odd. (default: 15)
 - ``raw_data``: use autoweight, set to True in case you are using raw data (default: False)
 
+A comprehensive explanation of the baseline selection syntax can be found `here`_.
+
+
 *Demixing options* (only used if demix step is added to the ``prep_cal_strategy`` variable)
 
 - ``demix_sources``: choose sources to demix (provided as list), e.g., ``[CasA,CygA]``
@@ -203,12 +206,16 @@ User-defined parameter configuration
 
 Parameters for **HBA** and **LBA** observations
 -----------------------------------------------
-=============== =============== ===============
-**parameter**   **HBA**         **LBA**
---------------- --------------- ---------------
-``do_smooth``   False           True
-``rfistrategy`` HBAdefault      LBAdefault
-``cal_ion``     {{ 1st_order }} {{ 3rd_order }}
-=============== =============== ===============
+====================== =============== =======================
+**parameter**          **HBA**         **LBA**
+---------------------- --------------- -----------------------
+``do_smooth``          False           True
+``rfistrategy``        HBAdefault.rifs LBAdefaultwideband.rfis
+``cal_ion``            {{ 1st_order }} {{ 3rd_order }}
+``tables2export``      clock000        phaseOrig000
+``avg_timeresolution`` 4               1
+====================== =============== =======================
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_cal_strategy`` variable.
+
+.. _here: https://www.astron.nl/lofarwiki/doku.php?id=public:user_software:documentation:ndppp#description_of_baseline_selection_parameters

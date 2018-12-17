@@ -33,8 +33,8 @@
 ! max_length               =  400                                    ## amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to about 148)
 ! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
-! ampRange                 =  [0.000001,0.01]                        ## range of median amplitudes accepted per station
-! skip_international       =  False                                  ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
+! ampRange                 =  [50,200]                               ## range of median amplitudes accepted per station
+! skip_international       =  True                                   ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
@@ -64,6 +64,7 @@
 ! num_proc_per_node        =  input.output.max_per_node              ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
 ! num_proc_per_node_limit  =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! max_dppp_threads         =  10                                     ## number of threads per process for NDPPP
+! memoryperc               =  20                                     ## maximum of memory used for aoflagger in raw_flagging mode in percent
 
 ! error_tolerance          =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
 
@@ -193,7 +194,7 @@ ndppp_prep_cal.argument.steps                               =   [{{ initial_flag
 ndppp_prep_cal.argument.flagedge.type                       =   preflagger
 ndppp_prep_cal.argument.flagedge.chan                       =   [0..nchan/32-1,31*nchan/32..nchan-1] # we are running on a single subband
 ndppp_prep_cal.argument.aoflag.type                         =   aoflagger
-ndppp_prep_cal.argument.aoflag.memoryperc                   =   10
+ndppp_prep_cal.argument.aoflag.memoryperc                   =   {{ memoryperc }}
 ndppp_prep_cal.argument.aoflag.keepstatistics               =   false
 ndppp_prep_cal.argument.flagbaseline.type                   =   preflagger
 ndppp_prep_cal.argument.flagbaseline.baseline               =   {{ flag_baselines }}

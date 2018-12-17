@@ -101,6 +101,8 @@ User-defined parameter configuration
 - ``raw_data``: use autoweight, set to True in case you are using raw data (default: False)
 - ``min_unflagged_fraction``: minimal fraction of unflagged data to be accepted for further processing of the data chunk
 
+A comprehensive explanation of the baseline selection syntax can be found `here`_.
+
 *Demixing options* (only used if demix step is added to the ``prep_targ_strategy`` variable)
 
 - ``demix_sources``: choose sources to demix (provided as list), e.g., ``[CasA,CygA]``
@@ -167,12 +169,17 @@ User-defined parameter configuration
 
 Parameters for **HBA** and **LBA** observations
 -----------------------------------------------
-=============== ========== ==========
-**parameter**   **HBA**    **LBA**
---------------- ---------- ----------
-``do_smooth``   False      True
-``rfistrategy`` HBAdefault LBAdefault
-=============== ========== ==========
+====================== ================== =======================
+**parameter**          **HBA**            **LBA**
+---------------------- ------------------ -----------------------
+``do_smooth``          False              True
+``rfistrategy``        HBAdefault         LBAdefaultwideband.rfis
+``apply_steps``        applyclock,applyRM applyphase
+``tables2export``      clock000           phaseOrig000
+``gsmcal_step``        phase              tec
+``updateweights``      False              True
+====================== ================== =======================
+
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_targ_strategy`` variable.
 
@@ -181,3 +188,4 @@ In case of **LBA** observation you might also want to enable demixing in the ``p
 .. _killMS: https://github.com/saopicc/killMS/
 .. _TGSS ADR: https://http://tgssadr.strw.leidenuniv.nl/
 .. _Dysco: https://github.com/aroffringa/dysco/
+.. _here: https://www.astron.nl/lofarwiki/doku.php?id=public:user_software:documentation:ndppp#description_of_baseline_selection_parameters
