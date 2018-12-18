@@ -33,11 +33,13 @@
 ! flag_baselines            =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! filter_baselines          =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                 =  False                                  ## enable or disable baseline-based smoothing
-! rfistrategy               =  HBAdefault                             ## strategy to be applied with the statistical flagger (AOFlagger)
+! rfistrategy               =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max_length                =  20                                     ## amount of chunks (calibrator) or chunks (target) to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to ~20 chunks for about 128 GB of RAM)
 ! interp_windowsize         =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
 ! min_unflagged_fraction    =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! compression_bitrate       =  16                                     ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
+! raw_data                  =  False                                  ## use autoweight, set to True in case you are using raw data
+! propagatesolutions        =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources             =  [CasA,CygA]                            ## choose sources to demix (provided as list)
@@ -261,6 +263,7 @@ ndppp_prep_target.argument.numthreads                          =   {{ max_dppp_t
 ndppp_prep_target.argument.msin                                =   input_file
 ndppp_prep_target.argument.msin.datacolumn                     =   DATA
 ndppp_prep_target.argument.msin.baseline                       =   check_station_mismatch.output.filter
+ndppp_prep_target.argument.msin.autoweight                     =   {{ raw_data }}
 ndppp_prep_target.argument.msout.datacolumn                    =   DATA
 ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
@@ -576,6 +579,7 @@ gsmcal_phase.argument.gaincal.usechannelfreq                   =   True
 gsmcal_phase.argument.gaincal.beammode                         =   array_factor
 gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
 gsmcal_phase.argument.gaincal.applysolutions                   =   True
+gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
 
 # solve for direction-independent TEC
 gsmcal_tec.control.type                                        =   dppp
@@ -601,7 +605,7 @@ gsmcal_tec.argument.ddecal.nchan                               =   1
 gsmcal_tec.argument.ddecal.stepsize                            =   0.2
 gsmcal_tec.argument.ddecal.h5parm                              =   parmdb
 gsmcal_tec.argument.ddecal.mode                                =   tec 
-gsmcal_tec.argument.ddecal.propagatesolutions                  =   True
+gsmcal_tec.argument.ddecal.propagatesolutions                  =   {{ propagatesolutions }}
 gsmcal_tec.argument.ddecal.approximatetec                      =   True
 gsmcal_tec.argument.ddecal.maxapproxiter                       =   200 
 gsmcal_tec.argument.ddecal.approxtolerance                     =   5e-3

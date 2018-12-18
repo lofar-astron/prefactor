@@ -36,6 +36,7 @@
 ! ampRange                 =  [50,200]                               ## range of median amplitudes accepted per station
 ! skip_international       =  True                                   ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 ! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
+! propagatesolutions       =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources            =  [CasA,CygA]                            ## choose sources to demix (provided as list)
@@ -378,7 +379,7 @@ calib_cal.argument.solve.uvlambdamin                        =   300
 calib_cal.argument.solve.maxiter                            =   50
 calib_cal.argument.solve.nchan                              =   1
 calib_cal.argument.solve.solint                             =   1
-calib_cal.argument.solve.propagatesolutions                 =   True
+calib_cal.argument.solve.propagatesolutions                 =   {{ propagatesolutions }}
 calib_cal.argument.solve.tolerance                          =   1e-3
 
 # # now run NDPPP on the averaged calibrator data (diagonal only)
