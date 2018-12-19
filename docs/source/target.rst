@@ -10,7 +10,7 @@ This chapter will present the specific steps of the target pipeline in more deta
 
 All results (diagnostic plots and calibration solutions) are usually stored in a subfolder of the results directory, see ``inspection_directory`` (line 71) and ``cal_values_directory`` (line 72), respectively.
 
-    
+
 Prepare target (incl. "demixing")
 ---------------------------------
 This part of the pipeline prepares the target data in order to be calibration-ready for the first direction-independent phase-only self-calibration against a global sky model.
@@ -63,7 +63,7 @@ The phase solutions derived from the preparation step are now collected and load
     .. image:: ph_polXX.png
 - ``ph_poldif``: matrix plot of the phase solutions for the XX-YY polarization
     .. image:: ph_poldif.png
-    
+
 The solutions are stored in the h5parm file format.
 The last step also incorporates full `Dysco`_ compression to save disk space. The fully calibrated data is stored in the DATA column.
 In the results directory also the uncompressed and uncorrected data is stored. These data are used for the :ref:`initsubtract_pipeline`.
@@ -175,7 +175,6 @@ Parameters for **HBA** and **LBA** observations
 ``do_smooth``          False              True
 ``rfistrategy``        HBAdefault         LBAdefaultwideband.rfis
 ``apply_steps``        applyclock,applyRM applyphase
-``tables2export``      clock000           phaseOrig000
 ``gsmcal_step``        phase              tec
 ``updateweights``      False              True
 ====================== ================== =======================
