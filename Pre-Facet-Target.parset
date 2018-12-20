@@ -86,7 +86,8 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 
 ## skymodel directory
 ! target_skymodel           =  {{ job_directory }}/target.skymodel    ## path to the skymodel for the phase-only calibration of the target
-! use_tgss_target           =  True                                   ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
+! use_target                =  True                                   ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
+! skymodel_source           =  TGSS                                   ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
 
 ## result directories
 ! results_directory         =  {{ job_directory }}/results            ## location of the results
@@ -476,11 +477,12 @@ check_unflagged_map.control.prune_str                          =   None
 
 # if wished, download the tgss skymodel for the target
 sky_tar.control.type                                           =   pythonplugin
-sky_tar.control.executable                                     =   {{ scripts }}/download_tgss_skymodel_target.py
+sky_tar.control.executable                                     =   {{ scripts }}/download_skymodel_target.py
 sky_tar.argument.flags                                         =   [combine_target_map.output.mapfile]
-sky_tar.argument.DoDownload                                    =   {{ use_tgss_target }}
+sky_tar.argument.DoDownload                                    =   {{ use_target }}
 sky_tar.argument.SkymodelPath                                  =   {{ target_skymodel }}
 sky_tar.argument.Radius                                        =   5. #in degrees
+sky_tar.argument.Source                                        =   {{ skymodel_source }}
 
 # create a mapfile with the target skymodel, length = 1
 create_target_model_map.control.kind                           =   plugin
