@@ -14,8 +14,8 @@
 ##########################################
 
 ## information about the target data
-! target_input_path         =  /data014/scratch/pizzo/A2255_HBA_HIGHRES ## specify the directory where your target data is stored
-! target_input_pattern      =  L123685*.MS_fixinfo                    ## regular expression pattern of all your target files
+! target_input_path         =  /data/scratch/drabent/                 ## specify the directory where your target data is stored
+! target_input_pattern      =  L123685*.MS                            ## regular expression pattern of all your target files
 
 ## location of the software
 ! prefactor_directory       =  /home/drabent/prefactor                ## path to your prefactor copy
@@ -125,7 +125,7 @@ pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_ta
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, aoflag]
-pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, make_results_mapfile, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
+pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, h5exp_phase,            make_results_mapfile_phase, move_results_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, h5exp_tec,   apply_tec, make_results_mapfile_tec,   move_results_tec]
 
@@ -447,7 +447,7 @@ aoflag.control.error_tolerance                                 =   {{ error_tole
 aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.concatmap
 aoflag.control.inputkey                                        =   msin
 aoflag.control.args_format                                     =   wsclean
-aoflag.argument.strategy                                       =   {{ lofar_directory }}/share/rfistrategies/{{ rfistrategy }}
+aoflag.argument.strategy                                       =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
 aoflag.argument.flags                                          =   [-v,-memory-read,-combine-spws,msin]
 
 
@@ -555,15 +555,16 @@ smooth_data.argument.flags                                     =   [-S,{{ do_smo
 
 # solve/store direction-independent phase-only self-calibration corrected UV-data to a fully Dysco compressed new MS
 gsmcal_phase.control.type                                      =   dppp
-gsmcal_phase.control.inplace                                   =   True
 gsmcal_phase.control.error_tolerance                           =   {{ error_tolerance }}
 gsmcal_phase.control.max_per_node                              =   {{ num_proc_per_node_limit }}
 gsmcal_phase.control.mapfiles_in                               =   [check_unflagged_map.output.mapfile,expand_sourcedb_target.output.mapfile,gsmcal_parmmap.output.mapfile]
 gsmcal_phase.control.inputkeys                                 =   [input_file,sourcedb,parmdb]
 gsmcal_phase.argument.msin                                     =   input_file
 gsmcal_phase.argument.msin.baseline                            =   check_bad_antennas.output.filter
-gsmcal_phase.argument.numthreads                               =   {{ max_dppp_threads }}
 gsmcal_phase.argument.msin.datacolumn                          =   SMOOTHED_DATA
+gsmcal_phase.argument.numthreads                               =   {{ max_dppp_threads }}
+gsmcal_phase.argument.msout.storagemanager                     =   "Dysco"
+gsmcal_phase.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
 gsmcal_phase.argument.steps                                    =   [filter,gaincal]
 gsmcal_phase.argument.filter.type                              =   filter
 gsmcal_phase.argument.filter.blrange                           =   [150, 999999]
@@ -578,7 +579,7 @@ gsmcal_phase.argument.gaincal.usebeammodel                     =   True
 gsmcal_phase.argument.gaincal.usechannelfreq                   =   True
 gsmcal_phase.argument.gaincal.beammode                         =   array_factor
 gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
-gsmcal_phase.argument.gaincal.applysolutions                   =   True
+gsmcal_phase.argument.gaincal.applysolution                    =   True
 gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
 
 # solve for direction-independent TEC
@@ -591,8 +592,6 @@ gsmcal_tec.control.inputkeys                                   =   [input_file,s
 gsmcal_tec.argument.msin                                       =   input_file
 gsmcal_tec.argument.numthreads                                 =   {{ max_dppp_threads }}
 gsmcal_tec.argument.msin.datacolumn                            =   SMOOTHED_DATA
-gsmcal_tec.argument.msout.storagemanager                       =   "Dysco"
-gsmcal_tec.argument.msout.storagemanager.databitrate           =   {{ compression_bitrate }}
 gsmcal_tec.argument.steps                                      =   [filter,ddecal]
 gsmcal_tec.argument.filter.type                                =   filter
 gsmcal_tec.argument.filter.blrange                             =   [150, 999999]
