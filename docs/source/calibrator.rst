@@ -10,7 +10,7 @@ You will find the single steps in the parameter ``pipeline.steps`` in line 98.
 All results (diagnostic plots and calibration solutions) are usually stored in a subfolder of the results directory, see ``inspection_directory`` (line 79) and ``cal_values_directory`` (line 80), respectively.
 
     .. image:: calibscheme.png
-    
+
 Prepare calibrator (incl. "demixing")
 -------------------------------------
 
@@ -59,7 +59,7 @@ The phase solutions derived from the preparation step are now collected and load
 
 The solutions are then stored in the final calibrator solution set ``cal_solutions`` (line 83) and applied to the interpolated data (``apply_PA``), together with the LOFAR beam correction (``apply_beam``)
 The calibration (``calib_cal``) is then repeated on the corrected and re-smoothed data (``smooth_corrected``).
-  
+
 Calibration of the Faraday Rotation (FR)
 ----------------------------------------
 The outcome of the re-calibration **after** correcting for the polarization alignment is again loaded into **LoSoTo** in order to derive corrections for Faraday Rotation.
@@ -73,7 +73,7 @@ The following diagnostic plots are created:
     .. image:: fr.png
 - ``fr_ph-res_pol??``: matrix plot of the residual phase solutions for the XX and YY polarization after subtraction the derived Rotation Measure
 - ``fr_ph-res_poldif``: matrix plot of the residual phase solutions for XX-YY after subtraction of the derived Rotation Measure
-    
+
 The solutions are then stored in the final calibrator solution set ``cal_solutions`` (line 83) and applied, together with the polarization alignment and the LOFAR beam correction, to the interpolated data (``apply_PA`` + ``apply_beam`` + ``apply_FR``).
 The calibration (``calib_cal``) is then repeated on the corrected and re-smoothed data (``smooth_corrected``).
 
@@ -140,7 +140,7 @@ User-defined parameter configuration
 - ``filter_baselines``: selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 - ``do_smooth``: enable or disable baseline-based smoothing
 - ``rfistrategy``: strategy to be applied with the statistical flagger (AOFlagger), default: ``HBAdefault.rfis``
-- ``max_length``: amount of subbands to concatenate for full-bandwidth flagging (for calibrator you can take all SBs if memory allows)
+- ``max_length``: amount of subbands to concatenate for full-bandwidth flagging (for an HBA calibrator, you can take all SBs if memory allows)
 - ``max2interpolate``: amount of channels in which interpolation should be performed for deriving the bandpass (default: 30)
 - ``interp_windowsize``: size of the window over which a value is interpolated. Should be odd. (default: 15)
 - ``raw_data``: use autoweight, set to True in case you are using raw data (default: False)
@@ -214,6 +214,7 @@ Parameters for **HBA** and **LBA** observations
 ``cal_ion``            {{ 1st_order }} {{ 3rd_order }}
 ``tables2export``      clock000        phaseOrig000
 ``avg_timeresolution`` 4               1
+``max_length``         400             50
 ====================== =============== =======================
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_cal_strategy`` variable.
