@@ -15,7 +15,7 @@ def main(h5parmdb, solsetName='sol000', pointing='POINTING'):
     direction = list(sources[0][-1])
     
     for i in numpy.arange(len(sources)):
-        sources[i] = [pointing, direction]
+        sources[i] = (pointing, direction)
         pass
     
     data.close()
