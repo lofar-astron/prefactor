@@ -183,9 +183,7 @@ gsmcal_apply.argument.steps                    = [applycal]
 gsmcal_apply.argument.applycal.type            = applycal
 gsmcal_apply.argument.applycal.parmdb          = select_apply_h5parm.output.mapfile
 gsmcal_apply.argument.applycal.solset          = target
-gsmcal_apply.argument.applycal.steps           = [ph,amp]
-gsmcal_apply.argument.applycal.ph.correction   = phase000
-gsmcal_apply.argument.applycal.amp.correction  = amplitude000
+gsmcal_apply.argument.applycal.correction      = phase000
 
 # adjust the high_size mapfile to match the selected bands, length = nbands_image
 select_high_size.control.kind         = plugin
@@ -392,9 +390,7 @@ subtract_high.argument.subtract.sourcedb                 =   sourcedb
 subtract_high.argument.subtract.operation                =   subtract
 subtract_high.argument.subtract.applycal.parmdb          =   parmdb
 subtract_high.argument.subtract.applycal.solset          =   target
-subtract_high.argument.subtract.applycal.steps           =   [ph,amp]
-subtract_high.argument.subtract.applycal.ph.correction   =   phase000
-subtract_high.argument.subtract.applycal.amp.correction  =   amplitude000
+subtract_high.argument.subtract.applycal.correction      =   phase000
 
 # select files spread over the full bandwidth for imaging, length = nbands_image * ntimes
 select_correct_high_files.control.kind        = plugin
@@ -445,9 +441,7 @@ correct_high.argument.steps                   =   [correct,avg]
 correct_high.argument.correct.type            =   applycal
 correct_high.argument.correct.parmdb          =   parmdb
 correct_high.argument.correct.solset          =   target
-correct_high.argument.correct.steps           =   [ph,amp]
-correct_high.argument.correct.ph.correction   =   phase000
-correct_high.argument.correct.amp.correction  =   amplitude000
+correct_high.argument.correct.correction      =   phase000
 correct_high.argument.correct.invert          =   True
 correct_high.argument.avg.type                =   squash
 
@@ -647,9 +641,7 @@ subtract_low.argument.subtract.sourcedb                 =   sourcedb
 subtract_low.argument.subtract.operation                =   subtract
 subtract_low.argument.subtract.applycal.parmdb          =   parmdb
 subtract_low.argument.subtract.applycal.solset          =   target
-subtract_low.argument.subtract.applycal.steps           =   [ph,amp]
-subtract_low.argument.subtract.applycal.ph.correction   =   phase000
-subtract_low.argument.subtract.applycal.amp.correction  =   amplitude000
+subtract_low.argument.subtract.applycal.correction      =   phase000
 
 # merge the high-res and low-res skymodels, length = nbands
 merge.control.type                              =   pythonplugin
