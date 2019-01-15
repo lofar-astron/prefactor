@@ -6,7 +6,7 @@
 Prefactor: Preprocessing for Facet Calibration for LOFAR
 ========================================================
 
-**prefactor** is a pipeline to correct for various instrumental and ionospheric efforts in both **LOFAR HBA** an **LOFAR LBA** observations.
+**prefactor** is a pipeline to correct for various instrumental and ionospheric efforts in both **LOFAR HBA** and **LOFAR LBA** observations.
 
 It includes:
 
@@ -17,7 +17,7 @@ It includes:
 - removal of the element beam
 - advanced flagging and interpolation of bad data
 - mitigation of broad-band RFI and bad stations
-- direction-independent phase correction of the target, using a global sky model from `TGSS ADR`_
+- direction-independent phase correction of the target, using a global sky model from `TGSS ADR`_  or the new Global Sky Model (GSM)
 - detailled diagnostics
 
 It will prepare your data so that you will be able to use any direction-dependent calibration software, like `factor`_ or `killMS`_.

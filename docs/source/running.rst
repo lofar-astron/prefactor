@@ -44,7 +44,7 @@ Stopping and re-starting the pipeline
 -------------------------------------
 
 You can stop a pipeline run anytime by terminating the genericpipeline process
-(typically by pressing in the terminal where you started it). Sometimes some of
+(typically by pressing CNTL-C in the terminal where you started it). Sometimes some of
 the processes that the pipeline started don't get properly terminated, so if the
 genericpipeline process doesn't terminate you should look for its child
 processes and terminate them too.

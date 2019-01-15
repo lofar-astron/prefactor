@@ -3,28 +3,31 @@
 Initial-subtract pipeline
 =========================
 
-This pipeline images the full FoV (and 1st side-lobe) at two resolutions and at
-multiple frequencies, generating a sky-model and subtracting it from the
+This pipeline images the full FoV (and first side lobe) at two resolutions and at
+multiple frequencies, generating a sky model and subtracting it from the
 visibilities. This pipeline need only be run if you want to use Factor to do the
 direction-dependent imaging. The parset is named one of ``Initial-Subtract.parset``,
 ``Initial-Subtract-IDG.parset``, or ``Initial-Subtract-IDG-LowMemory.parset``,
 depending on whether one wants to use IDG with WSClean. IDG is generally much
-faster if you have GPUs.
+faster than the normal WSClean if you have GPUs.
 
 .. note::
 
     At this time, only HBA data are supported.
 
 
-Options
--------
+Parameters
+----------
 
 ``! data_input_path``
     Directory where your concatenated target data are stored.
 ``! data_input_pattern``
-    Regular expression pattern of all your calibrator files.
-``! data_input_pattern``
-    Full path to the direction-independent calibration solutions.
+    Regular expression pattern of all your target files.
+    .. note::
+
+        These files should not have any calibration applied to the DATA column!
+``! direction_indep_h5parm``
+    Full path to the direction-independent target calibration solutions.
 ``! cellsize_highres_deg``
     Cellsize in degrees for high-resolution images.
 ``! cellsize_lowres_deg``
