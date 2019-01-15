@@ -22,6 +22,12 @@ It includes:
 
 It will prepare your data so that you will be able to use any direction-dependent calibration software, like `factor`_ or `killMS`_.
 
+.. note::
+
+    This documentation refers to the user version, intended to be run
+    by users. For the production version, intended for automated
+    processing on CEP4/LTA sites, see [insert production version url here].
+
 Introduction
 ------------
 
