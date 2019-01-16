@@ -3,7 +3,7 @@
 Target pipeline
 ===============
 
-This pipeline processes the target data in order to apply the direction-independent corrections from the calibrator pipeline (line 26). A first initial direction-independent self-calibration of the target field is performed, using a global sky model based on the `TGSS ADR`_ is performed and applied to the data.
+This pipeline processes the target data in order to apply the direction-independent corrections from the calibrator pipeline (line 26). A first initial direction-independent self-calibration of the target field is performed, using a global sky model based on the `TGSS ADR`_ or the new Global Sky Model (GSM), and applied to the data.
 You will find the single steps in the parameter ``pipeline.steps`` in line 99.
 
 This chapter will present the specific steps of the target pipeline in more detail.
