@@ -7,8 +7,6 @@ import numpy
 import os
 from lofarpipe.support.data_map import DataMap, DataProduct
 
-#max_length = 147
-
 ########################################################################
 def input2strlist_nomapfile(invar):
    """
@@ -28,7 +26,22 @@ def input2strlist_nomapfile(invar):
    return str_list
 
 ########################################################################
-def main(ms_input, ms_output, max_length, filename=None, mapfile_dir=None):
+def getsystemmemory():
+   
+   memory = int(os.popen('cat /proc/meminfo | grep MemAvailable').readlines()[0].split(':')[-1].split()[0])
+   return memory
+   pass
+
+########################################################################
+def getfilesize(MS):
+   
+   size = int(os.popen('du -cks ' + MS).readlines()[0].split()[0])
+   return size
+
+   pass
+
+########################################################################
+def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
 
     """
     Virtually concatenate subbands
@@ -39,8 +52,6 @@ def main(ms_input, ms_output, max_length, filename=None, mapfile_dir=None):
         String from the list (map) of the calibrator MSs
     ms_output : str
         String from the outut concatenated MS
-    max_length : str
-        Max length of file list to concatenate into one output MS
     filename: str
         Name of output mapfile
     mapfile_dir : str
@@ -48,6 +59,18 @@ def main(ms_input, ms_output, max_length, filename=None, mapfile_dir=None):
 
     """
     filelist      = input2strlist_nomapfile(ms_input)
+    max_space     = int(getsystemmemory() / getfilesize(filelist[0]))
+    max_length    = len(filelist) / ((len(filelist) / max_space) + 1)
+    
+    if max_length >= int(min_length):
+        memory = '-memory-read'
+        pass
+    else:
+        max_length = len(filelist)
+        memory = '-indirect-read'
+        pass
+    
+    print "The max_length value is: " + str(max_length)
     set_ranges    = list(numpy.arange(0, len(filelist), int(max_length)))
     set_ranges.append(len(filelist))
 
@@ -59,7 +82,7 @@ def main(ms_input, ms_output, max_length, filename=None, mapfile_dir=None):
 
     fileid = os.path.join(mapfile_dir, filename)
     map_out.save(fileid)
-    result = {'concatmapfile': fileid}
+    result = {'concatmapfile': fileid, 'memory': memory}
 
     return result
 
@@ -72,12 +95,11 @@ if __name__ == '__main__':
                         help='One (or more MSs) that we want to concatenate.')
     parser.add_argument('MSout', type=str,
                         help='Output MS file')
-    parser.add_argument('max_length', type=str,
-                        help='Max length of concatenation')
-
+    parser.add_argument('-min_length', type=str,
+                        help='Minimum amount of subbands to concatenate in frequency.')
 
 
 
     args = parser.parse_args()
 
-    main(args.MSfile,args.MSout,args.max_length)
+    main(args.MSfile,args.MSout,args.min_length)

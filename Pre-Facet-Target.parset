@@ -34,7 +34,6 @@
 ! filter_baselines          =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                 =  False                                  ## enable or disable baseline-based smoothing
 ! rfistrategy               =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger)
-! max_length                =  20                                     ## amount of chunks (calibrator) or chunks (target) to concatenate for full-bandwidth flagging (for calibrator you can take all SBs, for target stick to ~20 chunks for about 128 GB of RAM)
 ! interp_windowsize         =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
 ! min_unflagged_fraction    =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! compression_bitrate       =  16                                     ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
@@ -69,6 +68,7 @@
 ! num_proc_per_node         =  input.output.max_per_node              ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
 ! num_proc_per_node_limit   =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! max_dppp_threads          =  10                                     ## number of threads per process for NDPPP
+! min_length                =  50                                     ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
 
 ! error_tolerance           =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
 
@@ -431,7 +431,7 @@ ms_concat_target.control.executable                            =   {{ scripts }}
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.filename                             =   concatmapfile.mapfile
 ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
-ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ max_length }}]
+ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ min_length }}]
 
 # convert the output of ms_concat_target into usable mapfiles
 ms_concat_target_map.control.kind                              =   plugin
@@ -449,7 +449,7 @@ aoflag.control.mapfile_in                                      =   ms_concat_tar
 aoflag.control.inputkey                                        =   msin
 aoflag.control.args_format                                     =   wsclean
 aoflag.argument.strategy                                       =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                          =   [-v,-memory-read,-combine-spws,msin]
+aoflag.argument.flags                                          =   [-v,ms_concat_target.output.memory.mapfile,-combine-spws,msin]
 
 
 #############################
