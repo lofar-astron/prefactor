@@ -110,7 +110,7 @@ pipeline.steps             =  [createmap_cal, prep, PA, FR, bandpass, ion, final
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, h5imp_cal_map, interp_cal, smooth_data, predict_cal]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_prepcal, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, h5imp_cal_map, interp_cal, smooth_data, predict_cal]
 
 pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -135,10 +135,20 @@ createmap_cal.control.pattern                               =   {{ cal_input_pat
 #############################
 ## Prepare for demixing    ##
 #############################
-# generate a mapfile of all the calibrator data
+# generate a mapfile of the calibrator
+createmap_prepcal.control.kind                              =   plugin
+createmap_prepcal.control.type                              =   makeResultsMapfile
+createmap_prepcal.control.mapfile_dir                       =   input.output.mapfile_dir
+createmap_prepcal.control.filename                          =   createmap_prepcal.mapfile
+createmap_prepcal.control.mapfile_in                        =   createmap_cal.output.mapfile
+createmap_prepcal.control.target_dir                        =   {{ job_directory }}
+createmap_prepcal.control.make_target_dir                   =   False
+createmap_prepcal.control.new_suffix                        =   .ndppp_prep_cal
+
+# generate a mapfile for the instrument table of the calibrator
 createmap_instcal.control.kind                              =   plugin
 createmap_instcal.control.type                              =   changeMapfile
-createmap_instcal.control.mapfile_in                        =   createmap_cal.output.mapfile
+createmap_instcal.control.mapfile_in                        =   createmap_prepcal.output.mapfile
 createmap_instcal.control.join_files                        =   instrument
 createmap_instcal.control.newname                           =   createmap_instcal.mapfile
 
@@ -1033,7 +1043,33 @@ apply_TEC.argument.applytec.type                            =   applycal
 apply_TEC.argument.applytec.correction                      =   tec000
 apply_TEC.argument.applytec.parmdb                          =   {{ cal_solutions }}
 
-################################
+# # apply the phase offset solutions
+# apply_offset.control.type                                   =   dppp
+# apply_offset.control.error_tolerance                        =   {{ error_tolerance }}
+# apply_offset.control.inplace                                =   True
+# apply_offset.control.max_per_node                           =   {{ num_proc_per_node_limit }}
+# apply_offset.control.mapfile_in                             =   ndppp_prep_cal.output.mapfile
+# apply_offset.control.inputkey                               =   msfile
+# apply_offset.argument.msin                                  =   msfile
+# apply_offset.argument.numthreads                            =   {{ max_dppp_threads }}
+# apply_offset.argument.msin.datacolumn                       =   CORRECTED_DATA
+# apply_offset.argument.msout.datacolumn                      =   CORRECTED_DATA
+# apply_offset.argument.msout.storagemanager                  =   "Dysco"
+# apply_offset.argument.msout.storagemanager.databitrate      =   0
+# apply_offset.argument.steps                                 =   [applyoffset]
+# apply_offset.argument.applyoffset.type                      =   applycal
+# apply_offset.argument.applyoffset.correction                =   phase_offset000
+# apply_offset.argument.applyoffset.parmdb                    =   {{ cal_solutions }}
+
+# expand phase offset solutions
+expand_sourcedb.control.kind                                =   plugin
+expand_sourcedb.control.type                                =   expandMapfile
+expand_sourcedb.control.mapfile_in                          =   make_sourcedb.output.mapfile
+expand_sourcedb.control.mapfile_to_match                    =   ndppp_prep_cal.output.mapfile
+expand_sourcedb.control.mapfile_dir                         =   input.output.mapfile_dir
+expand_sourcedb.control.filename                            =   expand_sourcedb.mapfile
+
+###############################
 ## finalizing the results     ##
 ################################
 # set the pointing direction

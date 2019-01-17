@@ -15,7 +15,7 @@
 
 ## information about the target data
 ! target_input_path         =  /data/scratch/drabent/                 ## specify the directory where your target data is stored
-! target_input_pattern      =  L123685*.MS                            ## regular expression pattern of all your target files
+! target_input_pattern      =  L217457*.MS                            ## regular expression pattern of all your target files
 
 ## location of the software
 ! prefactor_directory       =  /home/drabent/prefactor                ## path to your prefactor copy
@@ -56,9 +56,9 @@
 # pipeline options
 ! initial_flagging          =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
 ! demix_step                =  {{ none }}                             ## choose {{ demix }} if you want to demix
-! apply_steps               =  applyclock,applyRM                     ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
+! apply_steps               =  applyclock,applybeam,applyRM           ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
 ! clipAteam_step            =  {{ clipATeam }}                        ## choose {{ none }} if you want to skip A-team-clipping
-! gsmcal_step               =  phase                                  ## choose gsmcal_tec if you want to fit TEC instead of self-calibrating for phases
+! gsmcal_step               =  phase                                  ## choose tec if you want to fit TEC instead of self-calibrating for phases
 ! updateweights             =  False                                  ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
 
 ##########################################
@@ -68,7 +68,7 @@
 ! num_proc_per_node         =  input.output.max_per_node              ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
 ! num_proc_per_node_limit   =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! max_dppp_threads          =  10                                     ## number of threads per process for NDPPP
-! min_length                =  50                                     ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! min_length                =  5                                      ## minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
 
 ! error_tolerance           =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
 
@@ -122,7 +122,7 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 pipeline.steps              =  [prep, {{ clipATeam }} concat, prep_gsmcal, {{ gsmcal_step }}, finalize]
 
 # pipeline substeps
-pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
+pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, aoflag]
@@ -179,12 +179,22 @@ check_station_mismatch.control.filter                          =   {{ filter_bas
 ###################################
 ## Prepare for demixing/clipping ##
 ###################################
-# generate a mapfile of all the calibrator data
+# generate a mapfile of the target
+createmap_preptarg.control.kind                                =   plugin
+createmap_preptarg.control.type                                =   makeResultsMapfile
+createmap_preptarg.control.mapfile_dir                         =   input.output.mapfile_dir
+createmap_preptarg.control.filename                            =   createmap_preptarg.mapfile
+createmap_preptarg.control.mapfile_in                          =   createmap_target.output.mapfile
+createmap_preptarg.control.target_dir                          =   {{ job_directory }}
+createmap_preptarg.control.make_target_dir                     =   False
+createmap_preptarg.control.new_suffix                          =   .ndppp_prep_target
+
+# generate a mapfile for the instrument table of the target
 createmap_insttarg.control.kind                                =   plugin
 createmap_insttarg.control.type                                =   changeMapfile
-createmap_insttarg.control.mapfile_in                          =   createmap_target.output.mapfile
+createmap_insttarg.control.mapfile_in                          =   createmap_preptarg.output.mapfile
 createmap_insttarg.control.join_files                          =   instrument
-createmap_insttarg.control.newname                             =   createmap_instcal.mapfile
+createmap_insttarg.control.newname                             =   createmap_insttarg.mapfile
 
 # create a mapfile with the A-Team skymodel, length = 1
 create_ateam_model_map.control.kind                            =   plugin
@@ -270,7 +280,7 @@ ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
 ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_target.argument.steps                               =   [filter,{{ initial_flagging }},{{ demix_step }}applyPA,applybandpass,{{ apply_steps }},applybeam,interp,avg]
+ndppp_prep_target.argument.steps                               =   [filter,{{ initial_flagging }},{{ demix_step }}applyPA,applybandpass,{{ apply_steps }},interp,avg]
 ndppp_prep_target.argument.filter.type                         =   filter
 ndppp_prep_target.argument.filter.baseline                     =   check_station_mismatch.output.filter
 ndppp_prep_target.argument.filter.remove                       =   true
