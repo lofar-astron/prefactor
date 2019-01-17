@@ -57,7 +57,7 @@
 ! demix_step               =  {{ none }}                                                          ## choose {{ demix }} if you want to demix
 ! cal_ion                  =  {{ 1st_order }}                                                     ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects (may be useful for LBA < 35 MHz)
 ! tables2export            =  clock000                                                            ## comma-separated list of tables to export from the ionospheric calibration step (cal_ion)
-! final_apply              =  {{ none }}
+! final_apply              =  {{ none }}                                                          ## choose {{ full_apply }} if you want to apply all extracted solutions to the calibrator field
 
 ##########################################
 ### parameters for pipeline performance ##
@@ -1010,7 +1010,7 @@ apply_clock.argument.msin.datacolumn                        =   CORRECTED_DATA
 apply_clock.argument.msout.datacolumn                       =   CORRECTED_DATA
 apply_clock.argument.msout.storagemanager                   =   "Dysco"
 apply_clock.argument.msout.storagemanager.databitrate       =   0
-apply_clock.argument.steps                                  =   [applyclock,applytec]
+apply_clock.argument.steps                                  =   [applyclock]
 apply_clock.argument.applyclock.type                        =   applycal
 apply_clock.argument.applyclock.correction                  =   clock000
 apply_clock.argument.applyclock.parmdb                      =   {{ cal_solutions }}
@@ -1028,10 +1028,10 @@ apply_TEC.argument.msin.datacolumn                          =   CORRECTED_DATA
 apply_TEC.argument.msout.datacolumn                         =   CORRECTED_DATA
 apply_TEC.argument.msout.storagemanager                     =   "Dysco"
 apply_TEC.argument.msout.storagemanager.databitrate         =   0
-apply_TEC.argument.steps                                    =   [applyclock,applytec]
-apply_TEC.argument.applyclock.type                          =   applycal
-apply_TEC.argument.applyclock.correction                    =   tec000
-apply_TEC.argument.applyclock.parmdb                        =   {{ cal_solutions }}
+apply_TEC.argument.steps                                    =   [applytec]
+apply_TEC.argument.applytec.type                            =   applycal
+apply_TEC.argument.applytec.correction                      =   tec000
+apply_TEC.argument.applytec.parmdb                          =   {{ cal_solutions }}
 
 ################################
 ## finalizing the results     ##
