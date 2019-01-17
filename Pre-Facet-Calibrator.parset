@@ -13,69 +13,71 @@
 ### parameters you will need to adjust. ##
 ##########################################
 ## information about the calibrator data
-! cal_input_path           =  /data/scratch/drabent                  ## specify the directory where your calibrator data is stored
-! cal_input_pattern        =  L217455*.MS                            ## regular expression pattern of all your calibrator files
+! cal_input_path           =  /data/scratch/drabent                                              ## specify the directory where your calibrator data is stored
+! cal_input_pattern        =  L217455*.MS                                                        ## regular expression pattern of all your calibrator files
 
 ## location of the software
-! prefactor_directory      =  /home/drabent/prefactor/               ## path to your prefactor copy
-! losoto_directory         =  /home/drabent/losoto                   ## path to your local LoSoTo installation
-! aoflagger                =  /home/drabent/aoflagger/bin/aoflagger  ## path to your aoflagger executable
+! prefactor_directory      =  /home/drabent/prefactor/                                           ## path to your prefactor copy
+! losoto_directory         =  /home/drabent/losoto                                               ## path to your local LoSoTo installation
+! aoflagger                =  /home/drabent/aoflagger/bin/aoflagger                              ## path to your aoflagger executable
 
 ##########################################
 ### parameters you may need to adjust   ##
 ##########################################
 
-! refant                   = 'CS001HBA0'                             ## name of the station that will be used as a reference for the phase-plots
-! flag_baselines           =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
-! filter_baselines         =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
-! do_smooth                =  False                                  ## enable or disable baseline-based smoothing
-! rfistrategy              =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger)
-! max2interpolate          =  30                                     ## amount of channels in which interpolation should be performed for deriving the bandpass
-! interp_windowsize        =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
-! ampRange                 =  [50,200]                               ## range of median amplitudes accepted per station
-! skip_international       =  True                                   ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
-! raw_data                 =  False                                  ## use autoweight, set to True in case you are using raw data
-! propagatesolutions       =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
+! refant                   =  'CS001HBA0'                                                        ## name of the station that will be used as a reference for the phase-plots
+! flag_baselines           =  []                                                                 ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
+! filter_baselines         =  [CR]S*&                                                            ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! do_smooth                =  False                                                              ## enable or disable baseline-based smoothing
+! rfistrategy              =  HBAdefault.rfis                                                    ## strategy to be applied with the statistical flagger (AOFlagger)
+! max2interpolate          =  30                                                                 ## amount of channels in which interpolation should be performed for deriving the bandpass
+! interp_windowsize        =  15                                                                 ## Size of the window over which a value is interpolated. Should be odd.
+! ampRange                 =  [50,200]                                                           ## range of median amplitudes accepted per station
+! skip_international       =  True                                                               ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
+! raw_data                 =  False                                                              ## use autoweight, set to True in case you are using raw data
+! propagatesolutions       =  True                                                               ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
-! demix_sources            =  [CasA,CygA]                            ## choose sources to demix (provided as list)
-! demix_target             =  ""                                     ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
-! demix_freqstep           =  16                                     ## number of channels to average when demixing.
-! demix_timestep           =  10                                     ## number of time slots to average when demixing
+! demix_sources            =  [CasA,CygA]                                                        ## choose sources to demix (provided as list)
+! demix_target             =  ""                                                                 ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
+! demix_freqstep           =  16                                                                 ## number of channels to average when demixing.
+! demix_timestep           =  10                                                                 ## number of time slots to average when demixing
 
 # definitions for pipeline options -- do not change!
-! default_flagging         =  flagbaseline,flagelev,flagamp          ## regular flagging after pre-processing by the observatory pipelines
-! raw_flagging             =  flagedge,aoflag,{{ default_flagging }} ## full flagging (usually only necessary for raw data)
-! 1st_order                =  ct,plotTEC,residuals                   ## Do not change! Only cal_ion should be edited if needed
-! 3rd_order                =  ct3,plotTEC3,residuals3                ## Do not change! Only cal_ion should be edited if needed
-! demix                    =  demix,                                 ## Do not change! Only demix_step should be edited if needed
-! none                     =                                         ## Do not change!
+! default_flagging         =  flagbaseline,flagelev,flagamp                                      ## regular flagging after pre-processing by the observatory pipelines
+! raw_flagging             =  flagedge,aoflag,{{ default_flagging }}                             ## full flagging (usually only necessary for raw data)
+! 1st_order                =  ct,plotTEC,residuals                                               ## Do not change! Only cal_ion should be edited if needed
+! 3rd_order                =  ct3,plotTEC3,residuals3                                            ## Do not change! Only cal_ion should be edited if needed
+! demix                    =  demix,                                                             ## Do not change! Only demix_step should be edited if needed
+! full_apply               =  apply_PA,apply_bandpass,apply_clock,apply_beam,apply_FR,apply_TEC  ## Do not change!
+! none                     =                                                                     ## Do not change!
 
 # pipeline options
-! initial_flagging         =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
-! demix_step               =  {{ none }}                             ## choose {{ demix }} if you want to demix
-! cal_ion                  =  {{ 1st_order }}                        ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects (may be useful for LBA < 35 MHz)
-! tables2export            =  clock000                               ## comma-separated list of tables to export from the ionospheric calibration step (cal_ion)
+! initial_flagging         =  {{ default_flagging }}                                             ## choose {{ raw_flagging }} if you process raw data
+! demix_step               =  {{ none }}                                                         ## choose {{ demix }} if you want to demix
+! cal_ion                  =  {{ 1st_order }}                                                    ## choose {{ 3rd_order }} if you want to include 3rd order ionospheric effects (may be useful for LBA < 35 MHz)
+! tables2export            =  clock000                                                           ## comma-separated list of tables to export from the ionospheric calibration step (cal_ion)
+! final_apply              =  {{ none }}
 
 ##########################################
 ### parameters for pipeline performance ##
 ##########################################
 
-! num_proc_per_node        =  input.output.max_per_node              ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
-! num_proc_per_node_limit  =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
-! max_dppp_threads         =  10                                     ## number of threads per process for NDPPP
-! memoryperc               =  20                                     ## maximum of memory used for aoflagger in raw_flagging mode in percent
-! min_length               =  50                                     ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! num_proc_per_node        =  input.output.max_per_node                                          ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
+! num_proc_per_node_limit  =  4                                                                  ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
+! max_dppp_threads         =  10                                                                 ## number of threads per process for NDPPP
+! memoryperc               =  20                                                                 ## maximum of memory used for aoflagger in raw_flagging mode in percent
+! min_length               =  50                                                                 ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
 
-! error_tolerance          =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance          =  False                                                              ## set this to True if you want the pipeline run to continue if single bands fail
 
 ##########################################
 ### parameters you may want to adjust   ##
 ##########################################
 
 ## main directories
-! lofar_directory          =  $LOFARROOT                             ## base directory of your LOFAR installation
-! job_directory            =  input.output.job_directory             ## directory of the prefactor outputs
+! lofar_directory          =  $LOFARROOT                                                         ## base directory of your LOFAR installation
+! job_directory            =  input.output.job_directory                                         ## directory of the prefactor outputs
 
 ## script and plugin directories
 ! scripts                  =  {{ prefactor_directory }}/scripts
@@ -85,17 +87,17 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ! calibrator_path_skymodel =  {{ prefactor_directory }}/skymodels
 
 ## result directories
-! results_directory        =  {{ job_directory }}/results            ## location of the results
-! inspection_directory     =  {{ results_directory }}/inspection     ## directory where the inspection plots will be stored
-! cal_values_directory     =  {{ results_directory }}/cal_values     ## directory where the final h5parm solution set will be stored
+! results_directory        =  {{ job_directory }}/results                                        ## location of the results
+! inspection_directory     =  {{ results_directory }}/inspection                                 ## directory where the inspection plots will be stored
+! cal_values_directory     =  {{ results_directory }}/cal_values                                 ## directory where the final h5parm solution set will be stored
 
 ## calibrator solutions
 ! cal_solutions            =  {{ cal_values_directory }}/cal_solutions.h5
 
 ## averaging for the calibrator data
-! avg_timeresolution       =  4.          # average to 4 sec/timeslot
-! avg_freqresolution       =  48.82kHz    # average to 48.82 kHz/ch (= 4 ch/SB)
-! bandpass_freqresolution  =  195.3125kHz # resolution of the bandpass table is 195.3125kHz (= 1 ch/SB)
+! avg_timeresolution       =  4.                                                                 ## average to 4 sec/timeslot
+! avg_freqresolution       =  48.82kHz                                                           ## average to 48.82 kHz/ch (= 4 ch/SB)
+! bandpass_freqresolution  =  195.3125kHz                                                        ## resolution of the bandpass table is 195.3125kHz (= 1 ch/SB)
 
 ########################################################
 ##                                                    ##
@@ -114,7 +116,7 @@ pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, proce
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
 pipeline.steps.bandpass    =  [smooth_corrected, calib_cal, h5imp_cal_bandpass, prepare_losoto_bandpass, process_losoto_bandpass, h5exp_cal_bandpass, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
-pipeline.steps.finalize    =  [h5parm_name]
+pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}]
 
 ###############################
 ## Mapping calibrator files  ##
@@ -995,6 +997,41 @@ apply_FR.argument.applyFR.type                              =   applycal
 apply_FR.argument.applyFR.correction                        =   rotationmeasure000
 apply_FR.argument.applyFR.parmdb                            =   {{ cal_solutions }}
 
+# apply the clock solutions
+apply_clock.control.type                                    =   dppp
+apply_clock.control.error_tolerance                         =   {{ error_tolerance }}
+apply_clock.control.inplace                                 =   True
+apply_clock.control.max_per_node                            =   {{ num_proc_per_node_limit }}
+apply_clock.control.mapfile_in                              =   ndppp_prep_cal.output.mapfile
+apply_clock.control.inputkey                                =   msfile
+apply_clock.argument.msin                                   =   msfile
+apply_clock.argument.numthreads                             =   {{ max_dppp_threads }}
+apply_clock.argument.msin.datacolumn                        =   CORRECTED_DATA
+apply_clock.argument.msout.datacolumn                       =   CORRECTED_DATA
+apply_clock.argument.msout.storagemanager                   =   "Dysco"
+apply_clock.argument.msout.storagemanager.databitrate       =   0
+apply_clock.argument.steps                                  =   [applyclock,applytec]
+apply_clock.argument.applyclock.type                        =   applycal
+apply_clock.argument.applyclock.correction                  =   clock000
+apply_clock.argument.applyclock.parmdb                      =   {{ cal_solutions }}
+
+# apply the TEC solutions
+apply_TEC.control.type                                      =   dppp
+apply_TEC.control.error_tolerance                           =   {{ error_tolerance }}
+apply_TEC.control.inplace                                   =   True
+apply_TEC.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+apply_TEC.control.mapfile_in                                =   ndppp_prep_cal.output.mapfile
+apply_TEC.control.inputkey                                  =   msfile
+apply_TEC.argument.msin                                     =   msfile
+apply_TEC.argument.numthreads                               =   {{ max_dppp_threads }}
+apply_TEC.argument.msin.datacolumn                          =   CORRECTED_DATA
+apply_TEC.argument.msout.datacolumn                         =   CORRECTED_DATA
+apply_TEC.argument.msout.storagemanager                     =   "Dysco"
+apply_TEC.argument.msout.storagemanager.databitrate         =   0
+apply_TEC.argument.steps                                    =   [applyclock,applytec]
+apply_TEC.argument.applyclock.type                          =   applycal
+apply_TEC.argument.applyclock.correction                    =   tec000
+apply_TEC.argument.applyclock.parmdb                        =   {{ cal_solutions }}
 
 ################################
 ## finalizing the results     ##
