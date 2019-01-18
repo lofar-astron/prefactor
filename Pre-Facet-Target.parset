@@ -125,7 +125,7 @@ pipeline.steps              =  [prep, {{ clipATeam }} concat, prep_gsmcal, {{ gs
 pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
-pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, aoflag]
+pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
 pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, h5exp_phase,            make_results_mapfile_phase, move_results_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, h5exp_tec,   apply_tec, make_results_mapfile_tec,   move_results_tec]
@@ -448,6 +448,14 @@ ms_concat_target_map.control.kind                              =   plugin
 ms_concat_target_map.control.type                              =   mapfilenamesFromMapfiles
 ms_concat_target_map.control.mapfile_concatmap                 =   ms_concat_target.output.concatmapfile.mapfile
 
+# convert the output of ms_concat_target into usable mapfiles
+expand_memory_map.control.kind                                 =   plugin
+expand_memory_map.control.type                                 =   expandMapfile
+expand_memory_map.control.mapfile_in                           =   ms_concat_target.output.memory.mapfile
+expand_memory_map.control.mapfile_to_match                     =   ms_concat_target_map.output.concatmap
+expand_memory_map.control.mapfile_dir                          =   input.output.mapfile_dir
+expand_memory_map.control.filename                             =   expand_memory_map.mapfile
+
 # run aoflagger on the concatenated data
 aoflag.control.kind                                            =   recipe
 aoflag.control.type                                            =   executable_args
@@ -455,11 +463,11 @@ aoflag.control.inplace                                         =   True
 aoflag.control.executable                                      =   {{ aoflagger }}
 aoflag.control.max_per_node                                    =   1
 aoflag.control.error_tolerance                                 =   {{ error_tolerance }}
-aoflag.control.mapfile_in                                      =   ms_concat_target_map.output.concatmap
-aoflag.control.inputkey                                        =   msin
+aoflag.control.mapfiles_in                                     =   [ms_concat_target_map.output.concatmap,expand_memory_map.output.mapfile]
+aoflag.control.inputkeys                                       =   [msin,memory]
 aoflag.control.args_format                                     =   wsclean
 aoflag.argument.strategy                                       =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                          =   [-v,ms_concat_target.output.memory.mapfile,-combine-spws,msin]
+aoflag.argument.flags                                          =   [-v,memory,-combine-spws,msin]
 
 
 #############################

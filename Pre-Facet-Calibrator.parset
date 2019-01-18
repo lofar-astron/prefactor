@@ -110,7 +110,7 @@ pipeline.steps             =  [createmap_cal, prep, PA, FR, bandpass, ion, final
 
 
 # pipeline substeps
-pipeline.steps.prep        =  [mk_cal_values_dir, createmap_prepcal, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, h5imp_cal_map, interp_cal, smooth_data, predict_cal]
+pipeline.steps.prep        =  [mk_cal_values_dir, createmap_prepcal, createmap_instcal, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, ndppp_prep_cal, combine_data_cal_map, ms_concat, ms_concat_map, expand_memory_map, aoflag, sky_cal, make_sourcedb, expand_sourcedb, calib_cal_parmmap, h5imp_cal_map, interp_cal, smooth_data, predict_cal]
 
 pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal, h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
@@ -255,6 +255,14 @@ ms_concat_map.control.kind                                  =   plugin
 ms_concat_map.control.type                                  =   mapfilenamesFromMapfiles
 ms_concat_map.control.mapfile_concatmap                     =   ms_concat.output.concatmapfile.mapfile
 
+# convert the output of ms_concat_target into usable mapfiles
+expand_memory_map.control.kind                              =   plugin
+expand_memory_map.control.type                              =   expandMapfile
+expand_memory_map.control.mapfile_in                        =   ms_concat.output.memory.mapfile
+expand_memory_map.control.mapfile_to_match                  =   ms_concat_map.output.concatmap
+expand_memory_map.control.mapfile_dir                       =   input.output.mapfile_dir
+expand_memory_map.control.filename                          =   expand_memory_map.mapfile
+
 # run aoflagger on the concatenated data
 aoflag.control.kind                                         =   recipe
 aoflag.control.type                                         =   executable_args
@@ -262,11 +270,11 @@ aoflag.control.inplace                                      =   True
 aoflag.control.executable                                   =   {{ aoflagger }}
 aoflag.control.max_per_node                                 =   1
 aoflag.control.error_tolerance                              =   {{ error_tolerance }}
-aoflag.control.mapfile_in                                   =   ms_concat_map.output.concatmap
-aoflag.control.inputkey                                     =   msin
+aoflag.control.mapfiles_in                                  =   [ms_concat_map.output.concatmap,expand_memory_map.output.mapfile]
+aoflag.control.inputkeys                                    =   [msin,memory]
 aoflag.control.args_format                                  =   wsclean
 aoflag.argument.strategy                                    =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                       =   [-v,ms_concat.output.memory.mapfile,-combine-spws,msin]
+aoflag.argument.flags                                       =   [-v,memory,-combine-spws,msin]
 
 # find automatically the calibrator sky model
 sky_cal.control.type                                        =   pythonplugin
@@ -1060,14 +1068,6 @@ apply_TEC.argument.applytec.parmdb                          =   {{ cal_solutions
 # apply_offset.argument.applyoffset.type                      =   applycal
 # apply_offset.argument.applyoffset.correction                =   phase_offset000
 # apply_offset.argument.applyoffset.parmdb                    =   {{ cal_solutions }}
-
-# expand phase offset solutions
-expand_sourcedb.control.kind                                =   plugin
-expand_sourcedb.control.type                                =   expandMapfile
-expand_sourcedb.control.mapfile_in                          =   make_sourcedb.output.mapfile
-expand_sourcedb.control.mapfile_to_match                    =   ndppp_prep_cal.output.mapfile
-expand_sourcedb.control.mapfile_dir                         =   input.output.mapfile_dir
-expand_sourcedb.control.filename                            =   expand_sourcedb.mapfile
 
 ###############################
 ## finalizing the results     ##
