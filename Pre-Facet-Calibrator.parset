@@ -47,7 +47,7 @@
 ! default_flagging         =  flagbaseline,flagelev,flagamp                                       ## regular flagging after pre-processing by the observatory pipelines
 ! raw_flagging             =  flagedge,aoflag,{{ default_flagging }}                              ## full flagging (usually only necessary for raw data)
 ! 1st_order                =  ct,plotTEC,residuals                                                ## Do not change! Only cal_ion should be edited if needed
-! 3rd_order                =  ct3,plotTEC3,residuals3                                             ## Do not change! Only cal_ion should be edited if needed
+! 3rd_order                =  ct3,plotTEC,plotTEC3,residuals3                                     ## Do not change! Only cal_ion should be edited if needed
 ! demix                    =  demix,                                                              ## Do not change! Only demix_step should be edited if needed
 ! full_apply               =  ,apply_PA,apply_bandpass,apply_clock,apply_beam,apply_FR,apply_TEC  ## Do not change!
 ! none                     =                                                                      ## Do not change!
