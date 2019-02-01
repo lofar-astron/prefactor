@@ -41,7 +41,7 @@ def getfilesize(MS):
    pass
 
 ########################################################################
-def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
+def main(ms_input, ms_output, min_length, strategy, filename=None, mapfile_dir=None):
 
     """
     Virtually concatenate subbands
@@ -59,8 +59,24 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
 
     """
     filelist      = input2strlist_nomapfile(ms_input)
-    max_space     = int(getsystemmemory() / getfilesize(filelist[0]))
+    system_memory = getsystemmemory()
+    file_size     = getfilesize(filelist[0])
+    max_space     = int(system_memory / file_size)
     max_length    = len(filelist) / ((len(filelist) / max_space) + 1)
+    
+    print "Your strategy is:", strategy
+    if 'wideband' in strategy:
+        overhead = 0.2
+        pass
+    else:
+        overhead = 0.8
+        pass
+    
+    i = 0
+    while max_length * file_size > overhead * system_memory:
+        i += 1
+        max_length = len(filelist) / ((len(filelist) / max_space) + i)
+        pass
     
     if max_length >= int(min_length):
         memory = '-memory-read'
@@ -71,8 +87,9 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
         pass
     
     print "The max_length value is: " + str(max_length)
-    set_ranges    = list(numpy.arange(0, len(filelist), int(max_length)))
-    set_ranges.append(len(filelist))
+    set_ranges    = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
+    set_ranges[-1] = len(filelist)
+    print "The ranges are:", set_ranges
 
     map_out = DataMap([])
     for i in numpy.arange(len(set_ranges) - 1):
@@ -97,9 +114,11 @@ if __name__ == '__main__':
                         help='Output MS file')
     parser.add_argument('-min_length', type=str,
                         help='Minimum amount of subbands to concatenate in frequency.')
+    parser.add_argument('-strategy', type=str,
+                        help='AOFlagger strategy to be used.', default='HBADefault.rfis')
 
 
 
     args = parser.parse_args()
 
-    main(args.MSfile,args.MSout,args.min_length)
+    main(args.MSfile,args.MSout,args.min_length,args.strategy)

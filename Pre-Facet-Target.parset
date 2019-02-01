@@ -441,7 +441,7 @@ ms_concat_target.control.executable                            =   {{ scripts }}
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.filename                             =   concatmapfile.mapfile
 ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
-ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ min_length }}]
+ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ min_length }},{{ rfistrategy }}]
 
 # convert the output of ms_concat_target into usable mapfiles
 ms_concat_target_map.control.kind                              =   plugin

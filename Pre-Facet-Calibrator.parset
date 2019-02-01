@@ -14,7 +14,7 @@
 ##########################################
 ## information about the calibrator data
 ! cal_input_path           =  /data/scratch/drabent                                               ## specify the directory where your calibrator data is stored
-! cal_input_pattern        =  L217455*.MS                                                         ## regular expression pattern of all your calibrator files
+! cal_input_pattern        =  L368144*.MS                                                         ## regular expression pattern of all your calibrator files
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor/                                            ## path to your prefactor copy
@@ -248,7 +248,7 @@ ms_concat.control.executable                                =   {{ scripts }}/co
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
 ms_concat.argument.filename                                 =   concatmapfile.mapfile
 ms_concat.argument.mapfile_dir                              =   input.output.mapfile_dir
-ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey,{{ min_length }}]
+ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey,{{ min_length }},{{ rfistrategy }}]
 
 # convert the output of ms_concat into usable mapfiles
 ms_concat_map.control.kind                                  =   plugin
