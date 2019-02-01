@@ -47,7 +47,7 @@
 ! default_flagging         =  flagbaseline,flagelev,flagamp                                       ## regular flagging after pre-processing by the observatory pipelines
 ! raw_flagging             =  flagedge,aoflag,{{ default_flagging }}                              ## full flagging (usually only necessary for raw data)
 ! 1st_order                =  ct,plotTEC,residuals                                                ## Do not change! Only cal_ion should be edited if needed
-! 3rd_order                =  ct3,plotTEC3,residuals3                                             ## Do not change! Only cal_ion should be edited if needed
+! 3rd_order                =  ct3,plotTEC,plotTEC3,residuals3                                     ## Do not change! Only cal_ion should be edited if needed
 ! demix                    =  demix,                                                              ## Do not change! Only demix_step should be edited if needed
 ! full_apply               =  ,apply_PA,apply_bandpass,apply_clock,apply_beam,apply_FR,apply_TEC  ## Do not change!
 ! none                     =                                                                      ## Do not change!
@@ -882,7 +882,7 @@ prepare_losoto_ion.control.plotTEC3.operation               =   PLOT
 prepare_losoto_ion.control.plotTEC3.soltab                  =   sol000/tec3rd000
 prepare_losoto_ion.control.plotTEC3.axesInPlot              =   [time]
 prepare_losoto_ion.control.plotTEC3.axisInTable             =   ant
-prepare_losoto_ion.control.plotTEC3.prefix                  =   plots/tec3rd
+prepare_losoto_ion.control.plotTEC3.prefix                  =   {{ inspection_directory }}/tec3rd
 prepare_losoto_ion.control.plotTEC3.plotFlag                =   False
 prepare_losoto_ion.control.plotTEC3.refAnt                  =   {{ refant }}
 prepare_losoto_ion.control.residuals.operation              =   RESIDUALS
