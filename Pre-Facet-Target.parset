@@ -126,9 +126,9 @@ pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_ta
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
-pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
-pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, h5exp_phase,            make_results_mapfile_phase, move_results_phase]
-pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, h5exp_tec,   apply_tec, make_results_mapfile_tec,   move_results_tec]
+pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target]
+pipeline.steps.phase        =  [                smooth_data, gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, h5exp_phase,            make_results_mapfile_phase, move_results_phase]
+pipeline.steps.tec          =  [gsmcal_predict, smooth_data, gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, h5exp_tec,   apply_tec, make_results_mapfile_tec,   move_results_tec]
 
 pipeline.steps.finalize     =  [make_results_mapfile_uncor, move_results_uncor]
 
@@ -602,13 +602,31 @@ gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
 gsmcal_phase.argument.gaincal.applysolution                    =   True
 gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
 
+# predict for direction-independent TEC
+gsmcal_predict.control.type                                    =   dppp
+gsmcal_predict.control.error_tolerance                         =   {{ error_tolerance }}
+gsmcal_predict.control.inplace                                 =   True
+gsmcal_predict.control.max_per_node                            =   {{ num_proc_per_node_limit }}
+gsmcal_predict.control.mapfiles_in                             =   [check_unflagged_map.output.mapfile,expand_sourcedb_target.output.mapfile]
+gsmcal_predict.control.inputkeys                               =   [input_file,sourcedb]
+gsmcal_predict.argument.msin                                   =   input_file
+gsmcal_predict.argument.numthreads                             =   {{ max_dppp_threads }}
+gsmcal_predict.argument.msin.datacolumn                        =   DATA
+gsmcal_predict.argument.msout.datacolumn                       =   MODEL_DATA
+gsmcal_predict.argument.steps                                  =   [predict]
+gsmcal_predict.argument.predict.type                           =   predict
+gsmcal_predict.argument.predict.sourcedb                       =   sourcedb
+gsmcal_predict.argument.predict.usebeammodel                   =   True
+gsmcal_predict.argument.predict.usechannelfreq                 =   True
+gsmcal_predict.argument.predict.beammode                       =   array_factor
+
 # solve for direction-independent TEC
 gsmcal_tec.control.type                                        =   dppp
 gsmcal_tec.control.error_tolerance                             =   {{ error_tolerance }}
 gsmcal_tec.control.inplace                                     =   True
 gsmcal_tec.control.max_per_node                                =   {{ num_proc_per_node_limit }}
-gsmcal_tec.control.mapfiles_in                                 =   [check_unflagged_map.output.mapfile,expand_sourcedb_target.output.mapfile,gsmcal_parmmap.output.mapfile]
-gsmcal_tec.control.inputkeys                                   =   [input_file,sourcedb,parmdb]
+gsmcal_tec.control.mapfiles_in                                 =   [check_unflagged_map.output.mapfile,gsmcal_parmmap.output.mapfile]
+gsmcal_tec.control.inputkeys                                   =   [input_file,parmdb]
 gsmcal_tec.argument.msin                                       =   input_file
 gsmcal_tec.argument.numthreads                                 =   {{ max_dppp_threads }}
 gsmcal_tec.argument.msin.datacolumn                            =   SMOOTHED_DATA
@@ -616,19 +634,19 @@ gsmcal_tec.argument.steps                                      =   [filter,ddeca
 gsmcal_tec.argument.filter.type                                =   filter
 gsmcal_tec.argument.filter.blrange                             =   [150, 999999]
 gsmcal_tec.argument.ddecal.type                                =   ddecal
-gsmcal_tec.argument.ddecal.uvlambdamin                         =   250
-gsmcal_tec.argument.ddecal.maxiter                             =   500
-gsmcal_tec.argument.ddecal.tolerance                           =   5e-4
+gsmcal_tec.argument.ddecal.uvlambdamin                         =   100
+gsmcal_tec.argument.ddecal.maxiter                             =   400
+gsmcal_tec.argument.ddecal.tolerance                           =   1e-3
 gsmcal_tec.argument.ddecal.solint                              =   3
-gsmcal_tec.argument.ddecal.nchan                               =   1
+gsmcal_tec.argument.ddecal.nchan                               =   4
 gsmcal_tec.argument.ddecal.stepsize                            =   0.2
 gsmcal_tec.argument.ddecal.h5parm                              =   parmdb
 gsmcal_tec.argument.ddecal.mode                                =   tec 
 gsmcal_tec.argument.ddecal.propagatesolutions                  =   {{ propagatesolutions }}
 gsmcal_tec.argument.ddecal.approximatetec                      =   True
-gsmcal_tec.argument.ddecal.maxapproxiter                       =   200 
-gsmcal_tec.argument.ddecal.approxtolerance                     =   5e-3
-gsmcal_tec.argument.ddecal.sourcedb                            =   sourcedb
+gsmcal_tec.argument.ddecal.maxapproxiter                       =   400 
+gsmcal_tec.argument.ddecal.approxtolerance                     =   1e-3
+gsmcal_tec.argument.ddecal.uselmodelcolumn                     =   True
 
 
 ###########################
