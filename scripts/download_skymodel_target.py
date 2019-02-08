@@ -4,7 +4,7 @@ import glob
 import pyrap.tables as pt
 import numpy as np
 import time
-
+import lsmtool
 
 ########################################################################
 def grab_coord_MS(MS):
@@ -126,6 +126,11 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True", Source="TGSS"):
     if not os.path.isfile(SkymodelPath):
         raise IOError("download_tgss_skymodel_target: Path: \"%s\" does not exist after trying to download the skymodel."%(SkymodelPath))
 
+    # Treat all sources as one group (direction)
+    skymodel = lsmtool.load(SkymodelPath)
+    skymodel.group('single')
+    skymodel.write(clobber=True)
+    
     return
 
 
