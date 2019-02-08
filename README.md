@@ -30,13 +30,13 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 * APLpy (for Initial-Subtract)
 
 ### Installation
-The recommended way to install prefactor is to downloaded it from github with git clone:
+The recommended way to install prefactor is to download it from github with:
 
 ```
 git clone https://github.com/lofar-astron/prefactor.git
 ```
 
-This allows easy update of the code to include bugfixes or new features.
+This allows for easy updating of the code to include bugfixes or new features.
 It is also possible to download tar files of releases from the [release page](https://github.com/lofar-astron/prefactor/releases).
 
 Once downloaded, the installation is complete; to set up a run, see the detailed setup information at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
