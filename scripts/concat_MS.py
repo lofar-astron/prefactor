@@ -41,7 +41,7 @@ def getfilesize(MS):
    pass
 
 ########################################################################
-def main(ms_input, ms_output, min_length, strategy, filename=None, mapfile_dir=None):
+def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
 
     """
     Virtually concatenate subbands
@@ -64,14 +64,8 @@ def main(ms_input, ms_output, min_length, strategy, filename=None, mapfile_dir=N
     max_space     = int(system_memory / file_size)
     max_length    = len(filelist) / ((len(filelist) / max_space) + 1)
     
-    print "Your strategy is:", strategy
-    if 'wideband' in strategy:
-        overhead = 0.2
-        pass
-    else:
-        overhead = 0.8
-        pass
-    
+
+    overhead = 0.8
     i = 0
     while max_length * file_size > overhead * system_memory:
         i += 1
@@ -114,11 +108,9 @@ if __name__ == '__main__':
                         help='Output MS file')
     parser.add_argument('-min_length', type=str,
                         help='Minimum amount of subbands to concatenate in frequency.')
-    parser.add_argument('-strategy', type=str,
-                        help='AOFlagger strategy to be used.', default='HBADefault.rfis')
 
 
 
     args = parser.parse_args()
 
-    main(args.MSfile,args.MSout,args.min_length,args.strategy)
+    main(args.MSfile,args.MSout,args.min_length)
