@@ -20,7 +20,7 @@ if you are running ``My_prefactor_calibrator.parset`` a directory named
 ``My_prefactor_calibrator`` will appear in your ``runtime_directory``)::
 
     $ ls My_prefactor_calibrator/
-    logs  mapfiles parsets statefile
+    logs mapfiles parsets statefile
 
 The logs dir contains all the logs of the pipeline runs, identified by the date
 and time of execution, e.g.::
@@ -40,8 +40,8 @@ The intermediate data files of the pipeline are written in the ``working_directo
 specified in the ``pipeline.cfg``.
 
 
-Stopping and re-starting the pipeline
--------------------------------------
+Stopping and restarting the pipeline
+------------------------------------
 
 You can stop a pipeline run anytime by terminating the genericpipeline process
 (typically by pressing CRTL-C in the terminal where you started it). Sometimes some of

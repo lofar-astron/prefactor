@@ -134,10 +134,10 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 - ``scripts``: location of the prefactor scripts (default: ``{{ prefactor_directory }}/scripts``)
 - ``pipeline.pluginpath``: location of the prefactor plugins: (default: ``{{ prefactor_directory }}/plugins``)
 
-*Skymodel directory*
+*Sky model directory*
 
-- ``target_skymodel``: location of the target skymodel (default: ``{{ job_directory }}/target.skymodel``), use False for ``use_tgss_target`` in case ``target_skymodel`` is already a pre-existing user-supplied skymodel
-- ``use_tgss_target``: download the phase-only calibration skymodel from TGSS (``Force`` : always download , ``True`` download if ``{{ target_skymodel }}`` does not exist , ``False`` : never download)
+- ``target_skymodel``: location of the target sky model (default: ``{{ job_directory }}/target.skymodel``), use False for ``use_tgss_target`` in case ``target_skymodel`` is already a pre-existing user-supplied skymodel
+- ``use_tgss_target``: download the phase-only calibration sky model from TGSS (``Force`` : always download , ``True`` download if ``{{ target_skymodel }}`` does not exist , ``False`` : never download)
 
 *Result directories*
 
@@ -154,7 +154,7 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 - ``avg_timeresolution``: intermediate time resolution of the data in seconds after averaging (default: 4)
 - ``avg_freqresolution`` : intermediate frequency resolution of the data after averaging (default: 48.82kHz, which translates to 4 channels per subband)
 - ``avg_timeresolution_concat``: final time resolution of the data in seconds after averaging and concatenation (default: 8)
-- ``avg_freqresolution_concat``: final frequency resolution of the data after avaerginag and concatenation (default: 97.64kHz, which translates to 2 channels per subband)
+- ``avg_freqresolution_concat``: final frequency resolution of the data after averaging and concatenation (default: 97.64kHz, which translates to 2 channels per subband)
 
 *Concatenating of the target data*
 

@@ -1,7 +1,7 @@
 .. _parset:
 
-Preparing the configuration file and pipeline parset
-====================================================
+Configuring prefactor
+=====================
 
 Preparing the configuration file
 --------------------------------

@@ -18,7 +18,7 @@ It includes:
 - advanced flagging and interpolation of bad data
 - mitigation of broad-band RFI and bad stations
 - direction-independent phase correction of the target, using a global sky model from `TGSS ADR`_  or the new Global Sky Model (GSM)
-- detailled diagnostics
+- detailed diagnostics
 
 It will prepare your data so that you will be able to use any direction-dependent calibration software, like `factor`_ or `killMS`_.
 
