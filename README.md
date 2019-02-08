@@ -26,7 +26,7 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 * Python (including matplotlib, scipy, and astropy)
 * [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
 * [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
-* for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
+* for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with [IDG](https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
 
 ### Installation
