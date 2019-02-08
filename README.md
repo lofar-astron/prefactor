@@ -45,8 +45,10 @@ Once downloaded, the installation is complete; to set up a run, see the detailed
 prefactor contains the following sub-directories:
 * **bin** scripts for your convenience. At the moment, these consist only of a state-file manipulation tool for changing the state of a previously run pipeline
 * **plugins** scripts for manipulating mapfiles
-* **skymodels** skymodels that are used by the pipeline (e.g. for demixing or calibrating the calibrator)
+* **rfistrategies** strategies for statistical RFI mitigation using [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
 * **scripts** scripts that the pipeline calls to process data, generate plots, etc.
+* **skymodels** skymodels that are used by the pipeline (e.g. for demixing or calibrating the calibrator)
+
 
 The main directory contains the different parsets for the genericpipeline:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
