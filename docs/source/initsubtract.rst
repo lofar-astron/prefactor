@@ -16,48 +16,10 @@ faster than the normal WSClean if you have GPUs.
     At this time, only HBA data are supported.
 
 
-Parameters
-----------
-
-``! data_input_path``
-    Directory where your concatenated target data are stored.
-``! data_input_pattern``
-    Regular expression pattern of all your target files.
-    .. note::
-
-        These files should not have any calibration applied to the DATA column!
-``! direction_indep_h5parm``
-    Full path to the direction-independent target calibration solutions.
-``! cellsize_highres_deg``
-    Cellsize in degrees for high-resolution images.
-``! cellsize_lowres_deg``
-    Cellsize in degrees for low-resolution images.
-``! fieldsize_highres``
-    Size of the high-resolution image is this value times the FWHM of mean semi-major axis of
-    the station beam.
-``! fieldsize_lowres``
-    Size of the low-resolution image is this value times the FWHM of mean semi-major axis of
-    the station beam.
-``! maxlambda_highres``
-    Maximum uv-distance in lambda that will be used for the high-resolution imaging.
-``! maxlambda_lowres``
-    Maximum uv-distance in lambda that will be used for the low-resolution imaging.
-``! image_padding``
-    How much padding shall we add during the imaging?
-``! nbands_image``
-    Number of bands to image (spread over the full bandwidth). Larger values
-    result in better subtraction but longer runtimes.
-``! min_flux_jy``
-    Minimum flux density in Jy of clean components from the high-resolution
-    imaging to include in subtract_high step.
-``! idg_mode``
-    IDG mode to use: cpu or hybrid (= CPU + GPU).
-``! local_scratch_dir``
-    Scratch directory for wsclean (can be local to the processing nodes!).
-
-
-Steps
------
+Prepare data
+------------
+This part of the pipeline prepares the target data in order to be imaged. The steps are
+as follows:
 
 ``create_ms_map``
     Generate a mapfile of all the target data. The files must be supplied as a
@@ -87,6 +49,15 @@ Steps
     Adjust the high_size mapfile to match the selected bands.
 ``select_high_nwavelengths``
     Adjust the nwavelengths mapfile to match the selected bands.
+
+
+Imaging and subtraction
+-----------------------
+Imaging is done at two resolutions to fully cover the expected range of source structure.
+WSClean is used to produce the images. See the parset and the do_magic step above
+for details of the parameters used. They are chosen to produce good results for
+most standard observations.
+
 ``wsclean_high``
     Image the data with WSClean to make the high-resolution images. The images will
     automatically be stretched along the y-axis to account for the elongation of the
@@ -197,3 +168,66 @@ Steps
     Create a map with the generated plots.
 ``move_plots``
     Move the plots to the inpection directory.
+
+
+
+User-defined parameter configuration
+------------------------------------
+
+**Parameters you will need to adjust**
+
+*Information about the input data*
+
+``! data_input_path``
+    Directory where your concatenated target data are stored.
+``! data_input_pattern``
+    Regular expression pattern of all your target files.
+    .. note::
+
+        These files should not have any calibration applied to the DATA column!
+``! direction_indep_h5parm``
+    Full path to the direction-independent target calibration solutions.
+
+*Location of the software*
+
+``! prefactor_directory``
+    Path to your prefactor copy
+``! wsclean_executable``
+    Path to your local WSClean executable
+
+**Parameters you may need to adjust**
+
+*Imaging and subtraction options*
+
+``! cellsize_highres_deg``
+    Cellsize in degrees for high-resolution images.
+``! cellsize_lowres_deg``
+    Cellsize in degrees for low-resolution images.
+``! fieldsize_highres``
+    Size of the high-resolution image is this value times the FWHM of mean semi-major axis of
+    the station beam.
+``! fieldsize_lowres``
+    Size of the low-resolution image is this value times the FWHM of mean semi-major axis of
+    the station beam.
+``! maxlambda_highres``
+    Maximum uv-distance in lambda that will be used for the high-resolution imaging.
+``! maxlambda_lowres``
+    Maximum uv-distance in lambda that will be used for the low-resolution imaging.
+``! image_padding``
+    How much padding shall we add during the imaging?
+``! nbands_image``
+    Number of bands to image (spread over the full bandwidth). Larger values
+    result in better subtraction but longer runtimes.
+``! min_flux_jy``
+    Minimum flux density in Jy of clean components from the high-resolution
+    imaging to include in subtract_high step.
+``! idg_mode``
+    IDG mode to use: cpu or hybrid (= CPU + GPU).
+``! local_scratch_dir``
+    Scratch directory for wsclean (can be local to the processing nodes!).
+
+
+Parameters for **HBA** and **LBA** observations
+-----------------------------------------------
+
+At this time, only HBA data are supported.

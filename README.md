@@ -16,16 +16,9 @@ It includes:
 * detailled diagnostics
 * (optional) wide-band cleaning in Initial-Subtract
 
-The full documentation can be found on the [wiki pages](https://www.astron.nl/citt/prefactor/).
+The full documentation can be found at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
 
-There are several pipeline parsets in this repository:
-* Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
-* Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
-* Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
-* Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean
-* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
-
-Software requirements:
+### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
 * [LoSoTo](https://github.com/revoltek/losoto) (version >= 2.0)
 * [LSMTool](https://github.com/darafferty/LSMTool)
@@ -35,6 +28,33 @@ Software requirements:
 * [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
 * for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
+
+### Installation
+The recommended way to install prefactor is to downloaded it from github with git clone:
+
+```
+git clone https://github.com/lofar-astron/prefactor.git
+```
+
+This allows easy update of the code to include bugfixes or new features.
+It is also possible to download tar files of releases from the [release page](https://github.com/lofar-astron/prefactor/releases).
+
+Once downloaded, the installation is complete; to set up a run, see the detailed setup information at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
+
+### Directory Structure
+prefactor contains the following sub-directories:
+* **bin** scripts for your convenience. At the moment, these consist only of a state-file manipulation tool for changing the state of a previously run pipeline
+* **plugins** scripts for manipulating mapfiles
+* **skymodels** skymodels that are used by the pipeline (e.g. for demixing or calibrating the calibrator)
+* **scripts** scripts that the pipeline calls to process data, generate plots, etc.
+
+The main directory contains the different parsets for the genericpipeline:
+* Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
+* Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
+* Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
+* Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean
+* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
+
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Alexander Drabent <alex somewhere tls-tautenburg.de>

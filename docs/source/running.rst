@@ -44,7 +44,7 @@ Stopping and re-starting the pipeline
 -------------------------------------
 
 You can stop a pipeline run anytime by terminating the genericpipeline process
-(typically by pressing CNTL-C in the terminal where you started it). Sometimes some of
+(typically by pressing CRTL-C in the terminal where you started it). Sometimes some of
 the processes that the pipeline started don't get properly terminated, so if the
 genericpipeline process doesn't terminate you should look for its child
 processes and terminate them too.
@@ -57,3 +57,39 @@ processes and terminate them too.
 
 As mentioned earlier, you can re-start the pipeline by running the same command
 with which you started it.
+
+
+Pipeline crashes
+----------------
+
+It can happen that the pipeline stops with a message like this::
+
+     ERROR   genericpipeline: LOFAR Pipeline finished unsuccesfully.
+     WARNING genericpipeline: recipe genericpipeline completed with errors
+
+You need to read the log of that run to identify the reason why it stopped, e.g.::
+
+    > less My_prefactor_calibrator/logs/2016-06-30T15:07:21/pipeline.log
+
+It is usually best to first check at the end of the file for what ended the
+pipeline and then search from the beginning of the file for error or diagnostic
+messages that tell you what exactly went wrong. See :ref:`help` for tips on
+interpreting the error messages.
+
+If you identify the problem and it does not affect the products that have been
+already produced, you can launch the pipeline again, after correcting the issue
+causing the process to stop.
+
+
+Rerunning parts of the pipeline
+--------------------------------
+
+You can fully rerun a pipeline by deleting the runtime and working directories and restarting the pipeline.
+
+To rerun parts of the pipeline that were (allegedly) already executed
+successfully, you need to modify the ``statefile`` of the pipeline. To do this
+there is a ``statefile_manipulation.py`` script as part of prefactor::
+
+    python prefactor/bin/statefile_manipulation.py My_Workdir/My_calibrator_job/statefile
+
+If you then run the pipeline again, it will start at the step that you removed with the statefile manipulation tool.
