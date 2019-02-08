@@ -1,21 +1,22 @@
 # prefactor
 ## The LOFAR pre-facet calibration pipeline.
 
-Parsets for the genericpipeline that do the first calibration of LOFAR data. Originally in order
-to prepare said data for the Factor facet calibration (https://github.com/lofar-astron/factor), but
-also useful if you don't plan to run Factor.
+**prefactor** is a pipeline to correct for various instrumental and ionospheric effects in both **LOFAR HBA** and **LOFAR LBA** observations.
+It will prepare your data so that you will be able to use any direction-dependent calibration software, like [factor](https://github.com/lofar-astron/factor) or [killMS](https://github.com/saopicc/killMS/).
 
 It includes:
-* applying Ionospheric RM corrections
-* clock-TEC separation with transfer of clock from the calibrator to the target
-* some flagging and averaging of amplitude solutions
-* grouping of subbands by actual frequency
-* speed and disk usage improvements by optimized usage of NDPPP
+* removal of clock offsets between core and remote stations (using clock-TEC separation)
+* correction of the polarization alignment between XX and YY
+* robust time-independent bandpass correction
+* ionospheric RM corrections with [RMextract](https://github.com/lofar-astron/RMextract/)
+* removal of the element beam
+* advanced flagging and interpolation of bad data
+* mitigation of broad-band RFI and bad stations
+* direction-independent phase correction of the target, using a global sky model from [TGSS ADR](https://http://tgssadr.strw.leidenuniv.nl/)  or the new Global Sky Model [GSM](http://172.104.228.177/)
+* detailled diagnostics
 * (optional) wide-band cleaning in Initial-Subtract
-* diagnostic plots
-* at least some documentation on the [wiki pages](https://github.com/lofar-astron/prefactor/wiki)
 
-The documentation can be found on the GitHub wiki pages: https://github.com/lofar-astron/prefactor/wiki
+The full documentation can be found on the [wiki pages](https://www.astron.nl/citt/prefactor/).
 
 There are several pipeline parsets in this repository:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
@@ -26,12 +27,12 @@ There are several pipeline parsets in this repository:
 
 Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
-* LoSoTo (version >= 2.0 -- see https://github.com/revoltek/losoto)
-* LSMTool (see https://github.com/darafferty/LSMTool)
-* RMextract (see https://github.com/maaijke/RMextract)
+* [LoSoTo](https://github.com/revoltek/losoto) (version >= 2.0)
+* [LSMTool](https://github.com/darafferty/LSMTool)
+* [RMextract](https://github.com/maaijke/RMextract)
 * Python (including matplotlib, scipy, and astropy)
-* AOFlagger (see https://sourceforge.net/p/aoflagger/wiki/Home/)
-* WSClean (for Initial-Subtract; version >= 2.5 -- see https://sourceforge.net/projects/wsclean)
+* [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
+* [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
 * for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with IDG (see https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract)
 
@@ -49,9 +50,10 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Reinout van Weeren <rvweeren somewhere strw.leidenuniv.nl>
 * Wendy Williams <wwilliams somewhere strw.leidenuniv.nl>
 
-With special thanks to Stefan Froehlich for developing the genericpipeline.
+With special thanks to Stefan Fröhlich for developing the genericpipeline.
 
 The procedure is also mostly described in these papers:
+* de Gasperin, F.; Dijkema, T. J.; Drabent, A.; Mevius, M.; Rafferty, van Weeren, R., et al. 2018, arXiv:1811.07954
 * van Weeren, R. J., Williams, W. L., Hardcastle, M. J., et al. 2016, ApJS, 223, 2
 * Williams, W. L., van Weeren, R. J., Röttgering, H. J. A., et al. 2016, MNRAS,
 460, 2385
