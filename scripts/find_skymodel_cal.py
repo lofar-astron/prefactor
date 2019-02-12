@@ -74,8 +74,8 @@ def find_skymodel(ra, dec, PathSkyMod, extensionSky = ".skymodel", max_separatio
     skymodels = glob.glob(PathSkyMod + "/*" + extensionSky)
     
     # remove any Ateam models from the listing (only in filenames)
-    skymodels = [s for s in skymodels if 'Ateam' not in s]
-    skymodels = [s for s in skymodels if 'A-Team' not in s]
+    #skymodels = [s for s in skymodels if 'Ateam' not in s]
+    #skymodels = [s for s in skymodels if 'A-Team' not in s]
     
     for skymodel in skymodels:
         check = check_skymodel(skymodel, ra, dec, max_separation_arcmin)
