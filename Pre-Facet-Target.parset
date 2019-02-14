@@ -85,6 +85,8 @@
 pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 
 ## skymodel directory
+! calibrator_path_skymodel  =  {{ prefactor_directory }}/skymodels
+! A-team_skymodel           =  {{ calibrator_path_skymodel }}/Ateam_LBA_CC.skymodel
 ! target_skymodel           =  {{ job_directory }}/target.skymodel    ## path to the skymodel for the phase-only calibration of the target
 ! use_target                =  True                                   ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
 ! skymodel_source           =  TGSS                                   ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
@@ -122,7 +124,7 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 pipeline.steps              =  [prep, {{ clipATeam }} concat, prep_gsmcal, {{ gsmcal_step }}, finalize]
 
 # pipeline substeps
-pipeline.steps.prep         =  [createmap_target, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
+pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
@@ -130,7 +132,7 @@ pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unfla
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, h5exp_phase,            make_results_mapfile_phase, move_results_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, h5exp_tec,   apply_tec, make_results_mapfile_tec,   move_results_tec]
 
-pipeline.steps.finalize     =  [make_results_mapfile_uncor, move_results_uncor]
+pipeline.steps.finalize     =  [make_results_mapfile_uncor, move_results_uncor, h5parm_name]
 
 
 #############################
@@ -144,6 +146,11 @@ createmap_target.control.mapfile_dir                           =   input.output.
 createmap_target.control.filename                              =   createmap_target.mapfile
 createmap_target.control.folder                                =   {{ target_input_path }}
 createmap_target.control.pattern                               =   {{ target_input_pattern }}
+
+# get the target name
+get_targetname.control.kind                                    =   plugin
+get_targetname.control.type                                    =   getTargetName
+get_targetname.control.mapfile_in                              =   createmap_target.output.mapfile
 
 # combine all entries into one mapfile, for the sortmap script
 combine_data_target_map.control.kind                           =   plugin
@@ -200,7 +207,7 @@ createmap_insttarg.control.newname                             =   createmap_ins
 create_ateam_model_map.control.kind                            =   plugin
 create_ateam_model_map.control.type                            =   addListMapfile
 create_ateam_model_map.control.hosts                           =   ['localhost']
-create_ateam_model_map.control.files                           =   [ {{ prefactor_directory }}/skymodels/Ateam_LBA_CC.skymodel ]
+create_ateam_model_map.control.files                           =   [ {{ A-team_skymodel }} ]
 create_ateam_model_map.control.mapfile_dir                     =   input.output.mapfile_dir
 create_ateam_model_map.control.filename                        =   ateam_model_name.mapfile
 
@@ -314,7 +321,7 @@ ndppp_prep_target.argument.applytec.correction                 =   tec000
 ndppp_prep_target.argument.applytec.solset                     =   calibrator
 ndppp_prep_target.argument.applyphase.type                     =   applycal
 ndppp_prep_target.argument.applyphase.parmdb                   =   {{ solutions }}
-ndppp_prep_target.argument.applyphase.correction               =   phaseOrig000
+ndppp_prep_target.argument.applyphase.correction               =   phaseOrig
 ndppp_prep_target.argument.applyphase.solset                   =   calibrator
 ndppp_prep_target.argument.applyRM.type                        =   applycal
 ndppp_prep_target.argument.applyRM.parmdb                      =   {{ solutions }}
@@ -709,7 +716,8 @@ prepare_losoto_phase.control.plotPd2.minmax                    =   [-3.14,3.14]
 # create losoto v2 parset file
 prepare_losoto_tec.control.kind                                =   plugin
 prepare_losoto_tec.control.type                                =   makeLosotoParset
-prepare_losoto_tec.control.steps                               =   [plotP, plotP2, plotPd, plotPd2]
+# prepare_losoto_tec.control.steps                               =   [plotCSPTEC, plotCSP, plotTEC]
+prepare_losoto_tec.control.steps                               =   [plotTEC]
 prepare_losoto_tec.control.filename                            =   input.output.job_directory/losoto.parset
 prepare_losoto_tec.control.global.ncpu                         =   {{ num_proc_per_node }}
 prepare_losoto_tec.control.plotCSPTEC.operation                =   PLOT
@@ -787,7 +795,7 @@ apply_tec.argument.msin.datacolumn                             =   SMOOTHED_DATA
 apply_tec.argument.msin.baseline                               =   check_bad_antennas.output.filter
 apply_tec.argument.msout.storagemanager                        =   "Dysco"
 apply_tec.argument.msout.storagemanager.databitrate            =   {{ compression_bitrate }}
-apply_tec.argument.steps                                       =   [applyphase,interp]
+apply_tec.argument.steps                                       =   [applytec,interp]
 apply_tec.argument.applytec.type                               =   applycal
 apply_tec.argument.applytec.correction                         =   tec000
 apply_tec.argument.applytec.parmdb                             =   {{ solutions }}
@@ -852,6 +860,15 @@ move_results_uncor.control.mapfiles_in                         =   [check_unflag
 move_results_uncor.control.inputkeys                           =   [source,destination]
 move_results_uncor.control.arguments                           =   [source,destination]
 
+# set the pointing direction
+h5parm_name.control.type                                       =   pythonplugin
+h5parm_name.control.executable                                 =   {{ scripts }}/h5parm_pointingname.py
+h5parm_name.control.error_tolerance                            =   {{ error_tolerance }}
+h5parm_name.control.skip_infile                                =   True
+h5parm_name.control.mapfile_in                                 =   combine_data_target_map.output.mapfile
+h5parm_name.argument.flags                                     =   [{{ solutions }}]]
+h5parm_name.argument.solsetName                                =   target
+h5parm_name.argument.pointing                                  =   get_targetname.output.targetName
 
 ########################################################
 ##                                                    ##
