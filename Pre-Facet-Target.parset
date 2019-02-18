@@ -89,7 +89,7 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 ! A-team_skymodel           =  {{ calibrator_path_skymodel }}/Ateam_LBA_CC.skymodel
 ! target_skymodel           =  {{ job_directory }}/target.skymodel    ## path to the skymodel for the phase-only calibration of the target
 ! use_target                =  True                                   ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
-! skymodel_source           =  TGSS                                   ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
+! skymodel_source           =  GSM                                    ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
 
 ## result directories
 ! results_directory         =  {{ job_directory }}/results            ## location of the results
@@ -313,11 +313,11 @@ ndppp_prep_target.argument.applybandpass.updateweights         =   {{ updateweig
 ndppp_prep_target.argument.applybandpass.solset                =   calibrator
 ndppp_prep_target.argument.applyclock.type                     =   applycal
 ndppp_prep_target.argument.applyclock.parmdb                   =   {{ solutions }}
-ndppp_prep_target.argument.applyclock.correction               =   clock000
+ndppp_prep_target.argument.applyclock.correction               =   clock
 ndppp_prep_target.argument.applyclock.solset                   =   calibrator
 ndppp_prep_target.argument.applytec.type                       =   applycal
 ndppp_prep_target.argument.applytec.parmdb                     =   {{ solutions }}
-ndppp_prep_target.argument.applytec.correction                 =   tec000
+ndppp_prep_target.argument.applytec.correction                 =   tec
 ndppp_prep_target.argument.applytec.solset                     =   calibrator
 ndppp_prep_target.argument.applyphase.type                     =   applycal
 ndppp_prep_target.argument.applyphase.parmdb                   =   {{ solutions }}
@@ -674,7 +674,7 @@ h5imp_gsmcal.argument.outh5parm                                =   outh5parm
 # create losoto v2 parset file
 prepare_losoto_phase.control.kind                              =   plugin
 prepare_losoto_phase.control.type                              =   makeLosotoParset
-prepare_losoto_phase.control.steps                             =   [plotP, plotP2, plotPd, plotPd2]
+prepare_losoto_phase.control.steps                             =   [plotP, plotP2, plotPd, plotPd2, bkp]
 prepare_losoto_phase.control.filename                          =   input.output.job_directory/losoto.parset
 prepare_losoto_phase.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_phase.control.plotP.operation                   =   PLOT
@@ -712,6 +712,9 @@ prepare_losoto_phase.control.plotPd2.plotFlag                  =   True
 prepare_losoto_phase.control.plotPd2.prefix                    =   {{ inspection_directory }}/ph_poldif_
 prepare_losoto_phase.control.plotPd2.refAnt                    =   {{ refant }}
 prepare_losoto_phase.control.plotPd2.minmax                    =   [-3.14,3.14]
+prepare_losoto_phase.control.bkp.operation                     =   DUPLICATE
+prepare_losoto_phase.control.bkp.soltab                        =   sol000/phase000
+prepare_losoto_phase.control.bkp.soltabOut                     =   {{ skymodel_source }}phase
 
 # create losoto v2 parset file
 prepare_losoto_tec.control.kind                                =   plugin
@@ -743,6 +746,9 @@ prepare_losoto_tec.control.plotTEC.plotFlag                    =   True
 prepare_losoto_tec.control.plotTEC.minmax                      =   [-0.5,0.5]
 prepare_losoto_tec.control.plotTEC.prefix                      =   {{ inspection_directory }}/tec
 prepare_losoto_tec.control.plotTEC.refAnt                      =   {{ refant }}
+prepare_losoto_tec.control.bkp.operation                       =   DUPLICATE
+prepare_losoto_tec.control.bkp.soltab                          =   sol000/tec000
+prepare_losoto_tec.control.bkp.soltabOut                       =   {{ skymodel_source }}tec
 
 # do the processing on the LoSoTo file
 process_losoto_gsmcal.control.kind                             =   recipe
@@ -763,7 +769,7 @@ h5exp_phase.control.error_tolerance                            =   {{ error_tole
 h5exp_phase.control.mapfile_in                                 =   h5imp_gsmcal.output.mapfile
 h5exp_phase.control.inputkey                                   =   h5in
 h5exp_phase.argument.flags                                     =   [h5in]
-h5exp_phase.argument.insoltab                                  =   phase000
+h5exp_phase.argument.insoltab                                  =   {{ skymodel_source }}phase
 h5exp_phase.argument.outsolset                                 =   target
 h5exp_phase.argument.outh5parm                                 =   {{ solutions }}
 
@@ -776,7 +782,7 @@ h5exp_tec.control.error_tolerance                              =   {{ error_tole
 h5exp_tec.control.mapfile_in                                   =   h5imp_gsmcal.output.mapfile
 h5exp_tec.control.inputkey                                     =   h5in
 h5exp_tec.argument.flags                                       =   [h5in]
-h5exp_tec.argument.insoltab                                    =   tec000
+h5exp_tec.argument.insoltab                                    =   {{ skymodel_source }}tec
 h5exp_tec.argument.outsolset                                   =   target
 h5exp_tec.argument.outh5parm                                   =   {{ solutions }}
 
@@ -797,7 +803,7 @@ apply_tec.argument.msout.storagemanager                        =   "Dysco"
 apply_tec.argument.msout.storagemanager.databitrate            =   {{ compression_bitrate }}
 apply_tec.argument.steps                                       =   [applytec,interp]
 apply_tec.argument.applytec.type                               =   applycal
-apply_tec.argument.applytec.correction                         =   tec000
+apply_tec.argument.applytec.correction                         =   {{ skymodel_source }}tec
 apply_tec.argument.applytec.parmdb                             =   {{ solutions }}
 apply_tec.argument.applytec.solset                             =   target
 apply_tec.argument.interp.type                                 =   interpolate
