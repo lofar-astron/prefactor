@@ -69,6 +69,7 @@
 ! num_proc_per_node_limit   =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! max_dppp_threads          =  10                                     ## number of threads per process for NDPPP
 ! min_length                =  5                                      ## minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! min_separation            =  30                                     ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 
 ! error_tolerance           =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
 
@@ -124,7 +125,7 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 pipeline.steps              =  [prep, {{ clipATeam }} concat, prep_gsmcal, {{ gsmcal_step }}, finalize]
 
 # pipeline substeps
-pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_target_map, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
+pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_target_map, check_Ateam_separation, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
@@ -159,6 +160,14 @@ combine_data_target_map.control.method                         =   mapfile_all_t
 combine_data_target_map.control.mapfile_dir                    =   input.output.mapfile_dir
 combine_data_target_map.control.filename                       =   combine_data_tar_map.mapfile
 combine_data_target_map.control.mapfile_in                     =   createmap_target.output.mapfile
+
+# warn for potential nearby A-Team sources
+check_Ateam_separation.control.type                            =   pythonplugin
+check_Ateam_separation.control.executable                      =   {{ scripts }}/check_Ateam_separation.py
+check_Ateam_separation.control.mapfile_in                      =   combine_data_target_map.output.mapfile
+check_Ateam_separation.control.inputkey                        =   MSfile
+check_Ateam_separation.argument.min_separation                 =   {{ min_separation }}
+check_Ateam_separation.argument.flags                          =   [MSfile]
 
 # create the cal_values_directory if needed
 mk_targ_values_dir.control.kind                                =   plugin
