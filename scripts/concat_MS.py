@@ -7,6 +7,7 @@ import numpy
 import os
 from lofarpipe.support.data_map import DataMap, DataProduct
 
+global_limit = 637871244
 ########################################################################
 def input2strlist_nomapfile(invar):
    """
@@ -58,15 +59,22 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
         Directory for output mapfile
 
     """
-    filelist      = input2strlist_nomapfile(ms_input)
     system_memory = getsystemmemory()
+    filelist      = input2strlist_nomapfile(ms_input)
     file_size     = getfilesize(filelist[0])
+    overhead      = 0.8
+
+    print "Detected available system memory is: " + str(int(((system_memory / 1024. / 1024.) + 0.5))) + " GB" 
+    if overhead * system_memory > global_limit:
+        system_memory = global_limit
+        overhead      = 1.0
+        print "Number of files to concat wil be limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
+        pass    
+    
     max_space     = int(system_memory / file_size)
     max_length    = len(filelist) / ((len(filelist) / max_space) + 1)
-    
-
-    overhead = 0.8
     i = 0
+
     while max_length * file_size > overhead * system_memory:
         i += 1
         max_length = len(filelist) / ((len(filelist) / max_space) + i)
@@ -79,11 +87,10 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
         max_length = len(filelist)
         memory = '-indirect-read'
         pass
-    
-    print "The max_length value is: " + str(max_length)
-    set_ranges    = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
+        
+    print "The max_length value is: " + str(max_length)    
+    set_ranges     = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
     set_ranges[-1] = len(filelist)
-    print "The ranges are:", set_ranges
 
     map_out = DataMap([])
     for i in numpy.arange(len(set_ranges) - 1):
