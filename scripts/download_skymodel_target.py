@@ -147,10 +147,12 @@ if __name__ == '__main__':
                         help='Radius for the TGSS/GSM cone search in degrees')
     parser.add_argument('--Source', type=str, default='TGSS',
                         help='Choose source for skymodel: TGSS or GSM')
+    parser.add_argument('--DoDownload', type=str, default="True",
+                        help='Download or not the TGSS skymodel or GSM ("Force" or "True" or "False").')
 
     args = parser.parse_args()
     radius=5
     if args.Radius:
         radius=args.Radius
 
-    main(args.MSfile,args.SkyTar, str(radius), args.Source)
+    main(args.MSfile, args.SkyTar, str(radius), args.DoDownload, args.Source)
