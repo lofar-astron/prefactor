@@ -176,7 +176,6 @@ Parameters for **HBA** and **LBA** observations
 ``rfistrategy``        HBAdefault         LBAdefaultwideband.rfis
 ``apply_steps``        applyclock,applyRM applyphase
 ``gsmcal_step``        phase              tec
-``updateweights``      False              True
 ====================== ================== =======================
 
 

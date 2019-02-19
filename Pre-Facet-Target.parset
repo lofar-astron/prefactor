@@ -59,7 +59,7 @@
 ! apply_steps               =  applyclock,applybeam,applyRM           ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
 ! clipAteam_step            =  {{ clipATeam }}                        ## choose {{ none }} if you want to skip A-team-clipping
 ! gsmcal_step               =  phase                                  ## choose tec if you want to fit TEC instead of self-calibrating for phases
-! updateweights             =  False                                  ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
+! updateweights             =  True                                   ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
 
 ##########################################
 ### parameters for pipeline performance ##
@@ -378,7 +378,8 @@ predict_ateam.argument.predict.operation                       =   replace
 predict_ateam.argument.predict.sourcedb                        =   sourcedb
 predict_ateam.argument.predict.sources                         =   [VirA_4_patch,CygAGG,CasA_4_patch,TauAGG]
 predict_ateam.argument.predict.usebeammodel                    =   True
-predict_ateam.argument.predict.usechannelfreq                  =   false
+predict_ateam.argument.predict.usechannelfreq                  =   False
+predict_ateam.argument.predict.onebeamperpatch                 =   True
 
 # run the a-team clipper to flag data affected by the a-team
 ateamcliptar.control.kind                                      =   recipe
