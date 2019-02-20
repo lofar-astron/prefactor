@@ -29,7 +29,7 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
-! refant                   =  'closest'                               ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
+! refant                   =  'CS001HBA0'                             ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
 ! flag_baselines            =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! filter_baselines          =  [CR]S*&                                ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                 =  False                                  ## enable or disable baseline-based smoothing
