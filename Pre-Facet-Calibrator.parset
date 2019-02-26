@@ -25,7 +25,7 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
-! refant                   =  'CS001HBA0'                                                           ## name of the station that will be used as a reference for the phase-plots, 'closest' will reference to the spatially closest unflagged antenna
+! refant                   =  'CS001HBA0'                                                         ## name of the station that will be used as a reference for the phase-plots, 'closest' will reference to the spatially closest unflagged antenna
 ! flag_baselines           =  []                                                                  ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! filter_baselines         =  [CR]S*&                                                             ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                =  False                                                               ## enable or disable baseline-based smoothing
@@ -69,6 +69,7 @@
 ! max_dppp_threads         =  10                                                                  ## number of threads per process for NDPPP
 ! memoryperc               =  20                                                                  ## maximum of memory used for aoflagger in raw_flagging mode in percent
 ! min_length               =  50                                                                  ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! overhead                 =  0.8                                                                 ## Only use this fraction of the available memory for deriving the amount of data to be concatenated.
 ! min_separation           =  30                                                                  ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 
 ! error_tolerance          =  False                                                               ## set this to True if you want the pipeline run to continue if single bands fail
@@ -267,7 +268,9 @@ ms_concat.control.executable                                =   {{ scripts }}/co
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
 ms_concat.argument.filename                                 =   concatmapfile.mapfile
 ms_concat.argument.mapfile_dir                              =   input.output.mapfile_dir
-ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey,{{ min_length }}]
+ms_concat.argument.min_length                               =   {{ min_length }}
+ms_concat.argument.overhead                                 =   {{ overhead }}
+ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey]
 
 # convert the output of ms_concat into usable mapfiles
 ms_concat_map.control.kind                                  =   plugin
@@ -293,7 +296,7 @@ aoflag.control.mapfiles_in                                  =   [ms_concat_map.o
 aoflag.control.inputkeys                                    =   [msin,memory]
 aoflag.control.args_format                                  =   wsclean
 aoflag.argument.strategy                                    =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                       =   [-v,memory,-combine-spws,msin]
+aoflag.argument.flags                                       =   [-v,memory,-j,{{ num_proc_per_node }},-combine-spws,msin]
 
 # find automatically the calibrator sky model
 sky_cal.control.type                                        =   pythonplugin

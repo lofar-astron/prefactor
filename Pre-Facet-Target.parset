@@ -69,6 +69,7 @@
 ! num_proc_per_node_limit   =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
 ! max_dppp_threads          =  10                                     ## number of threads per process for NDPPP
 ! min_length                =  5                                      ## minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! overhead                  =  0.8                                    ## Only use this fraction of the available memory for deriving the amount of data to be concatenated.
 ! min_separation            =  30                                     ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 
 ! error_tolerance           =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
@@ -459,7 +460,9 @@ ms_concat_target.control.executable                            =   {{ scripts }}
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.filename                             =   concatmapfile.mapfile
 ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
-ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey,{{ min_length }}]
+ms_concat_target.argument.min_length                           =   {{ min_length }}
+ms_concat_target.argument.overhead                             =   {{ overhead }}
+ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey]
 
 # convert the output of ms_concat_target into usable mapfiles
 ms_concat_target_map.control.kind                              =   plugin
@@ -485,7 +488,7 @@ aoflag.control.mapfiles_in                                     =   [ms_concat_ta
 aoflag.control.inputkeys                                       =   [msin,memory]
 aoflag.control.args_format                                     =   wsclean
 aoflag.argument.strategy                                       =   {{ prefactor_directory }}/rfistrategies/{{ rfistrategy }}
-aoflag.argument.flags                                          =   [-v,memory,-combine-spws,msin]
+aoflag.argument.flags                                          =   [-v,memory,-j,{{ num_proc_per_node }},-combine-spws,msin]
 
 
 #############################

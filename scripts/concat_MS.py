@@ -42,7 +42,7 @@ def getfilesize(MS):
    pass
 
 ########################################################################
-def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
+def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile_dir=None):
 
     """
     Virtually concatenate subbands
@@ -53,6 +53,10 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
         String from the list (map) of the calibrator MSs
     ms_output : str
         String from the outut concatenated MS
+    min_length : int
+        minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+    overhead   : float
+        Only use this fraction of the available memory for deriving the amount of data to be concatenated.
     filename: str
         Name of output mapfile
     mapfile_dir : str
@@ -62,7 +66,7 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
     system_memory = getsystemmemory()
     filelist      = input2strlist_nomapfile(ms_input)
     file_size     = getfilesize(filelist[0])
-    overhead      = 0.8
+    overhead      = float(overhead)
 
     print "Detected available system memory is: " + str(int(((system_memory / 1024. / 1024.) + 0.5))) + " GB" 
     if overhead * system_memory > global_limit:
@@ -88,6 +92,7 @@ def main(ms_input, ms_output, min_length, filename=None, mapfile_dir=None):
         memory = '-indirect-read'
         pass
         
+    print "Applying an overhead of: " + str(overhead)
     print "The max_length value is: " + str(max_length)    
     set_ranges     = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
     set_ranges[-1] = len(filelist)
@@ -113,11 +118,13 @@ if __name__ == '__main__':
                         help='One (or more MSs) that we want to concatenate.')
     parser.add_argument('MSout', type=str,
                         help='Output MS file')
-    parser.add_argument('-min_length', type=str,
+    parser.add_argument('--min_length', type=str,
                         help='Minimum amount of subbands to concatenate in frequency.')
+    parser.add_argument('--overhead', type=float, default=0.8,
+                        help='Only use this fraction of the available memory for deriving the amount of data to be concatenated.')
 
 
 
     args = parser.parse_args()
 
-    main(args.MSfile,args.MSout,args.min_length)
+    main(args.MSfile,args.MSout,args.min_length,args.overhead)
