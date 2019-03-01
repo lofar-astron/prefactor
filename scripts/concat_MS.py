@@ -78,7 +78,7 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
     
     #i = 1
     max_space     = overhead * system_memory / file_size
-    max_length    = int(len(filelist) / ((len(filelist) / max_space) + 1.))
+    max_length    = len(filelist) / int((len(filelist) / max_space) + 1.)
 
     #while max_length * file_size > overhead * system_memory:
         #i += 1
@@ -93,7 +93,7 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         max_length = len(filelist)
         if max_length * file_size > global_limit:
             max_space  = global_limit / file_size
-            max_length = int(len(filelist) / ((len(filelist) / max_space) + 1.))
+            max_length = len(filelist) / int((len(filelist) / max_space) + 1.)
             print "Number of files to concat was limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
             print "WARNING: The number of concatenated files will thus be lower than the min_length of: "  + str(min_length)
             pass
