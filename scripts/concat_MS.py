@@ -93,6 +93,7 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         while max_length * file_size > global_limit:
             i += 1
             max_length = len(filelist) / ((len(filelist) / max_space) + i)
+            print "Number of files to concat wil be limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
             pass
         memory = '-indirect-read'
         pass
