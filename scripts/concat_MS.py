@@ -73,7 +73,7 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
     if overhead * system_memory > global_limit:
         system_memory = global_limit
         overhead      = 1.0
-        print "Number of files to concat wil be limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
+        print "Number of files to concat will be limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
         pass    
     
     max_space     = int(system_memory / file_size)
@@ -90,16 +90,21 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         pass
     else:
         max_length = len(filelist)
+        i = 0
         while max_length * file_size > global_limit:
+            print max_length * file_size, global_limit, i
             i += 1
             max_length = len(filelist) / ((len(filelist) / max_space) + i)
-            print "Number of files to concat wil be limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
             pass
         memory = '-indirect-read'
         pass
     
     print "Applying an overhead of: " + str(overhead)
-    print "The max_length value is: " + str(max_length)    
+    print "The max_length value is: " + str(max_length)
+    if max_length < min_length:
+        print "Number of files to concat was limited to the global limit of: " + str(int(((global_limit / 1024. / 1024.) + 0.5))) + " GB" 
+        print "WARNING: The number of concatenated files will thus be lower than the min_length of: "  + str(min_length)
+        pass
     set_ranges     = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
     set_ranges[-1] = len(filelist)
 
