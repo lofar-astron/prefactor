@@ -69,6 +69,7 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
     overhead      = float(overhead)
 
     print "Detected available system memory is: " + str(int(((system_memory / 1024. / 1024.) + 0.5))) + " GB" 
+    print "Detected file size is: " + str(int(((file_size / 1024. / 1024.) + 0.5))) + " GB" 
     if overhead * system_memory > global_limit:
         system_memory = global_limit
         overhead      = 1.0
