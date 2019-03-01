@@ -90,11 +90,8 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         pass
     else:
         max_length = len(filelist)
-        i = 0
         while max_length * file_size > global_limit:
-            print max_length * file_size, global_limit, i
-            i += 1
-            max_length = len(filelist) / ((len(filelist) / max_space) + i)
+            max_length = max_length / 2
             pass
         memory = '-indirect-read'
         pass
