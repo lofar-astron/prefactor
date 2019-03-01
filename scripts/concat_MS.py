@@ -90,9 +90,13 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         pass
     else:
         max_length = len(filelist)
+        while max_length * file_size > global_limit:
+            i += 1
+            max_length = len(filelist) / ((len(filelist) / max_space) + i)
+            pass
         memory = '-indirect-read'
         pass
-        
+    
     print "Applying an overhead of: " + str(overhead)
     print "The max_length value is: " + str(max_length)    
     set_ranges     = list(numpy.arange(0, len(filelist) + 1, int(max_length)))
