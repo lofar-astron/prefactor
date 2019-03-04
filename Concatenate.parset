@@ -1,0 +1,145 @@
+##########################################################################
+# Concatenate Pipeline                                                   #
+#                                                                        #
+# Concat part of the basic Pre-Facet calibration pipeline:               #
+# - intended for use to concat single-subband target data produced by    #
+#   production runs and retrieved through the LTA                        #
+# - expects shared filesystem, that all nodes can reach all files!       #
+#   (E.g. a single workstation or compute cluster with shared filesystem #
+#   doesn't work on multiple nodes on CEP3.)                             #
+##########################################################################
+
+##########################################
+### parameters you will need to adjust. ##
+##########################################
+
+## information about the input
+! target_input_path         =  /data/scratch/drabent                 ## specify the directory where your target data is stored
+! target_input_pattern      =  L*.MS                                 ## regular expression pattern of all your target files
+
+## location of the software
+! prefactor_directory       =  /home/drabent/prefactor/              ## path to your prefactor copy
+
+##########################################
+### parameters you may need to adjust   ##
+##########################################
+
+## interpolation for the target data
+! interp_windowsize         =  15                                    ## Size of the window over which a value is interpolated. Should be odd.
+
+## averaging for the target data
+! avg_timeresolution_concat=  8.                                     ## average to 8 sec/timeslot
+! avg_freqresolution_concat=  97.64kHz                               ## average to 97.64 kHz/ch (= 2 ch/SB)
+
+## concatenating the target data
+! num_SBs_per_group        =  10                                     ## make concatenated measurement-sets with that many subbands
+! reference_stationSB      =  None                                   ## station-subband number to use as reference for grouping, "None" -> use lowest frequency input data as reference
+
+##########################################
+### parameters you may want to adjust   ##
+##########################################
+
+## main directories
+! lofar_directory           =  $LOFARROOT                            ## base directory of your LOFAR installation
+! job_directory             =  input.output.job_directory            ## directory of the prefactor outputs
+
+## script and plugin directories
+! scripts                   =  {{ prefactor_directory }}/scripts
+pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
+
+## result directories
+! results_directory         =  {{ job_directory }}/results           ## location of the results
+
+##########################################
+### parameters for pipeline performance ##
+##########################################
+
+! num_proc_per_node         =  input.output.max_per_node             ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
+! error_tolerance           =  False                                 ## set this to True if you want the pipeline run to continue if single bands fail
+
+########################################################
+##                                                    ##
+##    BEGIN PIPELINE: DO NOT UPDATE BELOW THIS LINE!  ##
+##                                                    ##
+########################################################
+
+# which steps to run
+pipeline.steps              =  [createmap_target, combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, make_results_mapfile, move_results]
+
+
+# generate a mapfile of all the target data
+createmap_target.control.kind                                  =   plugin
+createmap_target.control.type                                  =   createMapfile
+createmap_target.control.method                                =   mapfile_from_folder
+createmap_target.control.mapfile_dir                           =   input.output.mapfile_dir
+createmap_target.control.filename                              =   createmap_target.mapfile
+createmap_target.control.folder                                =   {{ target_input_path }}
+createmap_target.control.pattern                               =   {{ target_input_pattern }}
+
+# combine all entries into one mapfile, for the sortmap script
+combine_target_map.control.kind                                =   plugin
+combine_target_map.control.type                                =   createMapfile
+combine_target_map.control.method                              =   mapfile_all_to_one
+combine_target_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_target_map.control.filename                            =   combine_target_map.mapfile
+combine_target_map.control.mapfile_in                          =   createmap_target.output.mapfile
+
+# sort the target data by frequency into groups so that NDPPP can concatenate them
+sortmap_target.control.type                                    =   pythonplugin
+sortmap_target.control.executable                              =   {{ scripts }}/sort_times_into_freqGroups.py
+sortmap_target.argument.flags                                  =   [combine_target_map.output.mapfile]
+sortmap_target.argument.filename                               =   sortmap_target
+sortmap_target.argument.mapfile_dir                            =   input.output.mapfile_dir
+sortmap_target.argument.target_path                            =   input.output.working_directory/input.output.job_name
+sortmap_target.argument.numSB                                  =   {{ num_SBs_per_group }}
+sortmap_target.argument.NDPPPfill                              =   True
+sortmap_target.argument.stepname                               =   dpppconcat
+sortmap_target.argument.firstSB                                =   {{ reference_stationSB }}
+sortmap_target.argument.truncateLastSBs                        =   False
+
+# convert the output of sortmap_target into usable mapfiles
+do_sortmap_maps.control.kind                                   =   plugin
+do_sortmap_maps.control.type                                   =   mapfilenamesFromMapfiles
+do_sortmap_maps.control.mapfile_groupmap                       =   sortmap_target.output.groupmapfile.mapfile
+do_sortmap_maps.control.mapfile_datamap                        =   sortmap_target.output.mapfile.mapfile
+
+# run NDPPP to concatenate the target
+dpppconcat.control.type                                        =   dppp
+dpppconcat.control.max_per_node                                =   {{ num_proc_per_node }}
+dpppconcat.control.error_tolerance                             =   {{ error_tolerance }}
+dpppconcat.control.mapfile_out                                 =   do_sortmap_maps.output.groupmap # tell the pipeline to give the output useful names
+dpppconcat.control.mapfiles_in                                 =   [do_sortmap_maps.output.datamap]
+dpppconcat.control.inputkey                                    =   msin
+dpppconcat.argument.msin.datacolumn                            =   DATA
+dpppconcat.argument.msin.missingdata                           =   True    #\ these two lines will make NDPPP generate dummy data when
+dpppconcat.argument.msin.orderms                               =   False   #/ concatenating data
+dpppconcat.argument.msout.datacolumn                           =   DATA
+dpppconcat.argument.msout.writefullresflag                     =   False
+dpppconcat.argument.msout.overwrite                            =   True
+dpppconcat.argument.msout.storagemanager                       =   "Dysco"
+dpppconcat.argument.msout.storagemanager.databitrate           =   0
+dpppconcat.argument.steps                                      =   [interp,avg]
+dpppconcat.argument.interp.type                                =   interpolate
+dpppconcat.argument.interp.windowsize                          =   {{ interp_windowsize }}
+dpppconcat.argument.avg.type                                   =   average
+dpppconcat.argument.avg.timeresolution                         =   {{ avg_timeresolution_concat }}
+dpppconcat.argument.avg.freqresolution                         =   {{ avg_freqresolution_concat }}
+
+# make mapfile with the filenames of the results that we want
+make_results_mapfile.control.kind                              =   plugin
+make_results_mapfile.control.type                              =   makeResultsMapfile
+make_results_mapfile.control.mapfile_dir                       =   input.output.mapfile_dir
+make_results_mapfile.control.filename                          =   make_results_mapfile.mapfile
+make_results_mapfile.control.mapfile_in                        =   dpppconcat.output.mapfile
+make_results_mapfile.control.target_dir                        =   {{ results_directory }}
+make_results_mapfile.control.make_target_dir                   =   True
+make_results_mapfile.control.new_suffix                        =   .ms
+
+# move the results to where we want them
+move_results.control.kind                                      =   recipe
+move_results.control.type                                      =   executable_args
+move_results.control.executable                                =   /bin/mv
+move_results.control.max_per_node                              =   {{ num_proc_per_node }}
+move_results.control.mapfiles_in                               =   [dpppconcat.output.mapfile,make_results_mapfile.output.mapfile]
+move_results.control.inputkeys                                 =   [source,destination]
+move_results.control.arguments                                 =   [source,destination]
