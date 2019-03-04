@@ -103,7 +103,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
 
     print 'SEPERATION from A-Team sources'
     print '------------------------------'
-    print 'The minimal expected distance to an A-Team source is: ' + str(min_separation) + ' deg.'
+    print 'The minimal accepted distance to an A-Team source is: ' + str(min_separation) + ' deg.'
     for target in targets:
    
         t = qa.quantity(time[0], 's')
