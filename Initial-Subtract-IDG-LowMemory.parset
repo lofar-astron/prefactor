@@ -46,7 +46,6 @@
 ## information about the input data
 ! data_input_path          = /data/scratch/drabent  ## specify the directory where your concatenated target data are stored
 ! data_input_pattern       = L217445*.pre-cal.ms    ## regular expression pattern of all your calibrator files
-! direction_indep_h5parm   = /data/scratch/drabent/cal_solutions.h5  ## full path to the direction-independent calibration solutions
 
 ## location of the software
 ! prefactor_directory      =  /home/drabent/prefactor  ## path to your prefactor copy
@@ -97,7 +96,7 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, create_h5parm_map, expand_h5parm_mapfile, select_imaging_bands, select_apply_high_files, select_apply_h5parm, gsmcal_apply, select_high_size, select_high_nwavelengths, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_correct_high_files, select_h5parm, select_freqstep, select_timestep, correct_high, regroup_map, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, do_magic_maps, select_imaging_bands, select_high_size, wsclean_high, mask_high, mk_inspect_dir, copy_mask, plot_im_high, move_high, create_maxsize_high_map, pad_model_high, pad_mask_high, combine_model_high_mapfile, expand_model_high, combine_mask_high_mapfile, expand_mask_high, fits_to_bbs_high, make_sourcedb_high, expand_sourcedb_high, subtract_high, select_low_size, select_low_nwavelengths, wsclean_low, mask_low, plot_im_low, move_low, create_maxsize_low_map, pad_model_low, pad_mask_low, combine_model_low_mapfile, expand_model_low, combine_mask_low_mapfile, expand_mask_low, fits_to_bbs_low, make_sourcedb_low, expand_sourcedb_low, subtract_low, merge, copy_skymodels, createmap_plots, move_plots]
 
 # create a mapfile with all MSs, length = nfiles
 create_ms_map.control.kind                      =   plugin
@@ -145,22 +144,6 @@ do_magic_maps.control.mapfile_low_padsize_map        =  do_magic.output.low_pads
 do_magic_maps.control.mapfile_nwavelengths_high_map  =  do_magic.output.nwavelengths_high_mapfile.mapfile
 do_magic_maps.control.mapfile_nwavelengths_low_map   =  do_magic.output.nwavelengths_low_mapfile.mapfile
 
-# create a mapfile with the direction independent h5parm, length = 1
-create_h5parm_map.control.kind                  =  plugin
-create_h5parm_map.control.type                  =  addListMapfile
-create_h5parm_map.control.hosts                 =  [localhost]
-create_h5parm_map.control.files                 =  [{{ direction_indep_h5parm }}]
-create_h5parm_map.control.mapfile_dir           =  input.output.mapfile_dir
-create_h5parm_map.control.filename              =  direction_indep_h5parm.mapfile
-
-# expand the h5parm mapfile so that there is one entry for every file, length = nfiles
-expand_h5parm_mapfile.control.kind             = plugin
-expand_h5parm_mapfile.control.type             = expandMapfile
-expand_h5parm_mapfile.control.mapfile_in       = create_h5parm_map.output.mapfile
-expand_h5parm_mapfile.control.mapfile_to_match = do_magic_maps.output.single_map
-expand_h5parm_mapfile.control.mapfile_dir      = input.output.mapfile_dir
-expand_h5parm_mapfile.control.filename         = expand_h5parm.mapfile
-
 # select bands spread over the full bandwidth for imaging, length = nbands_image
 select_imaging_bands.control.kind        = plugin
 select_imaging_bands.control.type        = selectDistFreqs
@@ -168,39 +151,6 @@ select_imaging_bands.control.mapfile_in  = do_magic_maps.output.groupmap
 select_imaging_bands.control.num         = {{ nbands_image }}
 select_imaging_bands.control.mapfile_dir = input.output.mapfile_dir
 select_imaging_bands.control.filename    = imaging_high_bands.mapfile
-
-# select files spread over the full bandwidth for imaging, length = nbands_image * ntimes
-select_apply_high_files.control.kind        = plugin
-select_apply_high_files.control.type        = selectDistFreqs
-select_apply_high_files.control.mapfile_in  = do_magic_maps.output.single_map
-select_apply_high_files.control.num         = {{ nbands_image }}
-select_apply_high_files.control.mapfile_dir = input.output.mapfile_dir
-select_apply_high_files.control.filename    = select_correct_high_files.mapfile
-
-# adjust the dir-indep h5parm mapfile to match the selected bands, length = nbands_image * ntimes
-select_apply_h5parm.control.kind         = plugin
-select_apply_h5parm.control.type         = matchDistFreqs
-select_apply_h5parm.control.mapfile_in   = expand_h5parm_mapfile.output.mapfile
-select_apply_h5parm.control.mapfile_dist = select_apply_high_files.output.mapfile
-select_apply_h5parm.control.mapfile_full = do_magic_maps.output.single_map
-select_apply_h5parm.control.mapfile_dir  = input.output.mapfile_dir
-select_apply_h5parm.control.filename     = parmdb.mapfile
-
-# apply direction-independent solutions, length = nbands_image
-gsmcal_apply.control.type                      = dppp
-gsmcal_apply.control.error_tolerance           = {{ error_tolerance }}
-gsmcal_apply.control.inplace                   = True
-gsmcal_apply.control.max_per_node              = {{ max_dppp_per_node }}
-gsmcal_apply.argument.numthreads               = {{ max_dppp_threads }}
-gsmcal_apply.argument.msin                     = select_apply_high_files.output.mapfile
-gsmcal_apply.argument.msin.datacolumn          = DATA
-gsmcal_apply.argument.msout.datacolumn         = CORRECTED_DATA
-gsmcal_apply.argument.msout.writefullresflag   = False
-gsmcal_apply.argument.steps                    = [applycal]
-gsmcal_apply.argument.applycal.type            = applycal
-gsmcal_apply.argument.applycal.parmdb          = select_apply_h5parm.output.mapfile
-gsmcal_apply.argument.applycal.solset          = target
-gsmcal_apply.argument.applycal.correction      = phase000
 
 # adjust the high_size mapfile to match the selected bands, length = nbands_image
 select_high_size.control.kind         = plugin
@@ -383,8 +333,8 @@ expand_sourcedb_high.control.filename           =   expand_sourcedb_high.datamap
 # The low-resolution model will be subtracted from the
 # output column (SUBTRACTED_DATA_HIGH) later
 subtract_high.control.type                      =   dppp
-subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile,expand_h5parm_mapfile.output.mapfile]
-subtract_high.control.inputkeys                 =   [msin,sourcedb,parmdb]
+subtract_high.control.mapfiles_in               =   [do_magic_maps.output.single_map,expand_sourcedb_high.output.mapfile]
+subtract_high.control.inputkeys                 =   [msin,sourcedb]
 subtract_high.control.inplace                   =   True
 subtract_high.control.max_per_node              =   {{ max_dppp_per_node }}
 subtract_high.argument.numthreads               =   {{ max_dppp_threads }}
@@ -396,70 +346,6 @@ subtract_high.argument.steps                    =   [subtract]
 subtract_high.argument.subtract.type            =   predict
 subtract_high.argument.subtract.sourcedb        =   sourcedb
 subtract_high.argument.subtract.operation       =   subtract
-subtract_high.argument.subtract.applycal.parmdb          =   parmdb
-subtract_high.argument.subtract.applycal.solset          =   target
-subtract_high.argument.subtract.applycal.correction      =   phase000
-
-# select files spread over the full bandwidth for imaging, length = nbands_image * ntimes
-select_correct_high_files.control.kind        = plugin
-select_correct_high_files.control.type        = selectDistFreqs
-select_correct_high_files.control.mapfile_in  = do_magic_maps.output.single_map
-select_correct_high_files.control.num         = {{ nbands_image }}
-select_correct_high_files.control.mapfile_dir = input.output.mapfile_dir
-select_correct_high_files.control.filename    = select_correct_high_files.mapfile
-
-# adjust the dir-indep h5parm mapfile to match the selected bands, length = nbands_image * ntimes
-select_h5parm.control.kind         = plugin
-select_h5parm.control.type         = matchDistFreqs
-select_h5parm.control.mapfile_in   = expand_h5parm_mapfile.output.mapfile
-select_h5parm.control.mapfile_dist = select_correct_high_files.output.mapfile
-select_h5parm.control.mapfile_full = do_magic_maps.output.single_map
-select_h5parm.control.mapfile_dir  = input.output.mapfile_dir
-select_h5parm.control.filename     = parmdb.mapfile
-
-# adjust the freqstep mapfile to match the selected bands, length = nbands_image * ntimes
-select_freqstep.control.kind         = plugin
-select_freqstep.control.type         = matchDistFreqs
-select_freqstep.control.mapfile_in   = do_magic_maps.output.freqstep_map
-select_freqstep.control.mapfile_dist = select_correct_high_files.output.mapfile
-select_freqstep.control.mapfile_full = do_magic_maps.output.single_map
-select_freqstep.control.mapfile_dir  = input.output.mapfile_dir
-select_freqstep.control.filename     = avg_freqstep.mapfile
-
-# adjust the timestep mapfile to match the selected bands, length = nbands_image * ntimes
-select_timestep.control.kind         = plugin
-select_timestep.control.type         = matchDistFreqs
-select_timestep.control.mapfile_in   = do_magic_maps.output.timestep_map
-select_timestep.control.mapfile_dist = select_correct_high_files.output.mapfile
-select_timestep.control.mapfile_full = do_magic_maps.output.single_map
-select_timestep.control.mapfile_dir  = input.output.mapfile_dir
-select_timestep.control.filename     = avg_timestep.mapfile
-
-# Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging, length = nbands_image * ntimes
-correct_high.control.type                       =   dppp
-correct_high.control.mapfiles_in                =   [select_correct_high_files.output.mapfile,select_h5parm.output.mapfile,select_freqstep.output.mapfile,select_timestep.output.mapfile]
-correct_high.control.inputkeys                  =   [msin,parmdb,avg.freqstep,avg.timestep]
-correct_high.control.max_per_node               =   {{ max_dppp_per_node }}
-correct_high.argument.numthreads                =   {{ max_dppp_threads }}
-correct_high.control.error_tolerance            =   {{ error_tolerance }}
-correct_high.argument.msin.datacolumn           =   SUBTRACTED_DATA_HIGH
-correct_high.argument.msout.overwrite           =   True
-correct_high.argument.msout.writefullresflag    =   False
-correct_high.argument.steps                     =   [correct,avg]
-correct_high.argument.correct.type              =   applycal
-correct_high.argument.correct.parmdb            =   parmdb
-correct_high.argument.correct.solset          =   target
-correct_high.argument.correct.correction      =   phase000
-correct_high.argument.correct.invert          =   True
-correct_high.argument.avg.type                  =   squash
-
-# re-group mapfile to have one group per band, length = nbands_image
-regroup_map.control.kind                        =   plugin
-regroup_map.control.type                        =   reGroupMapfile
-regroup_map.control.mapfile_in                  =   correct_high.output.mapfile
-regroup_map.control.mapfile_groups              =   select_imaging_bands.output.mapfile
-regroup_map.control.mapfile_dir                 =   input.output.mapfile_dir
-regroup_map.control.filename                    =   re_grouped.datamap
 
 # adjust the low size mapfile to match the selected bands, length = nbands_image
 select_low_size.control.kind         = plugin
@@ -634,8 +520,8 @@ expand_sourcedb_low.control.filename            =   expand_sourcedb_low.datamap
 
 # Predict, corrupt, and subtract the low-resolution model, length = nfiles
 subtract_low.control.type                       =   dppp
-subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile,expand_h5parm_mapfile.output.mapfile]
-subtract_low.control.inputkeys                  =   [msin,sourcedb,parmdb]
+subtract_low.control.mapfiles_in                =   [do_magic_maps.output.single_map,expand_sourcedb_low.output.mapfile]
+subtract_low.control.inputkeys                  =   [msin,sourcedb]
 subtract_low.control.inplace                    =   True
 subtract_low.control.max_per_node               =   {{ max_dppp_per_node }}
 subtract_low.argument.numthreads                =   {{ max_dppp_threads }}
@@ -647,9 +533,6 @@ subtract_low.argument.steps                     =   [subtract]
 subtract_low.argument.subtract.type             =   predict
 subtract_low.argument.subtract.sourcedb         =   sourcedb
 subtract_low.argument.subtract.operation        =   subtract
-subtract_low.argument.subtract.applycal.parmdb          =   parmdb
-subtract_low.argument.subtract.applycal.solset          =   target
-subtract_low.argument.subtract.applycal.correction      =   phase000
 
 # merge the high-res and low-res skymodels, length = nbands
 merge.control.type                              =   pythonplugin

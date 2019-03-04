@@ -22,8 +22,8 @@ This part of the pipeline prepares the target data in order to be imaged. The st
 as follows:
 
 ``create_ms_map``
-    Generate a mapfile of all the target data. The files must be supplied as a
-    list of the full paths to the files.
+    Generate a mapfile of all the target data (the concatenated datasets output by the
+    target pipeline, with the direction-independent phase-only calibration applied).
 ``combine_mapfile``
     Generate a mapfile with all files in a single entry. This mapfile is used as
     input to the next step.
@@ -39,12 +39,6 @@ as follows:
     Expand the h5parm mapfile so that there is one entry for every file.
 ``select_imaging_bands``
     Select bands spread over the full bandwidth for imaging.
-``select_apply_high_files``
-    Select files spread over the full bandwidth for imaging.
-``select_apply_h5parm``
-    Adjust the dir-indep h5parm mapfile to match the selected bands.
-``gsmcal_apply``
-    Apply direction-independent solutions.
 ``select_high_size``
     Adjust the high_size mapfile to match the selected bands.
 ``select_high_nwavelengths``
@@ -102,18 +96,6 @@ most standard observations.
     done from the DATA column to the SUBTRACTED_DATA_HIGH column. The SUBTRACTED_DATA_HIGH
     column is imaged later in the ``wsclean_low`` step to pick up any emission missed in
     the high-resolution image.
-``select_correct_high_files``
-    Select files spread over the full bandwidth for imaging.
-``select_h5parm``
-    Adjust the dir-indep h5parm mapfile to match the selected bands.
-``select_freqstep``
-    Adjust the freqstep mapfile to match the selected bands.
-``select_timestep``
-    Adjust the timestep mapfile to match the selected bands.
-``correct_high``
-    Correct the SUBTRACTED_DATA_HIGH column and average to prepare for imaging.
-``regroup_map``
-    Re-group mapfile to have one group per band.
 ``select_low_size``
     Adjust the low size mapfile to match the selected bands.
 ``select_low_nwavelengths``
@@ -184,9 +166,8 @@ User-defined parameter configuration
     Regular expression pattern of all your target files.
     .. note::
 
-        These files should not have any calibration applied to the DATA column!
-``! direction_indep_h5parm``
-    Full path to the direction-independent target calibration solutions.
+        These files should have the direction-independent calibration applied to the DATA
+        column (usually the ``*.pre-cal.ms`` files from the target pipeline).
 
 *Location of the software*
 
