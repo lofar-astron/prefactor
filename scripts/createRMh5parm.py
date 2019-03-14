@@ -46,7 +46,7 @@ def makesolset(MS, data, solset_name):
 
 def main(MSfiles, h5parmdb, solset_name = "sol000",all_stations=False,timestep=300,
                 ionex_server="ftp://ftp.aiub.unibe.ch/CODE/",
-                ionex_prefix='CODG',ionexPath="./",earth_rot=0):
+                ionex_prefix='CODG',ionexPath="./",earth_rot=0,proxyServer=None,proxyPort=None,proxyType=None,proxyUser=None,proxyPass=None):
     '''Add rotation measure to existing h5parmdb
     
     Args:
@@ -63,7 +63,7 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",all_stations=False,timestep=3
         earth_rot (float) : parameter to determine how much earth rotation is taken \
         into account when interpolating IONEX data. (0 is none, 1 is full)
     '''
-    
+   
     mslist = MSfiles.lstrip('[').rstrip(']').replace(' ','').replace("'","").split(',')
     
     if len(mslist) == 0:
@@ -73,23 +73,53 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",all_stations=False,timestep=3
         MS = mslist[0]
         pass
     
-    if not all_stations:
-        rmdict = getRM.getRM(MS, 
-                             server=ionex_server, 
-                             prefix=ionex_prefix, 
-                             ionexPath=ionexPath, 
-                             timestep=timestep,
-                             stat_names = ["st0"],
-                             stat_pos=[PosTools.posCS002],
-                             earth_rot=earth_rot)
+    if "None" in proxyServer:
+	    if not all_stations:
+		rmdict = getRM.getRM(MS, 
+		                     server=ionex_server, 
+		                     prefix=ionex_prefix, 
+		                     ionexPath=ionexPath, 
+		                     timestep=timestep,
+		                     stat_names = ["st0"],
+		                     stat_pos=[PosTools.posCS002],
+		                     earth_rot=earth_rot)
 
+	    else:
+		rmdict = getRM.getRM(MS, 
+		                     server=ionex_server, 
+		                     prefix=ionex_prefix, 
+		                     ionexPath=ionexPath, 
+		                     timestep=timestep,
+		                     earth_rot=earth_rot)
     else:
-        rmdict = getRM.getRM(MS, 
-                             server=ionex_server, 
-                             prefix=ionex_prefix, 
-                             ionexPath=ionexPath, 
-                             timestep=timestep,
-                             earth_rot=earth_rot)
+	    if not all_stations:
+		rmdict = getRM.getRM(MS, 
+		                     server=ionex_server, 
+		                     prefix=ionex_prefix, 
+		                     ionexPath=ionexPath, 
+		                     timestep=timestep,
+		                     stat_names = ["st0"],
+		                     stat_pos=[PosTools.posCS002],
+		                     earth_rot=earth_rot,
+				     proxy_server=proxyServer,
+				     proxy_type=proxyType,
+				     proxy_port=proxyPort,
+				     proxy_user=proxyUser,
+				     proxy_pass=proxyPass)
+
+	    else:
+		rmdict = getRM.getRM(MS, 
+		                     server=ionex_server, 
+		                     prefix=ionex_prefix, 
+		                     ionexPath=ionexPath, 
+		                     timestep=timestep,
+		                     earth_rot=earth_rot,
+				     proxy_server=proxyServer,
+				     proxy_type=proxyType,
+				     proxy_port=proxyPort,
+				     proxy_user=proxyUser,
+				     proxy_pass=proxyPass)
+
     if not rmdict:
         if not server:
             raise ValueError("One or more IONEX files is not found on disk and download is disabled!\n"
