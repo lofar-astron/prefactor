@@ -39,7 +39,7 @@
 ! min_unflagged_fraction    =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! compression_bitrate       =  16                                     ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
 ! raw_data                  =  False                                  ## use autoweight, set to True in case you are using raw data
-! propagatesolutions        =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
+! propagatesolutions        =  False                                  ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources             =  [CasA,CygA]                            ## choose sources to demix (provided as list)
@@ -138,8 +138,8 @@ pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_t
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
 pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
-pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, add_missing_stations, h5exp_gsm,            make_results_mapfile_phase, move_results_phase]
-pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_tec, make_results_mapfile_tec,   move_results_tec]
+pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, add_missing_stations_phase, h5exp_gsm,            make_results_mapfile_phase, move_results_phase]
+pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, add_missing_stations_tec,   h5exp_gsm, apply_tec, make_results_mapfile_tec,   move_results_tec]
 
 pipeline.steps.finalize     =  [make_results_mapfile_uncor, move_results_uncor, h5parm_name]
 
@@ -795,17 +795,30 @@ process_losoto_gsmcal.control.inputkey                         =   h5in
 process_losoto_gsmcal.argument.flags                           =   [h5in,{{ job_directory }}/losoto.parset]
 
 # add missing stations to the soltab if any
-add_missing_stations.control.kind                              =   recipe
-add_missing_stations.control.type                              =   executable_args
-add_missing_stations.control.inplace                           =   True
-add_missing_stations.control.executable                        =   {{ scripts }}/add_missing_stations.py
-add_missing_stations.control.error_tolerance                   =   {{ error_tolerance }}
-add_missing_stations.control.mapfile_in                        =   h5imp_gsmcal.output.mapfile
-add_missing_stations.control.inputkey                          =   h5in
-add_missing_stations.argument.flags                            =   [h5in]
-add_missing_stations.argument.solset                           =   sol000
-add_missing_stations.argument.soltab_in                        =   phase000
-add_missing_stations.argument.soltab_out                       =   {{ skymodel_source }}{{ gsmcal_step }}
+add_missing_stations_phase.control.kind                        =   recipe
+add_missing_stations_phase.control.type                        =   executable_args
+add_missing_stations_phase.control.inplace                     =   True
+add_missing_stations_phase.control.executable                  =   {{ scripts }}/add_missing_stations.py
+add_missing_stations_phase.control.error_tolerance             =   {{ error_tolerance }}
+add_missing_stations_phase.control.mapfile_in                  =   h5imp_gsmcal.output.mapfile
+add_missing_stations_phase.control.inputkey                    =   h5in
+add_missing_stations_phase.argument.flags                      =   [h5in]
+add_missing_stations_phase.argument.solset                     =   sol000
+add_missing_stations_phase.argument.soltab_in                  =   phase000
+add_missing_stations_phase.argument.soltab_out                 =   {{ skymodel_source }}{{ gsmcal_step }}
+
+# add missing stations to the soltab if any
+add_missing_stations_tec.control.kind                          =   recipe
+add_missing_stations_tec.control.type                          =   executable_args
+add_missing_stations_tec.control.inplace                       =   True
+add_missing_stations_tec.control.executable                    =   {{ scripts }}/add_missing_stations.py
+add_missing_stations_tec.control.error_tolerance               =   {{ error_tolerance }}
+add_missing_stations_tec.control.mapfile_in                    =   h5imp_gsmcal.output.mapfile
+add_missing_stations_tec.control.inputkey                      =   h5in
+add_missing_stations_tec.argument.flags                        =   [h5in]
+add_missing_stations_tec.argument.solset                       =   sol000
+add_missing_stations_tec.argument.soltab_in                    =   tec000
+add_missing_stations_tec.argument.soltab_out                   =   {{ skymodel_source }}{{ gsmcal_step }}
 
 # output the final soltab into an external h5parm
 h5exp_gsm.control.kind                                         =   recipe
