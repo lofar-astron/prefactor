@@ -39,7 +39,7 @@
 ! min_unflagged_fraction    =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! compression_bitrate       =  16                                     ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
 ! raw_data                  =  False                                  ## use autoweight, set to True in case you are using raw data
-! propagatesolutions        =  False                                  ## use already derived solutions as initial guess for the upcoming time slot
+! propagatesolutions        =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources             =  [CasA,CygA]                            ## choose sources to demix (provided as list)
