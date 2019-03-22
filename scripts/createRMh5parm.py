@@ -73,7 +73,7 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",all_stations=False,timestep=3
         MS = mslist[0]
         pass
     
-    if "None" in proxyServer:
+    if not proxyServer:
 	    if not all_stations:
 		rmdict = getRM.getRM(MS, 
 		                     server=ionex_server, 
