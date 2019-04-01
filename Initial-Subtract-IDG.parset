@@ -21,7 +21,6 @@
 #   - the LOFAR beam towards the phase center corrected                          #
 # - in the CORRECTED_DATA column:                                                #
 #   - the DATA calibrated with the gains                                         #
-# - the direction-indepndent h5parm                                                #
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.             #
 #                                                                                #
 # IDG version                                                                    #

@@ -93,13 +93,15 @@ User-defined parameter configuration
 
 - ``refant``:name of the station that will be used as a reference for the phase-plots
 - ``flag_baselines``: NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: ``[]`` )
+- ``process_baselines_target``: performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 - ``filter_baselines``: selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 - ``do_smooth``: enable or disable baseline-based smoothing (may enhance signal-to-noise for **LBA** data)
 - ``rfistrategy``: strategy to be applied with the statistical flagger (AOFlagger), default: ``HBAdefault.rfis``
-- ``max_length``: amount of chunks to concatenate for full-bandwidth flagging (for target you can take up to 20 chunks if memory permits)
 - ``interp_windowsize``: size of the window over which a value is interpolated. Should be odd. (default: 15)
 - ``raw_data``: use autoweight, set to True in case you are using raw data (default: False)
+- ``compression_bitrate``: defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
 - ``min_unflagged_fraction``: minimal fraction of unflagged data to be accepted for further processing of the data chunk
+- ``propagatesolutions``: use already derived solutions as initial guess for the upcoming time slot
 
 A comprehensive explanation of the baseline selection syntax can be found `here`_.
 
@@ -112,14 +114,21 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 
 *Definitions for pipeline options*
 
-- ``substep``: choose which additional steps are run (default: ``clipATeam,``). Set empty if you want to skip A-Team clipping (usually in case demixing is already enabled)
-
+- ``initial_flagging``: choose {{ raw_flagging }} if you process raw data
+- ``demix_step``: choose {{ demix }} if you want to demix
+- ``apply_steps``: comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
+- ``clipAteam_step``: choose {{ none }} if you want to skip A-team-clipping
+- ``gsmcal_step``: choose tec if you want to fit TEC instead of self-calibrating for phases
+- ``updateweights``: update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
 
 **Parameters for pipeline performance**
 
 - ``num_proc_per_node``: number of processes to use per step per node (default: ``input.output.max_per_node``, reads the parameter ``max_per_node`` from the ``pipeline.cfg``)
 - ``num_proc_per_node_limit``: number of processes to use per step per node for tasks with high I/O (DPPP or cp) or memory (e.g. calibration) (default: 4)
 - ``max_dppp_threads``: number of threads per process for NDPPP (default: 10)
+- ``min_length``: minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+- ``overhead``: Only use this fraction of the available memory for deriving the amount of data to be concatenated.
+- ``min_separation``: minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 - ``error_tolerance``: defines whether pipeline run will continue if single bands fail (default: False)
 
 **Parameters you may want to adjust**
@@ -136,8 +145,10 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 
 *Sky model directory*
 
-- ``target_skymodel``: location of the target sky model (default: ``{{ job_directory }}/target.skymodel``), use False for ``use_tgss_target`` in case ``target_skymodel`` is already a pre-existing user-supplied skymodel
-- ``use_tgss_target``: download the phase-only calibration sky model from TGSS (``Force`` : always download , ``True`` download if ``{{ target_skymodel }}`` does not exist , ``False`` : never download)
+- ``A-team_skymodel``: path to A-team skymodel (used for demixing and clipping)
+- ``target_skymodel``: path to the skymodel for the phase-only calibration of the target
+- ``use_target``: download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
+- ``skymodel_source``: use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
 
 *Result directories*
 
