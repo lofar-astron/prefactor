@@ -31,8 +31,8 @@
 
 ! refant                    =  'CS001HBA0'                            ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
 ! flag_baselines            =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
-! process_baselines_target  =  [CR]S*&                                ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
-! filter_baselines          =  {{ process_baselines_target }}         ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! process_baselines_target  =  [C]S*&                                 ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! filter_baselines          =  [CR]S*&                                ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                 =  False                                  ## enable or disable baseline-based smoothing
 ! rfistrategy               =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger) for wideband flagging
 ! interp_windowsize         =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
@@ -804,6 +804,8 @@ add_missing_stations_phase.control.mapfile_in                  =   h5imp_gsmcal.
 add_missing_stations_phase.control.inputkey                    =   h5in
 add_missing_stations_phase.argument.flags                      =   [h5in]
 add_missing_stations_phase.argument.solset                     =   sol000
+add_missing_stations_phase.argument.refsolset                  =   target
+add_missing_stations_phase.argument.refh5                      =   {{ solutions }}
 add_missing_stations_phase.argument.soltab_in                  =   phase000
 add_missing_stations_phase.argument.soltab_out                 =   {{ skymodel_source }}{{ gsmcal_step }}
 
@@ -817,6 +819,8 @@ add_missing_stations_tec.control.mapfile_in                    =   h5imp_gsmcal.
 add_missing_stations_tec.control.inputkey                      =   h5in
 add_missing_stations_tec.argument.flags                        =   [h5in]
 add_missing_stations_tec.argument.solset                       =   sol000
+add_missing_stations_tec.argument.refsolset                    =   target
+add_missing_stations_tec.argument.refh5                        =   {{ solutions }}
 add_missing_stations_tec.argument.soltab_in                    =   tec000
 add_missing_stations_tec.argument.soltab_out                   =   {{ skymodel_source }}{{ gsmcal_step }}
 

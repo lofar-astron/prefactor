@@ -16,10 +16,14 @@ from losoto.h5parm import h5parm
 from losoto.lib_operations import *
 import logging
 
-def main(h5parmfile, solset='sol000', soltab_in='phase000', soltab_out='GSMphase'):
+def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_in='phase000', soltab_out='GSMphase'):
 
 
-    if not os.path.exists(h5parmfile):
+    if refh5 == None:
+        refh5 = h5parmfile
+        pass
+    
+    if not os.path.exists(h5parmfile) or not os.path.exists(refh5):
         logging.error("H5parm file %s doesn't exist!" % h5parmfile)
         return(1)
 
@@ -29,10 +33,12 @@ def main(h5parmfile, solset='sol000', soltab_in='phase000', soltab_out='GSMphase
 
     ### Open up the h5parm, get an example value
     data       = h5parm(h5parmfile, readonly = False)
+    refdata    = h5parm(refh5, readonly = False)
     solset     = data.getSolset(solset)
+    refsolset  = refdata.getSolset(refsolset)
     
     ### Get antenna information of the solset
-    new_station_names = sorted(solset.getAnt().keys())
+    new_station_names = sorted(refsolset.getAnt().keys())
     
     ### Load antenna list of input soltab
     logging.info('Processing solution table %s'%(soltab_in))
@@ -103,8 +109,12 @@ if __name__ == "__main__":
 
     parser.add_argument('h5parm', type=str,
                         help='H5parm to which this action should be performed .')
+    parser.add_argument('--refh5', type=str,
+                        help='External H5parm from which the full list of antennas is used from.')
     parser.add_argument('--solset', type=str, default='sol000',
 			help='Input calibration solutions')
+    parser.add_argument('--refsolset', type=str, default='sol000',
+			help='Input calibration solutions of the reference h5parm file')
     parser.add_argument('--soltab_in', type=str, default='phase000',
                         help='Input solution table')
     parser.add_argument('--soltab_out', type=str, default='GSMphase',
@@ -120,5 +130,5 @@ if __name__ == "__main__":
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
 
-    main(h5parmfile=args.h5parm, solset=args.solset, soltab_in=args.soltab_in, soltab_out=args.soltab_out)
+    main(h5parmfile=args.h5parm, refh5=args.refh5, solset=args.solset, refsolset=args.refsolset, soltab_in=args.soltab_in, soltab_out=args.soltab_out)
 
