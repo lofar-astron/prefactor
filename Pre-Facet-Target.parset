@@ -116,10 +116,10 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 ! ionex_server              =  "ftp://ftp.aiub.unibe.ch/CODE/"        ## to download from the "standard" server
 ! ionex_prefix              =  CODG                                   ## the prefix of the IONEX files
 ! ionex_path                =  {{ job_directory }}/IONEX/             ## path where the IONEX files can be stored or are already stored
-## Proxy Settings for RMextract
-! proxy_server              =  None                                   ## Url "my.proxy.com" or ip of proxy server
-! proxy_port                =  None                                   ## Port of the server
-! proxy_type                =  None                                   ## Proxy Type: "socks4" or "socks5"
+## Proxy Settings for RMextract                                       ## Only needed if commmunication to the outside world goes via proxy, leave empty otherwise
+! proxy_server              =                                         ## Url "my.proxy.com" or ip of proxy server
+! proxy_port                =                                         ## Port of the server
+! proxy_type                =                                         ## Proxy Type: "socks4" or "socks5"
 ! proxy_user                =  None                                   ## username for proxy server. Leave None if you do not need one
 ! proxy_pass                =  None                                   ## Password for proxy server. Leave None if you do not need one
 
