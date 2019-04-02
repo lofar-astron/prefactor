@@ -80,7 +80,7 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 With special thanks to Stefan Fröhlich for developing the genericpipeline.
 
 ### Acknowledgement
-Prefactor3 procedure described in this paper:
+Prefactor3 procedure is described in this paper:
 * de Gasperin, F.; Dijkema, T. J.; Drabent, A.; Mevius, M.; Rafferty, van Weeren, R., et al. 2019, [A&A, 662, A5](http://adsabs.harvard.edu/abs/2018arXiv181107954D)
 
 Fator procedure is described in these papers:
