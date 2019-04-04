@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015 - Francesco de Gasperin
+# Copyright (C) 2019 - Francesco de Gasperin
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,14 +65,14 @@ if not os.path.exists(msfile):
 ms = pt.table(msfile, readonly=False, ack=False)
         
 freqtab = pt.table(msfile + '/SPECTRAL_WINDOW', ack=False)
-freq = freqtab.getcol('REF_FREQUENCY')
+freq = freqtab.getcol('REF_FREQUENCY')[0]
 freqtab.close()
 wav = 299792458. / freq
 timepersample = ms.getcell('INTERVAL',0)
 
 # check if ms is time-ordered
 times = ms.getcol('TIME_CENTROID')
-if not all(times[i] <= times[i+1] for i in xrange(len(times)-1)):
+if not all(times[i] <= times[i+1] for i in range(len(times)-1)):
     logging.critical('This code cannot handle MS that are not time-sorted.')
     sys.exit(1)
 
@@ -101,6 +101,7 @@ for ms_ant1 in ms.iter(["ANTENNA1"]):
     a_flags = ms_ant1.getcol('FLAG')
  
     for ant2 in set(a_ant2):
+        if ant1 == ant2: continue # skip autocorr
         idx = np.where(a_ant2 == ant2)
         
         uvw = a_uvw[idx]
@@ -111,13 +112,13 @@ for ms_ant1 in ms.iter(["ANTENNA1"]):
         # compute the FWHM
         uvw_dist = np.sqrt(uvw[:, 0]**2 + uvw[:, 1]**2 + uvw[:, 2]**2)
         dist = np.mean(uvw_dist) / 1.e3
-        if np.isnan(dist) or dist == 0: continue # fix for missing anstennas and autocorr
+        if np.isnan(dist): continue # fix for missing anstennas
     
         stddev = options.ionfactor * (25.e3 / dist)**options.bscalefactor * (freq / 60.e6) # in sec
         stddev = stddev/timepersample # in samples
         logging.debug("%s - %s: dist = %.1f km: sigma=%.2f samples." % (ant1, ant2, dist, stddev))
     
-        if stddev == 0: continue # fix for missing anstennas
+        if stddev == 0: continue # fix for flagged antennas
         if stddev < 0.5: continue # avoid very small smoothing
     
         flags[ np.isnan(data) ] = True # flag NaNs
