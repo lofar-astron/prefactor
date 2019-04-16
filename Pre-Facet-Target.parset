@@ -58,7 +58,7 @@
 ! initial_flagging          =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
 ! demix_step                =  {{ none }}                             ## choose {{ demix }} if you want to demix
 ! apply_steps               =  applyclock,applybeam,applyRM           ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
-! clipAteam_step            =  {{ clipATeam }}                        ## choose {{ none }} if you want to skip A-team-clipping
+! clipATeam_step            =  {{ clipATeam }}                        ## choose {{ none }} if you want to skip A-team-clipping
 ! gsmcal_step               =  phase                                  ## choose tec if you want to fit TEC instead of self-calibrating for phases
 ! updateweights             =  True                                   ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
 
@@ -130,7 +130,7 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 ########################################################
 
 # which steps to run
-pipeline.steps              =  [prep, {{ clipATeam }} concat, prep_gsmcal, {{ gsmcal_step }}, finalize]
+pipeline.steps              =  [prep, {{ clipATeam_step }} concat, prep_gsmcal, {{ gsmcal_step }}, finalize]
 
 # pipeline substeps
 pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_target_map, check_Ateam_separation, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
