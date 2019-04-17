@@ -138,10 +138,10 @@ pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_t
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
 pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
 pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
-pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase, process_losoto_gsmcal, add_missing_stations_phase, h5exp_gsm,            make_results_mapfile_phase, move_results_phase]
-pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec,   process_losoto_gsmcal, add_missing_stations_tec,   h5exp_gsm, apply_tec, make_results_mapfile_tec,   move_results_tec]
+pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
+pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
-pipeline.steps.finalize     =  [make_results_mapfile_uncor, move_results_uncor, h5parm_name]
+pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, make_results_mapfile_uncor, move_results_uncor, h5parm_name]
 
 
 #############################
@@ -625,23 +625,26 @@ gsmcal_phase.argument.msin                                     =   input_file
 gsmcal_phase.argument.msin.baseline                            =   check_bad_antennas.output.filter
 gsmcal_phase.argument.msin.datacolumn                          =   SMOOTHED_DATA
 gsmcal_phase.argument.numthreads                               =   {{ max_dppp_threads }}
-gsmcal_phase.argument.msout.storagemanager                     =   "Dysco"
-gsmcal_phase.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
+# gsmcal_phase.argument.msout.storagemanager                     =   "Dysco"
+# gsmcal_phase.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
 gsmcal_phase.argument.steps                                    =   [filter,gaincal]
 gsmcal_phase.argument.filter.type                              =   filter
 gsmcal_phase.argument.filter.blrange                           =   [150, 999999]
 gsmcal_phase.argument.gaincal.type                             =   gaincal
+# gsmcal_phase.argument.gaincal.type                             =   ddecal
+# gsmcal_phase.argument.gaincal.mode                             =   diagonal
+# gsmcal_phase.argument.gaincal.h5parm                           =   h5parm
 gsmcal_phase.argument.gaincal.maxiter                          =   50
 gsmcal_phase.argument.gaincal.caltype                          =   phaseonly
 gsmcal_phase.argument.gaincal.nchan                            =   0
 gsmcal_phase.argument.gaincal.solint                           =   1
+gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
 gsmcal_phase.argument.gaincal.sourcedb                         =   sourcedb
 gsmcal_phase.argument.gaincal.parmdb                           =   parmdb
 gsmcal_phase.argument.gaincal.usebeammodel                     =   True
 gsmcal_phase.argument.gaincal.usechannelfreq                   =   True
 gsmcal_phase.argument.gaincal.beammode                         =   array_factor
-gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
-gsmcal_phase.argument.gaincal.applysolution                    =   True
+# gsmcal_phase.argument.gaincal.applysolution                    =   True
 gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
 
 # # predict for direction-independent TEC
@@ -672,23 +675,25 @@ gsmcal_tec.control.inputkeys                                   =   [input_file,s
 gsmcal_tec.argument.msin                                       =   input_file
 gsmcal_tec.argument.numthreads                                 =   {{ max_dppp_threads }}
 gsmcal_tec.argument.msin.datacolumn                            =   SMOOTHED_DATA
-gsmcal_tec.argument.steps                                      =   [filter,ddecal]
-gsmcal_tec.argument.filter.type                                =   filter
-gsmcal_tec.argument.filter.blrange                             =   [150, 999999]
-gsmcal_tec.argument.ddecal.type                                =   ddecal
-gsmcal_tec.argument.ddecal.uvlambdamin                         =   100
-gsmcal_tec.argument.ddecal.maxiter                             =   400
-gsmcal_tec.argument.ddecal.tolerance                           =   1e-3
-gsmcal_tec.argument.ddecal.solint                              =   3
-gsmcal_tec.argument.ddecal.nchan                               =   4
-gsmcal_tec.argument.ddecal.stepsize                            =   0.2
-gsmcal_tec.argument.ddecal.h5parm                              =   parmdb
-gsmcal_tec.argument.ddecal.mode                                =   tec 
-gsmcal_tec.argument.ddecal.propagatesolutions                  =   {{ propagatesolutions }}
-gsmcal_tec.argument.ddecal.approximatetec                      =   True
-gsmcal_tec.argument.ddecal.maxapproxiter                       =   400 
-gsmcal_tec.argument.ddecal.approxtolerance                     =   1e-3
-gsmcal_tec.argument.ddecal.sourcedb                            =   sourcedb
+gsmcal_tec.argument.steps                                      =   [teccal]
+gsmcal_tec.argument.teccal.type                                =   ddecal
+gsmcal_tec.argument.teccal.uvlambdamin                         =   100
+gsmcal_tec.argument.teccal.maxiter                             =   400
+gsmcal_tec.argument.teccal.tolerance                           =   1e-3
+gsmcal_tec.argument.teccal.solint                              =   3
+gsmcal_tec.argument.teccal.nchan                               =   8
+gsmcal_tec.argument.teccal.stepsize                            =   0.2
+gsmcal_tec.argument.teccal.h5parm                              =   parmdb
+gsmcal_tec.argument.teccal.mode                                =   tec 
+gsmcal_tec.argument.teccal.propagatesolutions                  =   {{ propagatesolutions }}
+gsmcal_tec.argument.teccal.approximatetec                      =   True
+gsmcal_tec.argument.teccal.maxapproxiter                       =   400 
+gsmcal_tec.argument.teccal.approxtolerance                     =   1e-3
+gsmcal_tec.argument.teccal.sourcedb                            =   sourcedb
+gsmcal_tec.argument.teccal.usebeammodel                        =   True
+gsmcal_tec.argument.teccal.usechannelfreq                      =   True
+gsmcal_tec.argument.teccal.beammode                            =   array_factor
+gsmcal_tec.argument.teccal.onebeamperpatch                     =   True
 
 
 ###########################
@@ -746,32 +751,13 @@ prepare_losoto_phase.control.plotPd2.plotFlag                  =   True
 prepare_losoto_phase.control.plotPd2.prefix                    =   {{ inspection_directory }}/ph_poldif_
 prepare_losoto_phase.control.plotPd2.refAnt                    =   {{ refant }}
 prepare_losoto_phase.control.plotPd2.minmax                    =   [-3.14,3.14]
-# prepare_losoto_phase.control.bkp.operation                     =   DUPLICATE
-# prepare_losoto_phase.control.bkp.soltab                        =   sol000/phase000
-# prepare_losoto_phase.control.bkp.soltabOut                     =   {{ skymodel_source }}phase
 
 # create losoto v2 parset file
 prepare_losoto_tec.control.kind                                =   plugin
 prepare_losoto_tec.control.type                                =   makeLosotoParset
-# prepare_losoto_tec.control.steps                               =   [plotCSPTEC, plotCSP, plotTEC]
 prepare_losoto_tec.control.steps                               =   [plotTEC]
 prepare_losoto_tec.control.filename                            =   input.output.job_directory/losoto.parset
 prepare_losoto_tec.control.global.ncpu                         =   {{ num_proc_per_node }}
-prepare_losoto_tec.control.plotCSPTEC.operation                =   PLOT
-prepare_losoto_tec.control.plotCSPTEC.soltab                   =   sol000/phase000
-prepare_losoto_tec.control.plotCSPTEC.axesInPlot               =   time
-prepare_losoto_tec.control.plotCSPTEC.axisInTable              =   ant
-prepare_losoto_tec.control.plotCSPTEC.plotFlag                 =   True
-prepare_losoto_tec.control.plotCSPTEC.prefix                   =   {{ inspection_directory }}/csptec
-prepare_losoto_tec.control.plotCSPTEC.refAnt                   =   {{ refant }}
-prepare_losoto_tec.control.plotCSPTEC.soltabToAdd              =   tec000
-prepare_losoto_tec.control.plotCSP.operation                   =   PLOT
-prepare_losoto_tec.control.plotCSP.soltab                      =   sol000/phase000
-prepare_losoto_tec.control.plotCSP.axesInPlot                  =   time
-prepare_losoto_tec.control.plotCSP.axisInTable                 =   ant
-prepare_losoto_tec.control.plotCSP.plotFlag                    =   True
-prepare_losoto_tec.control.plotCSP.prefix                      =   {{ inspection_directory }}/csp
-prepare_losoto_tec.control.plotCSP.refAnt                      =   {{ refant }}
 prepare_losoto_tec.control.plotTEC.operation                   =   PLOT
 prepare_losoto_tec.control.plotTEC.soltab                      =   sol000/tec000
 prepare_losoto_tec.control.plotTEC.axesInPlot                  =   time
@@ -780,9 +766,6 @@ prepare_losoto_tec.control.plotTEC.plotFlag                    =   True
 prepare_losoto_tec.control.plotTEC.minmax                      =   [-0.5,0.5]
 prepare_losoto_tec.control.plotTEC.prefix                      =   {{ inspection_directory }}/tec
 prepare_losoto_tec.control.plotTEC.refAnt                      =   {{ refant }}
-# prepare_losoto_tec.control.bkp.operation                       =   DUPLICATE
-# prepare_losoto_tec.control.bkp.soltab                          =   sol000/tec000
-# prepare_losoto_tec.control.bkp.soltabOut                       =   {{ skymodel_source }}tec
 
 # do the processing on the LoSoTo file
 process_losoto_gsmcal.control.kind                             =   recipe
@@ -837,61 +820,35 @@ h5exp_gsm.argument.insoltab                                    =   {{ skymodel_s
 h5exp_gsm.argument.outsolset                                   =   target
 h5exp_gsm.argument.outh5parm                                   =   {{ solutions }}
 
-# # output the final soltab into an external h5parm
-# h5exp_tec.control.kind                                         =   recipe
-# h5exp_tec.control.type                                         =   executable_args
-# h5exp_tec.control.inplace                                      =   True
-# h5exp_tec.control.executable                                   =   {{ losoto_directory }}/bin/H5parm_collector.py
-# h5exp_tec.control.error_tolerance                              =   {{ error_tolerance }}
-# h5exp_tec.control.mapfile_in                                   =   h5imp_gsmcal.output.mapfile
-# h5exp_tec.control.inputkey                                     =   h5in
-# h5exp_tec.argument.flags                                       =   [-q,-v,h5in]
-# h5exp_tec.argument.insoltab                                    =   {{ skymodel_source }}tec
-# h5exp_tec.argument.outsolset                                   =   target
-# h5exp_tec.argument.outh5parm                                   =   {{ solutions }}
-
-
 ################################
 ## final step (EXPERIMENTAL)  ##
 ################################
 
 # apply the final solutions to the data, interpolate, and compress it
-apply_tec.control.type                                         =   dppp
-apply_tec.control.error_tolerance                              =   {{ error_tolerance }}
-apply_tec.control.max_per_node                                 =   {{ num_proc_per_node_limit }}
-apply_tec.argument.msin                                        =   check_unflagged_map.output.mapfile
-apply_tec.argument.numthreads                                  =   {{ max_dppp_threads }}
-apply_tec.argument.msin.datacolumn                             =   SMOOTHED_DATA
-apply_tec.argument.msin.baseline                               =   check_bad_antennas.output.filter
-apply_tec.argument.msout.storagemanager                        =   "Dysco"
-apply_tec.argument.msout.storagemanager.databitrate            =   {{ compression_bitrate }}
-apply_tec.argument.steps                                       =   [applytec,interp]
-apply_tec.argument.applytec.type                               =   applycal
-apply_tec.argument.applytec.correction                         =   {{ skymodel_source }}tec
-apply_tec.argument.applytec.parmdb                             =   {{ solutions }}
-apply_tec.argument.applytec.solset                             =   target
-apply_tec.argument.interp.type                                 =   interpolate
-apply_tec.argument.interp.windowsize                           =   {{ interp_windowsize }}
+apply_gsmcal.control.type                                      =   dppp
+apply_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
+apply_gsmcal.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+apply_gsmcal.argument.msin                                     =   check_unflagged_map.output.mapfile
+apply_gsmcal.argument.numthreads                               =   {{ max_dppp_threads }}
+apply_gsmcal.argument.msin.datacolumn                          =   SMOOTHED_DATA
+apply_gsmcal.argument.msin.baseline                            =   check_bad_antennas.output.filter
+apply_gsmcal.argument.msout.storagemanager                     =   "Dysco"
+apply_gsmcal.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
+apply_gsmcal.argument.steps                                    =   [applygsm]
+apply_gsmcal.argument.applygsm.type                            =   applycal
+apply_gsmcal.argument.applygsm.correction                      =   {{ skymodel_source }}{{ gsmcal_step }}
+apply_gsmcal.argument.applygsm.parmdb                          =   {{ solutions }}
+apply_gsmcal.argument.applygsm.solset                          =   target
 
 # make mapfile with the filenames of the results that we want
-make_results_mapfile_phase.control.kind                        =   plugin
-make_results_mapfile_phase.control.type                        =   makeResultsMapfile
-make_results_mapfile_phase.control.mapfile_dir                 =   input.output.mapfile_dir
-make_results_mapfile_phase.control.filename                    =   make_results_mapfile.mapfile
-make_results_mapfile_phase.control.mapfile_in                  =   gsmcal_phase.output.mapfile
-make_results_mapfile_phase.control.target_dir                  =   {{ results_directory }}
-make_results_mapfile_phase.control.make_target_dir             =   True
-make_results_mapfile_phase.control.new_suffix                  =   .pre-cal.ms
-
-# make mapfile with the filenames of the results that we want
-make_results_mapfile_tec.control.kind                          =   plugin
-make_results_mapfile_tec.control.type                          =   makeResultsMapfile
-make_results_mapfile_tec.control.mapfile_dir                   =   input.output.mapfile_dir
-make_results_mapfile_tec.control.filename                      =   make_results_mapfile.mapfile
-make_results_mapfile_tec.control.mapfile_in                    =   apply_tec.output.mapfile
-make_results_mapfile_tec.control.target_dir                    =   {{ results_directory }}
-make_results_mapfile_tec.control.make_target_dir               =   True
-make_results_mapfile_tec.control.new_suffix                    =   .pre-cal.ms
+make_results_mapfile.control.kind                              =   plugin
+make_results_mapfile.control.type                              =   makeResultsMapfile
+make_results_mapfile.control.mapfile_dir                       =   input.output.mapfile_dir
+make_results_mapfile.control.filename                          =   make_results_mapfile.mapfile
+make_results_mapfile.control.mapfile_in                        =   apply_gsmcal.output.mapfile
+make_results_mapfile.control.target_dir                        =   {{ results_directory }}
+make_results_mapfile.control.make_target_dir                   =   True
+make_results_mapfile.control.new_suffix                        =   .pre-cal.ms
 
 # make mapfile with the filenames of the results that we want
 make_results_mapfile_uncor.control.kind                        =   plugin
@@ -904,22 +861,13 @@ make_results_mapfile_uncor.control.make_target_dir             =   True
 make_results_mapfile_uncor.control.new_suffix                  =   .uncorr.ms
 
 # move the results to where we want them
-move_results_phase.control.kind                                =   recipe
-move_results_phase.control.type                                =   executable_args
-move_results_phase.control.executable                          =   /bin/mv
-move_results_phase.control.max_per_node                        =   {{ num_proc_per_node_limit }}
-move_results_phase.control.mapfiles_in                         =   [gsmcal_phase.output.mapfile,make_results_mapfile_phase.output.mapfile]
-move_results_phase.control.inputkeys                           =   [source,destination]
-move_results_phase.control.arguments                           =   [source,destination]
-
-# move the results to where we want them
-move_results_tec.control.kind                                  =   recipe
-move_results_tec.control.type                                  =   executable_args
-move_results_tec.control.executable                            =   /bin/mv
-move_results_tec.control.max_per_node                          =   {{ num_proc_per_node_limit }}
-move_results_tec.control.mapfiles_in                           =   [apply_tec.output.mapfile,make_results_mapfile_tec.output.mapfile]
-move_results_tec.control.inputkeys                             =   [source,destination]
-move_results_tec.control.arguments                             =   [source,destination]
+move_results.control.kind                                      =   recipe
+move_results.control.type                                      =   executable_args
+move_results.control.executable                                =   /bin/mv
+move_results.control.max_per_node                              =   {{ num_proc_per_node_limit }}
+move_results.control.mapfiles_in                               =   [apply_gsmcal.output.mapfile,make_results_mapfile.output.mapfile]
+move_results.control.inputkeys                                 =   [source,destination]
+move_results.control.arguments                                 =   [source,destination]
 
 # move the results to where we want them
 move_results_uncor.control.kind                                =   recipe
