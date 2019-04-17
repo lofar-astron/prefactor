@@ -779,34 +779,19 @@ process_losoto_gsmcal.control.inputkey                         =   h5in
 process_losoto_gsmcal.argument.flags                           =   [h5in,{{ job_directory }}/losoto.parset]
 
 # add missing stations to the soltab if any
-add_missing_stations_phase.control.kind                        =   recipe
-add_missing_stations_phase.control.type                        =   executable_args
-add_missing_stations_phase.control.inplace                     =   True
-add_missing_stations_phase.control.executable                  =   {{ scripts }}/add_missing_stations.py
-add_missing_stations_phase.control.error_tolerance             =   {{ error_tolerance }}
-add_missing_stations_phase.control.mapfile_in                  =   h5imp_gsmcal.output.mapfile
-add_missing_stations_phase.control.inputkey                    =   h5in
-add_missing_stations_phase.argument.flags                      =   [h5in]
-add_missing_stations_phase.argument.solset                     =   sol000
-add_missing_stations_phase.argument.refsolset                  =   target
-add_missing_stations_phase.argument.refh5                      =   {{ solutions }}
-add_missing_stations_phase.argument.soltab_in                  =   phase000
-add_missing_stations_phase.argument.soltab_out                 =   {{ skymodel_source }}{{ gsmcal_step }}
-
-# add missing stations to the soltab if any
-add_missing_stations_tec.control.kind                          =   recipe
-add_missing_stations_tec.control.type                          =   executable_args
-add_missing_stations_tec.control.inplace                       =   True
-add_missing_stations_tec.control.executable                    =   {{ scripts }}/add_missing_stations.py
-add_missing_stations_tec.control.error_tolerance               =   {{ error_tolerance }}
-add_missing_stations_tec.control.mapfile_in                    =   h5imp_gsmcal.output.mapfile
-add_missing_stations_tec.control.inputkey                      =   h5in
-add_missing_stations_tec.argument.flags                        =   [h5in]
-add_missing_stations_tec.argument.solset                       =   sol000
-add_missing_stations_tec.argument.refsolset                    =   target
-add_missing_stations_tec.argument.refh5                        =   {{ solutions }}
-add_missing_stations_tec.argument.soltab_in                    =   tec000
-add_missing_stations_tec.argument.soltab_out                   =   {{ skymodel_source }}{{ gsmcal_step }}
+add_missing_stations.control.kind                              =   recipe
+add_missing_stations.control.type                              =   executable_args
+add_missing_stations.control.inplace                           =   True
+add_missing_stations.control.executable                        =   {{ scripts }}/add_missing_stations.py
+add_missing_stations.control.error_tolerance                   =   {{ error_tolerance }}
+add_missing_stations.control.mapfile_in                        =   h5imp_gsmcal.output.mapfile
+add_missing_stations.control.inputkey                          =   h5in
+add_missing_stations.argument.flags                            =   [h5in]
+add_missing_stations.argument.solset                           =   sol000
+add_missing_stations.argument.refsolset                        =   target
+add_missing_stations.argument.refh5                            =   {{ solutions }}
+add_missing_stations.argument.soltab_in                        =   {{ gsmcal_step }}000
+add_missing_stations.argument.soltab_out                       =   {{ skymodel_source }}{{ gsmcal_step }}
 
 # output the final soltab into an external h5parm
 h5exp_gsm.control.kind                                         =   recipe
