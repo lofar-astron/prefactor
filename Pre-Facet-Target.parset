@@ -694,7 +694,7 @@ gsmcal_tec.argument.teccal.sourcedb                            =   sourcedb
 gsmcal_tec.argument.teccal.usebeammodel                        =   True
 gsmcal_tec.argument.teccal.usechannelfreq                      =   True
 gsmcal_tec.argument.teccal.beammode                            =   array_factor
-gsmcal_tec.argument.teccal.onebeamperpatch                     =   True
+gsmcal_tec.argument.teccal.onebeamperpatch                     =   False
 
 
 ###########################
