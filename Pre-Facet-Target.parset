@@ -262,7 +262,6 @@ h5imp_RMextract.argument.ionex_server                          =   {{ ionex_serv
 h5imp_RMextract.argument.ionex_prefix                          =   {{ ionex_prefix }}
 h5imp_RMextract.argument.ionexPath                             =   {{ ionex_path }}
 h5imp_RMextract.argument.solset_name                           =   target
-h5imp_RMextract.argument.all_stations                          =   True
 h5imp_RMextract.argument.proxyServer                           =   {{ proxy_server }}
 h5imp_RMextract.argument.proxyPort                             =   {{ proxy_port }}
 h5imp_RMextract.argument.proxyType                             =   {{ proxy_type }}
