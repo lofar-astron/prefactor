@@ -42,23 +42,23 @@ def main(ms_file, min_fraction=0.01, print_fraction=False):
         minimum fraction of unflagged data needed to keep this MS
     print_fraction : bool, optional
         print the actual fration of unflagged data
-    
+
     Returns
     -------
     result : dict
-        Dict with the name of the input MS or "None"    
+        Dict with the name of the input MS or "None"
 
     """
     min_fraction = float(min_fraction)
     unflagged_fraction = find_unflagged_fraction(ms_file)
     if print_fraction:
-        print "File %s has %.2f%% unflagged data."%(os.path.basename(ms_file),unflagged_fraction*100.)
+        print("File %s has %.2f%% unflagged data."%(os.path.basename(ms_file),unflagged_fraction*100.))
     if unflagged_fraction < min_fraction:
-        print 'check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, ' \
-              'removing file.'.format(os.path.basename(ms_file),str(unflagged_fraction))
-        return { 'flagged' : 'None' }
+        print('check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, '
+              'removing file.'.format(os.path.basename(ms_file), str(unflagged_fraction)))
+        return {'flagged': 'None', 'unflagged_fraction':  unflagged_fraction}
     else:
-        return { 'flagged' : ms_file }  
+        return {'flagged': ms_file, 'unflagged_fraction':  unflagged_fraction}
 
 if __name__ == '__main__':
     descriptiontext = "Check a MS for a minimum fraction of unflagged data.\n"
@@ -70,4 +70,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     erg = main(args.inputms, args.min_fraction,print_fraction=True)
-    print erg

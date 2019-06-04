@@ -16,7 +16,7 @@ from losoto.h5parm import h5parm
 from losoto.lib_operations import *
 import logging
 
-def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_in='phase000', soltab_out='GSMphase'):
+def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_in='phase000', soltab_out='GSMphase', filter='[CR]S*&', bad_antennas='[CR]S*&'):
 
 
     if refh5 == None:
@@ -38,7 +38,9 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
     refsolset  = refdata.getSolset(refsolset)
     
     ### Get antenna information of the solset
-    new_station_names = sorted(refsolset.getAnt().keys())
+    ref_station_names = sorted(refsolset.getAnt().keys())
+    bad_antennas_list = bad_antennas.lstrip(filter).replace('!','').replace('*','').split(';')
+    new_station_names = [ ref_station_name for ref_station_name in ref_station_names if ref_station_name not in bad_antennas_list ]
     
     ### Load antenna list of input soltab
     logging.info('Processing solution table %s'%(soltab_in))
@@ -71,7 +73,7 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
             logging.error('Unknown axis in soltab: ' + str(axis))
             return 1           
 
-    ### just copy of number of antennas is the same
+    ### just copy if number of antennas is the same
     if len(new_station_names) == len(old_station_names):
         logging.warning('Station list in soltab ' + str(soltab_in) + ' matches the station list in the selected solset. Data will just be copied.')
         new_soltab = solset.makeSoltab(soltype=soltab_type, soltabName=soltab_out, axesNames=out_axes, axesVals=out_axes_vals, vals=vals, weights=weights)
@@ -119,6 +121,7 @@ if __name__ == "__main__":
                         help='Input solution table')
     parser.add_argument('--soltab_out', type=str, default='GSMphase',
                         help='Output solution table (has to be different from input solution table)')
+
 
     args = parser.parse_args()
 

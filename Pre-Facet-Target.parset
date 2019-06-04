@@ -136,8 +136,8 @@ pipeline.steps              =  [prep, {{ clipATeam_step }} concat, prep_gsmcal, 
 pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_target_map, check_Ateam_separation, mk_targ_values_dir, copy_cal_sols, check_station_mismatch, createmap_preptarg, createmap_insttarg, create_ateam_model_map, make_sourcedb_ateam, expand_sourcedb_ateam, h5imp_RMextract, prepare_losoto_RMextract, process_losoto_RMextract, ndppp_prep_target]
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar]
-pipeline.steps.concat       =  [combine_target_map, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
-pipeline.steps.prep_gsmcal  =  [check_unflagged, check_bad_antennas, check_unflagged_map, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
+pipeline.steps.concat       =  [combine_target_map, check_bad_antennas, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
+pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_concat_map, combine_frac_map, plot_unflagged, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
@@ -421,6 +421,12 @@ combine_target_map.control.mapfile_dir                         =   input.output.
 combine_target_map.control.filename                            =   combine_target_map.mapfile
 combine_target_map.control.mapfile_in                          =   ndppp_prep_target.output.mapfile
 
+# check bad antennas
+check_bad_antennas.control.kind                                =   plugin
+check_bad_antennas.control.type                                =   identifyBadAntennas
+check_bad_antennas.control.mapfile_in                          =   ndppp_prep_target.output.mapfile
+check_bad_antennas.control.filter                              =   {{ process_baselines_target }}
+
 # sort the target data by frequency into groups so that NDPPP can concatenate them
 sortmap_target.control.type                                    =   pythonplugin
 sortmap_target.control.executable                              =   {{ scripts }}/sort_times_into_freqGroups.py
@@ -450,9 +456,9 @@ dpppconcat.control.inputkey                                    =   msin
 dpppconcat.argument.msin.datacolumn                            =   DATA
 dpppconcat.argument.msin.missingdata                           =   True    #\ these two lines will make NDPPP generate dummy data when
 dpppconcat.argument.msin.orderms                               =   False   #/ concatenating data
-dpppconcat.argument.msin.baseline                              =   {{ process_baselines_target }}
+dpppconcat.argument.msin.baseline                              =   check_bad_antennas.output.filter
 dpppconcat.argument.filter.type                                =   filter
-dpppconcat.argument.filter.baseline                            =   {{ process_baselines_target }}
+dpppconcat.argument.filter.baseline                            =   check_bad_antennas.output.filter
 dpppconcat.argument.filter.remove                              =   True
 dpppconcat.argument.msout.datacolumn                           =   DATA
 dpppconcat.argument.msout.writefullresflag                     =   False
@@ -520,12 +526,6 @@ check_unflagged.control.executable                             =   {{ scripts }}
 check_unflagged.argument.flags                                 =   [dpppconcat.output.mapfile]
 check_unflagged.argument.min_fraction                          =   {{ min_unflagged_fraction }}
 
-# check potential station mismatch
-check_bad_antennas.control.kind                                =   plugin
-check_bad_antennas.control.type                                =   identifyBadAntennas
-check_bad_antennas.control.mapfile_in                          =   do_sortmap_maps.output.groupmap
-check_bad_antennas.control.filter                              =   {{ filter_baselines }}
-
 # prune flagged files from mapfile
 check_unflagged_map.control.kind                               =   plugin
 check_unflagged_map.control.type                               =   pruneMapfile
@@ -533,6 +533,28 @@ check_unflagged_map.control.mapfile_in                         =   check_unflagg
 check_unflagged_map.control.mapfile_dir                        =   input.output.mapfile_dir
 check_unflagged_map.control.filename                           =   check_unflagged_map.mapfile
 check_unflagged_map.control.prune_str                          =   None
+
+# compress mapfiles for plotting
+combine_concat_map.control.kind                                =   plugin
+combine_concat_map.control.type                                =   compressMapfile
+combine_concat_map.control.mapfile_in                          =   dpppconcat.output.mapfile
+combine_concat_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_concat_map.control.filename                            =   combine_concat_map.mapfile
+
+# compress mapfiles for plotting
+combine_frac_map.control.kind                                  =   plugin
+combine_frac_map.control.type                                  =   compressMapfile
+combine_frac_map.control.mapfile_in                            =   check_unflagged.output.unflagged_fraction.mapfile
+combine_frac_map.control.mapfile_dir                           =   input.output.mapfile_dir
+combine_frac_map.control.filename                              =   combine_frac_map.mapfile
+
+# plot the unflagged fraction
+plot_unflagged.control.type                                    =   pythonplugin
+plot_unflagged.control.executable                              =   {{ scripts }}/plot_unflagged_fraction.py
+plot_unflagged.control.mapfiles_in                             =   [combine_concat_map.output.mapfile,combine_frac_map.output.mapfile]
+plot_unflagged.control.inputkeys                               =   [msin,frac]
+plot_unflagged.argument.flags                                  =   [msin,frac]
+plot_unflagged.argument.outfile                                =   {{ inspection_directory }}/unflagged_fraction.png
 
 # if wished, download the tgss skymodel for the target
 sky_tar.control.type                                           =   pythonplugin
@@ -622,48 +644,31 @@ gsmcal_phase.control.max_per_node                              =   {{ num_proc_p
 gsmcal_phase.control.mapfiles_in                               =   [check_unflagged_map.output.mapfile,expand_sourcedb_target.output.mapfile,gsmcal_parmmap.output.mapfile]
 gsmcal_phase.control.inputkeys                                 =   [input_file,sourcedb,parmdb]
 gsmcal_phase.argument.msin                                     =   input_file
-gsmcal_phase.argument.msin.baseline                            =   check_bad_antennas.output.filter
+# gsmcal_phase.argument.msin.baseline                            =   check_bad_antennas.output.filter
 gsmcal_phase.argument.msin.datacolumn                          =   SMOOTHED_DATA
 gsmcal_phase.argument.numthreads                               =   {{ max_dppp_threads }}
-# gsmcal_phase.argument.msout.storagemanager                     =   "Dysco"
-# gsmcal_phase.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
+gsmcal_phase.argument.steps                                    =   [afilter,bfilter,gaincal]
 gsmcal_phase.argument.steps                                    =   [filter,gaincal]
+# gsmcal_phase.argument.afilter.type                             =   filter
+# gsmcal_phase.argument.afilter.baseline                          =  check_bad_antennas.output.filter
 gsmcal_phase.argument.filter.type                              =   filter
 gsmcal_phase.argument.filter.blrange                           =   [150, 999999]
-gsmcal_phase.argument.gaincal.type                             =   gaincal
 # gsmcal_phase.argument.gaincal.type                             =   ddecal
-# gsmcal_phase.argument.gaincal.mode                             =   diagonal
-# gsmcal_phase.argument.gaincal.h5parm                           =   h5parm
-gsmcal_phase.argument.gaincal.maxiter                          =   50
-gsmcal_phase.argument.gaincal.caltype                          =   phaseonly
-gsmcal_phase.argument.gaincal.nchan                            =   0
-gsmcal_phase.argument.gaincal.solint                           =   1
-gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
-gsmcal_phase.argument.gaincal.sourcedb                         =   sourcedb
+# gsmcal_phase.argument.gaincal.mode                             =   phaseonly
+# gsmcal_phase.argument.gaincal.h5parm                           =   parmdb
+gsmcal_phase.argument.gaincal.type                             =   gaincal
 gsmcal_phase.argument.gaincal.parmdb                           =   parmdb
+gsmcal_phase.argument.gaincal.caltype                          =   phaseonly
+gsmcal_phase.argument.gaincal.sourcedb                         =   sourcedb
+gsmcal_phase.argument.gaincal.maxiter                          =   50
+gsmcal_phase.argument.gaincal.solint                           =   1
+gsmcal_phase.argument.gaincal.nchan                            =   0
+gsmcal_phase.argument.gaincal.tolerance                        =   1e-3
+gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
 gsmcal_phase.argument.gaincal.usebeammodel                     =   True
 gsmcal_phase.argument.gaincal.usechannelfreq                   =   True
 gsmcal_phase.argument.gaincal.beammode                         =   array_factor
-# gsmcal_phase.argument.gaincal.applysolution                    =   True
-gsmcal_phase.argument.gaincal.propagatesolutions               =   {{ propagatesolutions }}
-
-# # predict for direction-independent TEC
-# gsmcal_predict.control.type                                    =   dppp
-# gsmcal_predict.control.error_tolerance                         =   {{ error_tolerance }}
-# gsmcal_predict.control.inplace                                 =   True
-# gsmcal_predict.control.max_per_node                            =   {{ num_proc_per_node_limit }}
-# gsmcal_predict.control.mapfiles_in                             =   [check_unflagged_map.output.mapfile,expand_sourcedb_target.output.mapfile]
-# gsmcal_predict.control.inputkeys                               =   [input_file,sourcedb]
-# gsmcal_predict.argument.msin                                   =   input_file
-# gsmcal_predict.argument.numthreads                             =   {{ max_dppp_threads }}
-# gsmcal_predict.argument.msin.datacolumn                        =   DATA
-# gsmcal_predict.argument.msout.datacolumn                       =   MODEL_DATA
-# gsmcal_predict.argument.steps                                  =   [predict]
-# gsmcal_predict.argument.predict.type                           =   predict
-# gsmcal_predict.argument.predict.sourcedb                       =   sourcedb
-# gsmcal_predict.argument.predict.usebeammodel                   =   True
-# gsmcal_predict.argument.predict.usechannelfreq                 =   True
-# gsmcal_predict.argument.predict.beammode                       =   array_factor
+gsmcal_phase.argument.gaincal.onebeamperpatch                  =   False
 
 # solve for direction-independent TEC
 gsmcal_tec.control.type                                        =   dppp
@@ -675,21 +680,25 @@ gsmcal_tec.control.inputkeys                                   =   [input_file,s
 gsmcal_tec.argument.msin                                       =   input_file
 gsmcal_tec.argument.numthreads                                 =   {{ max_dppp_threads }}
 gsmcal_tec.argument.msin.datacolumn                            =   SMOOTHED_DATA
+# gsmcal_tec.argument.msin.baseline                              =   check_bad_antennas.output.filter
+# gsmcal_tec.argument.steps                                      =   [afilter,teccal]
 gsmcal_tec.argument.steps                                      =   [teccal]
+# gsmcal_tec.argument.afilter.type                               =   filter
+# gsmcal_tec.argument.afilter.baseline                           =   check_bad_antennas.output.filter
 gsmcal_tec.argument.teccal.type                                =   ddecal
+gsmcal_tec.argument.teccal.mode                                =   tec 
+gsmcal_tec.argument.teccal.h5parm                              =   parmdb
+gsmcal_tec.argument.teccal.sourcedb                            =   sourcedb
 gsmcal_tec.argument.teccal.uvlambdamin                         =   100
 gsmcal_tec.argument.teccal.maxiter                             =   400
-gsmcal_tec.argument.teccal.tolerance                           =   1e-3
 gsmcal_tec.argument.teccal.solint                              =   3
 gsmcal_tec.argument.teccal.nchan                               =   8
+gsmcal_tec.argument.teccal.tolerance                           =   1e-3
 gsmcal_tec.argument.teccal.stepsize                            =   0.2
-gsmcal_tec.argument.teccal.h5parm                              =   parmdb
-gsmcal_tec.argument.teccal.mode                                =   tec 
-gsmcal_tec.argument.teccal.propagatesolutions                  =   {{ propagatesolutions }}
 gsmcal_tec.argument.teccal.approximatetec                      =   True
 gsmcal_tec.argument.teccal.maxapproxiter                       =   400 
 gsmcal_tec.argument.teccal.approxtolerance                     =   1e-3
-gsmcal_tec.argument.teccal.sourcedb                            =   sourcedb
+gsmcal_tec.argument.teccal.propagatesolutions                  =   {{ propagatesolutions }}
 gsmcal_tec.argument.teccal.usebeammodel                        =   True
 gsmcal_tec.argument.teccal.usechannelfreq                      =   True
 gsmcal_tec.argument.teccal.beammode                            =   array_factor
@@ -707,7 +716,7 @@ h5imp_gsmcal.control.error_tolerance                           =   {{ error_tole
 h5imp_gsmcal.control.mapfile_in                                =   h5_gsmsol_map.output.mapfile
 h5imp_gsmcal.control.inputkey                                  =   h5in
 h5imp_gsmcal.control.outputkey                                 =   outh5parm
-h5imp_gsmcal.argument.flags                                    =   [-v,-c,h5in]
+h5imp_gsmcal.argument.flags                                    =   [-q,-v,-c,h5in]
 h5imp_gsmcal.argument.outh5parm                                =   outh5parm
 
 # create losoto v2 parset file
@@ -778,8 +787,7 @@ process_losoto_gsmcal.control.inputkey                         =   h5in
 process_losoto_gsmcal.argument.flags                           =   [h5in,{{ job_directory }}/losoto.parset]
 
 # add missing stations to the soltab if any
-add_missing_stations.control.kind                              =   recipe
-add_missing_stations.control.type                              =   executable_args
+add_missing_stations.control.type                              =   pythonplugin
 add_missing_stations.control.inplace                           =   True
 add_missing_stations.control.executable                        =   {{ scripts }}/add_missing_stations.py
 add_missing_stations.control.error_tolerance                   =   {{ error_tolerance }}
@@ -791,6 +799,8 @@ add_missing_stations.argument.refsolset                        =   target
 add_missing_stations.argument.refh5                            =   {{ solutions }}
 add_missing_stations.argument.soltab_in                        =   {{ gsmcal_step }}000
 add_missing_stations.argument.soltab_out                       =   {{ skymodel_source }}{{ gsmcal_step }}
+add_missing_stations.argument.bad_antennas                     =   check_bad_antennas.output.filter
+add_missing_stations.argument.filter                           =   {{ process_baselines_target }}
 
 # output the final soltab into an external h5parm
 h5exp_gsm.control.kind                                         =   recipe
@@ -816,7 +826,7 @@ apply_gsmcal.control.max_per_node                              =   {{ num_proc_p
 apply_gsmcal.argument.msin                                     =   check_unflagged_map.output.mapfile
 apply_gsmcal.argument.numthreads                               =   {{ max_dppp_threads }}
 apply_gsmcal.argument.msin.datacolumn                          =   SMOOTHED_DATA
-apply_gsmcal.argument.msin.baseline                            =   check_bad_antennas.output.filter
+# apply_gsmcal.argument.msin.baseline                            =   check_bad_antennas.output.filter
 apply_gsmcal.argument.msout.storagemanager                     =   "Dysco"
 apply_gsmcal.argument.msout.storagemanager.databitrate         =   {{ compression_bitrate }}
 apply_gsmcal.argument.steps                                    =   [applygsm]
