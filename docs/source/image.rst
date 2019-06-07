@@ -78,6 +78,7 @@ User-defined parameter configuration
     Directory where your concatenated target data are stored.
 ``! target_input_pattern``
     Regular expression pattern of all your target files.
+
     .. note::
 
         These files should have the direction-independent calibration applied to the DATA
@@ -100,7 +101,7 @@ User-defined parameter configuration
 - ``local_scratch_dir``
     Scratch directory for WSClean (default: ``{{ job_directory }}``).
 - ``image_rootname``
-    Output image root name (default: ``{{ job_directory }}/fullband``). The image will be named ``image_rootname-MFS-image.fits``.
+    Output image root name (default: ``{{ job_directory }}/fullband``). The image will be named ``image_rootname-MFS-I-image.fits``.
 
 
 Parameters for **HBA** and **LBA** observations
