@@ -14,7 +14,7 @@ It includes:
 * mitigation of broad-band RFI and bad stations
 * direction-independent phase correction of the target, using a global sky model from [TGSS ADR](https://http://tgssadr.strw.leidenuniv.nl/)  or the new Global Sky Model [GSM](http://172.104.228.177/)
 * detailled diagnostics
-* (optional) wide-band cleaning in Initial-Subtract
+* (optional) wide-band cleaning in Initial-Subtract and Pre-Facet-Image
 
 The full documentation can be found at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
 
@@ -26,8 +26,8 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 * Python (including matplotlib, scipy, and astropy)
 * [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
 * [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
-* for Initial-Subtract-IDG(-LowMemory).parset: WSClean must be compiled with [IDG](https://gitlab.com/astron-idg/idg)
-* APLpy (for Initial-Subtract)
+* for Initial-Subtract-IDG(-LowMemory).parset and Pre-Facet-Image.parset: WSClean must be compiled with [IDG](https://gitlab.com/astron-idg/idg)
+* APLpy (for Initial-Subtract and Pre-Facet-Image)
 
 ### Installation
 The recommended way to install prefactor is to download it from github with:
@@ -54,9 +54,10 @@ The main directory contains the different parsets for the genericpipeline:
 * Pre-Facet-Calibrator.parset : The calibrator part of the "standard" pre-facet calibration pipeline.
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
 * Concatenate.parset : A pipeline that concatenates single-subband target data to produce concatenated bands suitable for the initial-subtract pipeline.
-* Initial-Subtract.parset : A pipeline that generates full FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
+* Initial-Subtract.parset : A pipeline that generates full-FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
 * Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean
 * Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
+* Pre-Facet-Image.parset : A pipeline that generates a full-bandwidth, full-FoV image.
 
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
