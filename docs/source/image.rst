@@ -71,7 +71,6 @@ standard observations.
 
 User-defined parameter configuration
 ------------------------------------
-**Parameters adjusted when specifying (via xmlgen.py or in MoM) the pipeline in the system**
 
 *Information about the input data*
 
