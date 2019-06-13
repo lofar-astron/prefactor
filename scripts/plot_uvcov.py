@@ -146,9 +146,9 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
                 for w in ref_wavelength:
                     flagvals.extend(flags.tolist())
                     flagvals.extend(flags.tolist())
-            for w in ref_wavelength:
-                xaxisvals.extend((savex/w/1000.).tolist())
-                yaxisvals.extend((savey/w/1000.).tolist())
+                for w in ref_wavelength:
+                    xaxisvals.extend((savex/w/1000.).tolist())
+                    yaxisvals.extend((savey/w/1000.).tolist())
             numPlotted += 1
 
         # Plot the uv coverage
