@@ -21,7 +21,7 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 ### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
 * [LoSoTo](https://github.com/revoltek/losoto) (version >= 2.0)
-* [LSMTool](https://github.com/darafferty/LSMTool)
+* [LSMTool](https://github.com/darafferty/LSMTool) (version >= 1.4)
 * [RMextract](https://github.com/maaijke/RMextract)
 * Python (including matplotlib, scipy, and astropy)
 * [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
