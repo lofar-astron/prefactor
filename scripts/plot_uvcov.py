@@ -93,7 +93,9 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
         flagvals = []
         savex = numpy.array([])
         savey = numpy.array([])
-        numPlotted = 0
+        prev_firstTime = None
+        prev_lastTime = None
+        prev_intTime = None
         for inputMS in MSlist:
             # open the main table and print some info about the MS
             t = pt.table(inputMS, readonly=True, ack=False)
@@ -135,8 +137,8 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
                 if ant1 not in antToPlot or ant2 not in antToPlot: continue
                 if ant1 == ant2: continue
                 i += 1
-                # Get the values to plot
-                if numPlotted == 0:
+                # Get the values to plot (only need to read again if this ms has new times)
+                if prev_firstTime != firstTime or prev_lastTime != lastTime or prev_intTime != intTime:
                     uvw = tpart.getcol('UVW', rowincr=timeskip)
                     savex = numpy.append(savex,[uvw[:,0],-uvw[:,0]])
                     savey = numpy.append(savey,[uvw[:,1],-uvw[:,1]])
@@ -146,10 +148,12 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
                 for w in ref_wavelength:
                     flagvals.extend(flags.tolist())
                     flagvals.extend(flags.tolist())
-                for w in ref_wavelength:
-                    xaxisvals.extend((savex/w/1000.).tolist())
-                    yaxisvals.extend((savey/w/1000.).tolist())
-            numPlotted += 1
+            for w in ref_wavelength:
+                xaxisvals.extend((savex/w/1000.).tolist())
+                yaxisvals.extend((savey/w/1000.).tolist())
+            prev_firstTime = firstTime
+            prev_lastTime = lastTime
+            prev_intTime = intTime
 
         # Plot the uv coverage
         xaxisvals = numpy.array(xaxisvals)
