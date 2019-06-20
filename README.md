@@ -55,10 +55,10 @@ The main directory contains the different parsets for the genericpipeline:
 * Pre-Facet-Target.parset : The target part of the "standard" pre-facet calibration pipeline.
 * Concatenate.parset : A pipeline that concatenates single-subband target data to produce concatenated bands suitable for the initial-subtract pipeline.
 * Initial-Subtract.parset : A pipeline that generates full-FoV images and subtracts the sky-models from the visibilities. (Needed for facet-calibration.)
-* Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean
-* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging
+* Initial-Subtract-IDG.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean.
+* Initial-Subtract-IDG-LowMemory.parset : Same as Initial-Subtract-Fast.parset, but uses the image domain gridder (IDG) in WSClean for high-res imaging.
 * Pre-Facet-Image.parset : A pipeline that generates a full-bandwidth, full-FoV image.
-
+* make\_calibrator/target\_plots.losoto\_parset : Losoto parsets for making diagnostic plots from the output h5parms.
 
 The Pre-Facet-Calibration pipeline and its scripts where developed by:
 * Alexander Drabent
