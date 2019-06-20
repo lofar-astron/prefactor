@@ -178,19 +178,24 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 - ``ionex_prefix``: the prefix of the *IONEX* files (default: CODG)
 - ``ionex_path``: location of the *IONEX* files after downloading (default: ``{{ job_directory }}/IONEX/``)
 
-Parameters for **HBA** and **LBA** observations
------------------------------------------------
-====================== ================== =======================
-**parameter**          **HBA**            **LBA**
----------------------- ------------------ -----------------------
-``do_smooth``          False              True
-``rfistrategy``        HBAdefault         LBAdefaultwideband.rfis
-``apply_steps``        applyclock,applyRM applyphase
-``gsmcal_step``        phase              tec
-====================== ================== =======================
-
+Recommended parameters for **HBA** and **LBA** observations
+-----------------------------------------------------------
+============================= ============================ =======================
+**parameter**                 **HBA**                      **LBA**
+----------------------------- ---------------------------- -----------------------
+``do_smooth``                 False                        True
+``rfistrategy``               HBAdefault                   LBAdefaultwideband.rfis
+``apply_steps``               applyclock,applybeam,applyRM applyphase,applybeam
+``gsmcal_step``               phase                        tec
+``skymodel_source``           TGSS                         GSM
+``clipATeam_step``            {{ clipATeam }}              {{ none }}
+``avg_timeresolution_concat`` 8.                           4.
+``avg_freqresolution_concat`` 97.64kHz                     48.82kHz
+``num_SBs_per_group``         10                           -1
+============================= ============================ =======================
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_targ_strategy`` variable.
+If your **LBA** data has **not** been demixed before you may still want to keep the A-Team-clipping.
 
 .. _RMextract: https://github.com/lofar-astron/RMextract/
 .. _factor: https://github.com/lofar-astron/factor/

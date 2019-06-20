@@ -221,9 +221,7 @@ Parameters for **HBA** and **LBA** observations
 ``do_smooth``          False           True
 ``rfistrategy``        HBAdefault.rifs LBAdefaultwideband.rfis
 ``cal_ion``            {{ 1st_order }} {{ 3rd_order }}
-``tables2export``      clock           phase
-``avg_timeresolution`` 4               1
-``max_length``         400             50
+``tables2export``      clock           phaseOrig
 ====================== =============== =======================
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_cal_strategy`` variable.
