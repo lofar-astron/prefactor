@@ -141,7 +141,7 @@ pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_co
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
-pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, make_results_mapfile_uncor, move_results_uncor, h5parm_name]
+pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, make_results_mapfile_uncor, move_results_uncor, h5parm_name, structure_function]
 
 
 #############################
@@ -867,9 +867,22 @@ h5parm_name.control.executable                                 =   {{ scripts }}
 h5parm_name.control.error_tolerance                            =   {{ error_tolerance }}
 h5parm_name.control.skip_infile                                =   True
 h5parm_name.control.mapfile_in                                 =   combine_data_target_map.output.mapfile
-h5parm_name.argument.flags                                     =   [{{ solutions }}]]
+h5parm_name.argument.flags                                     =   [{{ solutions }}]
 h5parm_name.argument.solsetName                                =   target
 h5parm_name.argument.pointing                                  =   get_targetname.output.targetName
+
+# set the pointing direction
+structure_function.control.type                                =   pythonplugin
+structure_function.control.executable                          =   {{ scripts }}/getStructure_from_phases.py
+structure_function.control.error_tolerance                     =   {{ error_tolerance }}
+structure_function.control.skip_infile                         =   True
+structure_function.control.mapfile_in                          =   combine_data_target_map.output.mapfile
+structure_function.argument.flags                              =   [{{ solutions }}]
+structure_function.argument.solset                             =   target
+structure_function.argument.soltab                             =   {{ skymodel_source }}{{ gsmcal_step }}
+structure_function.argument.outbasename                        =   get_targetname.output.targetName
+structure_function.argument.output_dir                         =   {{ inspection_directory }}
+
 
 ########################################################
 ##                                                    ##
