@@ -39,7 +39,7 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
     
     ### Get antenna information of the solset
     ref_station_names = sorted(refsolset.getAnt().keys())
-    bad_antennas_list = bad_antennas.lstrip(filter).replace('!','').replace('*','').split(';')
+    bad_antennas_list = bad_antennas.lstrip(filter).replace('!','').replace('*','').replace('&','').split(';')
     new_station_names = [ ref_station_name for ref_station_name in ref_station_names if ref_station_name not in bad_antennas_list ]
     
     ### Load antenna list of input soltab
