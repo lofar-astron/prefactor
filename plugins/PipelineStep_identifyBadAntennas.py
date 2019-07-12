@@ -11,7 +11,7 @@ def find_flagged_antennas(ms_file):
     
    print 'Reading ' + str(ms_file)
    outputs = os.popen('DPPP msin=' + ms_file + ' msout=. steps=[count] count.type=counter count.warnperc=100 | grep NOTE').readlines()
-   flaggedants = [ output.split('(')[-1].rstrip(')\n') for output in outputs ]
+   flaggedants = [ output.split('(')[-1].rstrip(')\n') for output in outputs if 'station' in output ]
    return flaggedants
 
 def plugin_main(args, **kwargs):
@@ -35,18 +35,14 @@ def plugin_main(args, **kwargs):
     filter         = kwargs['filter']
     data           = DataMap.load(mapfile_in)
     mslist         = [data[i].file for i in xrange(len(data))]
-    
+     
     pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
     flaggedants_list = pool.map(find_flagged_antennas, mslist)
-    
-    flagged_antennas = flaggedants_list[0]
-       
-    for flagged_antenna_list in flaggedants_list[1:]:
-        flagged_antenna_list = list(set(flagged_antennas).intersection(flagged_antenna_list))
-        pass
-    
+   
+    flagged_antenna_list = set.intersection(*map(set, flaggedants_list)) 
+
     for flagged_antenna in flagged_antenna_list:
-        filter += ';!' + flagged_antenna + '*'
+        filter += ';!' + flagged_antenna + '*&&*'
         pass
     
     print 'Identified bad antennas: ' + str(flagged_antenna_list)

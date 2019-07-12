@@ -1,0 +1,215 @@
+##########################################################################
+# Pre-Facet Image Pipeline                                               #
+#                                                                        #
+# Pipeline to do the imaging of the target data:                         #
+# - requires LOFAR software version >= 3.1.0                             #
+# - requires WSClean software version >= 2.5 with IDG                    #
+# - expects shared filesystem, that all nodes can reach all files!       #
+#   (E.g. a single workstation or compute cluster with shared filesystem #
+#   doesn't work on multiple nodes on CEP3.)                             #
+##########################################################################
+
+##########################################
+### parameters you will need to adjust. ##
+##########################################
+
+## information about the input data
+! target_input_path         =  /data/scratch/drabent/ ## specify the directory where the output data from the target pipeline is stored
+! target_input_pattern      =  L228163*.MS            ## regular expression pattern of all your target files
+
+## location of the software
+! prefactor_directory      =  /home/drabent/prefactor  ## path to your prefactor copy
+! wsclean_executable       =  /home/drabent/wsclean    ## path to your local WSClean executable
+
+##########################################
+### parameters you may want to adjust   ##
+##########################################
+
+## imaging parameters
+! cellsize_highres_deg     =  0.00208 ## cellsize in degrees, 0.00208 deg is about 7.5 arcsec
+! fieldsize_highres        =  1.5     ## size of the image is this value times the FWHM of mean semi-major axis of the station beam
+! maxlambda_highres        =  7000    ## maximum uv-distance in lambda that will be used for imaging
+! image_padding            =  1.4     ## how much padding shall we add during the imaging?
+! idg_mode                 =  cpu     ## IDG mode to use: cpu or hybrid (= CPU + GPU)
+
+## pipeline performance
+! max_percent_mem_per_img  =  90     ## max memory (as % of total) per imager process
+! max_cpus_per_img         =  20     ## number of cpus per imager process
+! error_tolerance          =  False  ## set this to True if you want the pipeline run to continue if single bands fail
+
+## job directory
+! job_directory            =  input.output.job_directory  ## directory of the prefactor outputs
+
+## script and plugin directories
+! scripts                  =  {{ prefactor_directory }}/scripts
+pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
+
+## result and scratch directories
+! local_scratch_dir        =  {{ job_directory }} ## scratch directory for wsclean (can be local to the processing nodes!)
+
+## image root name
+! image_rootname           =  {{ job_directory }}/fullband  ## image root name
+
+
+########################################################
+##                                                    ##
+##    BEGIN PIPELINE: DO NOT UPDATE BELOW THIS LINE!  ##
+##                                                    ##
+########################################################
+
+# which steps to run
+pipeline.steps = [create_ms_map, combine_mapfile, do_magic, average, combine_mapfile_deep, plot_uvcov, dpppconcat, wsclean_high_deep, createmap_image_i, plot_im_high_i, createmap_image_v, plot_im_high_v, make_source_list]
+
+# generate a mapfile of all the target data
+create_ms_map.control.kind                           =   plugin
+create_ms_map.control.type                           =   createMapfile
+create_ms_map.control.method                         =   mapfile_from_folder
+create_ms_map.control.mapfile_dir                    =   input.output.mapfile_dir
+create_ms_map.control.filename                       =   create_ms_map.mapfile
+create_ms_map.control.folder                         =   {{ target_input_path }}
+create_ms_map.control.pattern                        =   {{ target_input_pattern }}
+
+# generate a mapfile with all files in a single entry, length = 1
+combine_mapfile.control.kind                         =   plugin
+combine_mapfile.control.type                         =   compressMapfile
+combine_mapfile.control.mapfile_in                   =   create_ms_map.output.mapfile
+combine_mapfile.control.mapfile_dir                  =   input.output.mapfile_dir
+combine_mapfile.control.filename                     =   combine_mapfile.mapfile
+
+# compute frequency groupings, image sizes, averaging values, etc., len = different
+# the deep version of the do_magic_script should return mapfiles sorted by increasing frequency
+do_magic.control.type                                =  pythonplugin
+do_magic.control.executable                          =  {{ scripts }}/InitSubtract_deep_sort_and_compute.py
+do_magic.argument.flags                              =  [combine_mapfile.output.mapfile]
+do_magic.argument.outmapname                         =  do_magic.datamap
+do_magic.argument.mapfile_dir                        =  input.output.mapfile_dir
+do_magic.argument.cellsize_highres_deg               =  {{ cellsize_highres_deg }}
+do_magic.argument.fieldsize_highres                  =  {{ fieldsize_highres }}
+do_magic.argument.image_padding                      =  {{ image_padding }}
+do_magic.argument.y_axis_stretch                     =  1.0
+
+# average the data
+average.control.type                                 =   dppp
+average.control.error_tolerance                      =   {{ error_tolerance }}
+average.control.mapfiles_in                          =   [input.output.mapfile_dir/do_magic.datamap_single,input.output.mapfile_dir/do_magic.datamap_timestep,input.output.mapfile_dir/do_magic.datamap_freqstep]
+average.control.inputkeys                            =   [msfile,timeres,freqres]
+average.argument.numthreads                          =   2
+average.argument.msin                                =   msfile
+average.argument.msin.datacolumn                     =   DATA
+average.argument.msout.writefullresflag              =   False
+average.argument.msout.overwrite                     =   True
+average.argument.msout.storagemanager                =   Dysco
+average.argument.msout.storagemanager.databitrate    =   0
+average.argument.steps                               =   [avg]
+average.argument.avg.type                            =   average
+average.argument.avg.timeresolution                  =   timeres
+average.argument.avg.freqresolution                  =   freqres
+
+# generate a mapfile with all files in a single entry, length = 1
+combine_mapfile_deep.control.kind                    =   plugin
+combine_mapfile_deep.control.type                    =   compressMapfile
+combine_mapfile_deep.control.mapfile_in              =   average.output.mapfile
+combine_mapfile_deep.control.mapfile_dir             =   input.output.mapfile_dir
+combine_mapfile_deep.control.filename                =   combine_mapfile_deep.mapfile
+
+# plot the uv coverage with flags
+plot_uvcov.control.type                                =  pythonplugin
+plot_uvcov.control.executable                          =  {{ scripts }}/plot_uvcov.py
+plot_uvcov.control.mapfile_in                          =  combine_mapfile_deep.output.mapfile
+plot_uvcov.control.inputkey                            =  msin
+plot_uvcov.argument.flags                              =  [msin,{{ job_directory }}/results/inspection/uv_coverage.png]
+
+# run dp3 to concatenate the data, length = 1
+dpppconcat.control.type                                 =   dppp
+dpppconcat.control.error_tolerance                      =   {{ error_tolerance }}
+dpppconcat.control.mapfile_in                           =   combine_mapfile_deep.output.mapfile
+dpppconcat.control.inputkey                             =   msin
+dpppconcat.argument.msin.datacolumn                     =   DATA
+dpppconcat.argument.msout.writefullresflag              =   False
+dpppconcat.argument.msout.overwrite                     =   True
+dpppconcat.argument.msout.storagemanager                =   "Dysco"
+dpppconcat.argument.msout.storagemanager.databitrate    =   0
+dpppconcat.argument.steps                               =   []
+
+# first high-res imaging, length = 1
+wsclean_high_deep.control.kind                      =   recipe
+wsclean_high_deep.control.type                      =   executable_args
+wsclean_high_deep.control.inplace                   =   True
+wsclean_high_deep.control.executable                =   {{ wsclean_executable }}
+wsclean_high_deep.control.args_format               =   wsclean
+wsclean_high_deep.control.max_per_node              =   1
+wsclean_high_deep.control.error_tolerance           =   {{ error_tolerance }}
+wsclean_high_deep.control.mapfiles_in               =   [dpppconcat.output.mapfile,input.output.mapfile_dir/do_magic.datamap_deep_high_size,input.output.mapfile_dir/do_magic.datamap_nchansout_clean1]
+wsclean_high_deep.control.inputkeys                 =   [msfile,outputsize,nchansout_clean1]
+wsclean_high_deep.argument.flags                    =   [-no-update-model-required,-reorder,-fit-beam,-join-channels,-use-idg,-grid-with-beam,-use-differential-lofar-beam,msfile]
+wsclean_high_deep.argument.name                     =   {{ image_rootname }}
+wsclean_high_deep.argument.size                     =   outputsize
+wsclean_high_deep.argument.padding                  =   {{ image_padding }}
+wsclean_high_deep.argument.channels-out             =   nchansout_clean1
+wsclean_high_deep.argument.niter                    =   100000
+wsclean_high_deep.argument.threshold                =   0.0
+wsclean_high_deep.argument.pol                      =   IQUV
+wsclean_high_deep.argument.link-polarizations       =   I
+wsclean_high_deep.argument.weight                   =   briggs 0.0
+wsclean_high_deep.argument.mgain                    =   0.65
+wsclean_high_deep.argument.minuv-l                  =   80
+wsclean_high_deep.argument.maxuv-l                  =   {{ maxlambda_highres }}
+wsclean_high_deep.argument.scale                    =   {{ cellsize_highres_deg }}
+wsclean_high_deep.argument.weighting-rank-filter    =   3
+wsclean_high_deep.argument.mem                      =   {{ max_percent_mem_per_img }}
+wsclean_high_deep.argument.j                        =   {{ max_cpus_per_img }}
+wsclean_high_deep.argument.temp-dir                 =   {{ local_scratch_dir }}
+wsclean_high_deep.argument.auto-mask                =   3.3
+wsclean_high_deep.argument.auto-threshold           =   0.5
+wsclean_high_deep.argument.local-rms-window         =   50
+wsclean_high_deep.argument.local-rms-method         =   rms-with-min
+wsclean_high_deep.argument.idg-mode                 =   {{ idg_mode }}
+
+# create a map with the wsclean MFS-I image only, length = 1
+createmap_image_i.control.kind              =   plugin
+createmap_image_i.control.type              =   addListMapfile
+createmap_image_i.control.hosts             =   [localhost]
+createmap_image_i.control.files             =   [{{ image_rootname }}-MFS-I-image-pb.fits]
+createmap_image_i.control.mapfile_dir       =   input.output.mapfile_dir
+createmap_image_i.control.filename          =   wsclean_high_deep_image_i.mapfile
+
+# plot the Stokes-I image, length = 1
+plot_im_high_i.control.type                       =   pythonplugin
+plot_im_high_i.control.executable                 =   {{ scripts }}/plot_image.py
+plot_im_high_i.control.error_tolerance            =   {{ error_tolerance }}
+plot_im_high_i.control.mapfile_in                 =   createmap_image_i.output.mapfile
+plot_im_high_i.control.inputkey                   =   imhigh
+plot_im_high_i.control.outputkey                  =   imname
+plot_im_high_i.argument.flags                     =   [imhigh,imname,{{ job_directory }}/results/inspection]
+
+# create a map with the wsclean MFS-V image only, length = 1
+createmap_image_v.control.kind              =   plugin
+createmap_image_v.control.type              =   addListMapfile
+createmap_image_v.control.hosts             =   [localhost]
+createmap_image_v.control.files             =   [{{ image_rootname }}-MFS-V-image-pb.fits]
+createmap_image_v.control.mapfile_dir       =   input.output.mapfile_dir
+createmap_image_v.control.filename          =   wsclean_high_deep_image_v.mapfile
+
+# plot the Stokes-V image, length = 1
+plot_im_high_v.control.type                       =   pythonplugin
+plot_im_high_v.control.executable                 =   {{ scripts }}/plot_image.py
+plot_im_high_v.control.error_tolerance            =   {{ error_tolerance }}
+plot_im_high_v.control.mapfile_in                 =   createmap_image_v.output.mapfile
+plot_im_high_v.control.inputkey                   =   imhigh
+plot_im_high_v.control.outputkey                  =   imname
+plot_im_high_v.argument.flags                     =   [imhigh,imname,{{ job_directory }}/results/inspection]
+
+# make source list, length = 1
+make_source_list.control.type                       =   pythonplugin
+make_source_list.control.executable                 =   {{ scripts }}/make_source_list.py
+make_source_list.control.error_tolerance            =   {{ error_tolerance }}
+make_source_list.control.mapfile_in                 =   createmap_image_i.output.mapfile
+make_source_list.control.inputkey                   =   imagefile
+make_source_list.control.outputkey                  =   catalogfile
+make_source_list.argument.flags                     =   [imagefile,catalogfile]
+make_source_list.argument.threshisl                 =   4.0
+make_source_list.argument.threshpix                 =   5.0
+make_source_list.argument.atrous_do                 =   False
+make_source_list.argument.rmsbox                    =   (60,20)
+make_source_list.argument.adaptive_rmsbox           =   True
+make_source_list.argument.compare_dir               =   {{ job_directory }}/results/inspection

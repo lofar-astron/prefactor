@@ -72,6 +72,7 @@
 ! min_length               =  50                                                                  ## minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
 ! overhead                 =  0.8                                                                 ## Only use this fraction of the available memory for deriving the amount of data to be concatenated.
 ! min_separation           =  30                                                                  ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
+! max_separation_arcmin    =  1.0                                                                 ## maximum distance to the phase center for which a skymodel will be still accepted. Change with caution!
 
 ! error_tolerance          =  False                                                               ## set this to True if you want the pipeline run to continue if single bands fail
 
@@ -306,6 +307,7 @@ sky_cal.control.executable                                  =   {{ scripts }}/fi
 sky_cal.control.error_tolerance                             =   {{ error_tolerance }}
 sky_cal.argument.flags                                      =   [combine_data_cal_map.output.mapfile]
 sky_cal.argument.DirSkymodelCal                             =   {{ calibrator_path_skymodel }}
+sky_cal.argument.max_separation_arcmin                      =   {{ max_separation_arcmin }}
 
 # make the sourcedb
 make_sourcedb.control.kind                                  =   recipe

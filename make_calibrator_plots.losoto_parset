@@ -1,0 +1,74 @@
+# Losoto parset for making calibrator diagnostic plots from the output h5parm
+# of the calibrator or target pipeline
+#
+# Run with, e.g.:
+#
+#   $ losoto L672089_global_cal_solutions.h5 make_calibrator_plots.losoto_parset
+#
+#
+# Note: steps that are not applicable to the input h5parm will be skipped automatically
+
+
+# Set the reference station
+refAnt = CS001HBA0
+
+[plotAlign]
+axisDiff = pol
+plotFlag = True
+axesInPlot = [time,freq]
+prefix = polalign
+soltab = calibrator/polalign
+minmax = [-3.14,3.14]
+axisInTable = ant
+operation = PLOT
+
+[plotFR]
+axisInTable = ant
+operation = PLOT
+prefix = fr
+soltab = calibrator/faraday
+axesInPlot = [time]
+
+[plotB1]
+plotFlag = True
+axesInPlot = [time,freq]
+prefix = bandpass_
+soltab = calibrator/bandpass
+axisInTable = ant
+operation = PLOT
+
+[plotB2]
+time.minmaxstep = [0,1e20,500000]
+plotFlag = True
+axisInCol = pol
+axesInPlot = freq
+prefix = bandpass_
+soltab = calibrator/bandpass
+axisInTable = ant
+operation = PLOT
+
+[plotB3]
+time.minmaxstep = [0,1e20,500000]
+plotFlag = True
+axisInCol = ant
+axesInPlot = freq
+prefix = bandpass_
+soltab = calibrator/bandpass
+operation = PLOT
+
+[plotClock]
+plotFlag = False
+axesInPlot = [time]
+prefix = clock
+soltab = calibrator/clock
+axisInTable = ant
+operation = PLOT
+
+[plotPhase]
+operation = PLOT
+soltab = calibrator/phaseOrig
+axesInPlot = [time,freq]
+axisInTable = ant
+plotFlag = True
+prefix = ph_
+minmax = [-3.14,3.14]

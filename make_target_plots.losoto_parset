@@ -1,0 +1,68 @@
+# Losoto parset for making target diagnostic plots from the output h5parm
+# of the target pipeline
+#
+# Run with, e.g.:
+#
+#   $ losoto L672089_global_cal_solutions.h5 make_target_plots.losoto_parset
+#
+#
+# Note: steps that are not applicable to the input h5parm will be skipped automatically
+
+
+# Set the reference station
+refAnt = CS001HBA0
+
+[plotRM]
+soltab = target/RMextract
+axesInPlot = time
+axisInTable = ant
+prefix = RMextract
+operation = PLOT
+
+[plotP]
+soltab = target/TGSSphase
+plotFlag = True
+axesInPlot = [time,freq]
+prefix = ph_
+minmax = [-3.14,3.14]
+axisInTable = ant
+operation = PLOT
+
+[plotP2]
+soltab = target/TGSSphase
+plotFlag = True
+axisInCol = pol
+axesInPlot = [time]
+prefix = ph_
+minmax = [-3.14,3.14]
+axisInTable = ant
+operation = PLOT
+
+[plotPd]
+soltab = target/TGSSphase
+axisDiff = pol
+plotFlag = True
+axesInPlot = [time,freq]
+prefix = ph_poldif
+minmax = [-3.14,3.14]
+axisInTable = ant
+operation = PLOT
+
+[plotPd2]
+soltab = target/TGSSphase
+axisDiff = pol
+plotFlag = True
+axesInPlot = [time]
+prefix = ph_poldif_
+minmax = [-3.14,3.14]
+axisInTable = ant
+operation = PLOT
+
+[plotTEC]
+soltab = target/GSMtec
+plotFlag = True
+axesInPlot = time
+prefix = tec
+minmax = [-0.5,0.5]
+axisInTable = ant
+operation = PLOT

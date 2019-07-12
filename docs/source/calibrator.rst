@@ -137,13 +137,18 @@ User-defined parameter configuration
 
 - ``refant``:name of the station that will be used as a reference for the phase-plots
 - ``flag_baselines``: NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: ``[]`` )
+- ``process_baselines_cal``: performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 - ``filter_baselines``: selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 - ``do_smooth``: enable or disable baseline-based smoothing
 - ``rfistrategy``: strategy to be applied with the statistical flagger (AOFlagger), default: ``HBAdefault.rfis``
 - ``max_length``: amount of subbands to concatenate for full-bandwidth flagging (for an HBA calibrator, you can take all SBs if memory allows)
 - ``max2interpolate``: amount of channels in which interpolation should be performed for deriving the bandpass (default: 30)
 - ``interp_windowsize``: size of the window over which a value is interpolated. Should be odd. (default: 15)
+- ``ampRange``: range of median amplitudes accepted per station
+- ``skip_international``: skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 - ``raw_data``: use autoweight, set to True in case you are using raw data (default: False)
+- ``propagatesolutions``: use already derived solutions as initial guess for the upcoming time slot
+- ``maxStddev``: maximum allowable standard deviation when outlier clipping is done. For phases, this should value should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is used for phases and 0.01 for amplitudes
 
 A comprehensive explanation of the baseline selection syntax can be found `here`_.
 
@@ -170,6 +175,10 @@ A comprehensive explanation of the baseline selection syntax can be found `here`
 - ``num_proc_per_node``: number of processes to use per step per node (default: ``input.output.max_per_node``, reads the parameter ``max_per_node`` from the ``pipeline.cfg``)
 - ``num_proc_per_node_limit``: number of processes to use per step per node for tasks with high I/O (DPPP or cp) or memory (e.g. calibration) (default: 4)
 - ``max_dppp_threads``: number of threads per process for NDPPP (default: 10)
+- ``memoryperc``: maximum of memory used for aoflagger in raw_flagging mode in percent
+- ``min_length``: minimum amount of subbands to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+- ``overhead``: Only use this fraction of the available memory for deriving the amount of data to be concatenated.
+- ``min_separation``: minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 - ``error_tolerance``: defines whether pipeline run will continue if single bands fail (default: False)
 
 **Parameters you may want to adjust**
@@ -212,9 +221,7 @@ Parameters for **HBA** and **LBA** observations
 ``do_smooth``          False           True
 ``rfistrategy``        HBAdefault.rifs LBAdefaultwideband.rfis
 ``cal_ion``            {{ 1st_order }} {{ 3rd_order }}
-``tables2export``      clock000        phaseOrig000
-``avg_timeresolution`` 4               1
-``max_length``         400             50
+``tables2export``      clock           phaseOrig
 ====================== =============== =======================
 
 In case of **LBA** observation you might also want to enable demixing in the ``prep_cal_strategy`` variable.

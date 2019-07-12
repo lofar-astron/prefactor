@@ -138,7 +138,7 @@ def main(ms_input, DirSkymodelCal, extensionSky=".skymodel", max_separation_arcm
         
     elif os.path.isdir(DirSkymodelCal):
         ra, dec = grab_pointing(input2strlist_nomapfile(ms_input)[0])
-        skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, max_separation_arcmin)
+        skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, float(max_separation_arcmin))
         return { 'SkymodelCal' : skymodelCal, 'SkymodelName': skymodelName}
     else:
         raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal))

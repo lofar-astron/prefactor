@@ -15,4 +15,6 @@ Pipeline overview
     Concatenates the single-subband target data retrieved from the LTA into bands suitable for further processing with the initial-subtract pipeline. See :ref:`concatenate_pipeline` for details.
 ``Initial-Subtract``
     Images the full FoV (and 1st side-lobe), generating a sky-model and subtracting it from the visibilities. See :ref:`initsubtract_pipeline` for details.
+``Pre-Facet-Image``
+    Images the full FoV using the full bandwidth. See :ref:`image_pipeline` for details.
 

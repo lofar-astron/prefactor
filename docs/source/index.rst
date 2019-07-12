@@ -72,6 +72,7 @@ The Prefactor Pipelines
    target
    concatenate
    initsubtract
+   image
 
 
 .. _TGSS ADR: https://http://tgssadr.strw.leidenuniv.nl/
