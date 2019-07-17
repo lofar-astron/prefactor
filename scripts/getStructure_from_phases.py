@@ -55,7 +55,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     timestep=int(nrtimes/nr_grid)
     for vals, coord, selection in soltab.getValuesIter(returnAxes=soltab.getAxesNames(), weight=False):
         try:
-            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq','dir'])
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq', 'dir'])
         except:
             vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq'])
             
@@ -115,7 +115,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
         if doplot:
             x=D2[myselect]
             y=dvarx[myselect]
-            subplot(2,1,1)
+            subplot(3,1,1)
             scatter(x,y,color='b')
             if dofilter:
                 y2 = y[flagselect]
@@ -137,6 +137,9 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             xscale("log")
             yscale("log")
             xlim(30,4000)
+            xlabel('baseline length [km]')
+            ylabel('XX phase variance [rad$^2$]')
+            title('XX diffractive scale:  %3.1f km'%(float(S0)/1000.))
         myselect=np.logical_and(D2y>0,np.logical_and(np.any(np.logical_and(dvary>1e-7,dvary<.1),axis=0)[np.newaxis],np.any(np.logical_and(dvary>1e-7,dvary<.1),axis=1)[:,np.newaxis]))
         if dofilter:
             x=D2y[myselect]
@@ -161,7 +164,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
         if doplot:
             x=D2y[myselect]
             y=dvary[myselect]
-            subplot(2,1,2)
+            subplot(3,1,3)
             scatter(x,y,color='b')
             if dofilter:
                 y2 = y[flagselect]
@@ -183,6 +186,9 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             xscale("log")
             yscale("log")
             xlim(30,4000)
+            xlabel('baseline length [km]')
+            ylabel('YY phase variance [rad$^2$]')
+            title('YY diffractive scale:  %3.1f km'%(float(S0y)/1000.))
             savefig(output_dir + '/' + outbasename + '_structure.png')
             close()
             cla()
