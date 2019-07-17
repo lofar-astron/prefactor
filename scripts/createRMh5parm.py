@@ -133,14 +133,26 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
             return -1
     
     
-    
-    rmdict = getRM.getRM(MS,
+    if not proxyServer:
+	    rmdict = getRM.getRM(MS,
                          server    = ionex_server, 
                          prefix    = ionex_prefix, 
                          ionexPath = ionexPath, 
                          timestep  = timestepRM,
                          earth_rot = earth_rot)
-    
+    else:
+	    rmdict = getRM.getRM(MS,
+                         server    = ionex_server, 
+                         prefix    = ionex_prefix, 
+                         ionexPath = ionexPath, 
+                         timestep  = timestepRM,
+                         earth_rot = earth_rot,
+                         proxy_server = proxyServer,
+                         proxy_type   = proxyType,
+                         proxy_port   = proxyPort,
+                         proxy_user   = proxyUser,
+                         proxy_pass   = proxyPass)
+
     
     if not rmdict:
         if not ionex_server:
