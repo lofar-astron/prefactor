@@ -39,6 +39,10 @@
 ! propagatesolutions       =  True                                                                ## use already derived solutions as initial guess for the upcoming time slot
 ! maxStddev                =  -1.0                                                                ## Maximum allowable standard deviation when outlier clipping is done. For phases, this should value should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is used for phases and 0.01 for amplitudes
 
+# options for solution transfer (for non-trusted calibrator observations)
+! solutions2transfer       =  {{ prefactor_directory }}/solutions/3C48.h5                         ## location of h5parm reference solutions to transfer 
+! antennas2transfer        =  [FUSPID].*                                                          ## regular expression of antennas which solutions should be transferred to the final solution set, if none of the trusted calibrators have been observed
+
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources            =  [CasA,CygA]                                                         ## choose sources to demix (provided as list)
 ! demix_target             =  ""                                                                  ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
@@ -122,7 +126,7 @@ pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, proce
 pipeline.steps.FR          =  [smooth_corrected, calib_cal,  h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
 pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, process_losoto_bandpass, h5exp_cal_bandpass, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal2, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
-pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}]
+pipeline.steps.finalize    =  [h5parm_name, transfer_solutions {{ final_apply }}]
 
 ###############################
 ## Mapping calibrator files  ##
@@ -1121,10 +1125,22 @@ apply_TEC.argument.applytec.parmdb                          =   {{ cal_solutions
 h5parm_name.control.type                                    =   pythonplugin
 h5parm_name.control.executable                              =   {{ scripts }}/h5parm_pointingname.py
 h5parm_name.control.error_tolerance                         =   {{ error_tolerance }}
-h5parm_name.argument.flags                                  =   [{{ cal_solutions }}]]
+h5parm_name.argument.flags                                  =   [{{ cal_solutions }}]
 h5parm_name.argument.solsetName                             =   calibrator
 h5parm_name.argument.pointing                               =   sky_cal.output.SkymodelName.mapfile
 
+# transfer solutions if necessary
+transfer_solutions.control.type                             =   pythonplugin
+transfer_solutions.control.executable                       =   {{ scripts }}/transfer_solutions.py
+transfer_solutions.control.error_tolerance                  =   {{ error_tolerance }}
+transfer_solutions.control.skip_infile                      =   True
+transfer_solutions.control.mapfile_in                       =   sky_cal.output.SkymodelName.mapfile
+transfer_solutions.argument.flags                           =   [{{ cal_solutions }}, {{ solutions2transfer }}]
+transfer_solutions.argument.insolset                        =   calibrator
+transfer_solutions.argument.outsolset                       =   calibrator
+transfer_solutions.argument.insoltab                        =   bandpass
+transfer_solutions.argument.outsoltab                       =   bandpass
+transfer_solutions.argument.antenna                         =   {{ antennas2transfer }}
 
 ########################################################
 ##                                                    ##
