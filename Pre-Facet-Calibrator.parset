@@ -33,7 +33,7 @@
 ! rfistrategy              =  HBAdefault.rfis                                                     ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max2interpolate          =  30                                                                  ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! interp_windowsize        =  15                                                                  ## Size of the window over which a value is interpolated. Should be odd.
-! ampRange                 =  [50,200]                                                            ## range of median amplitudes accepted per station
+! ampRange                 =  [0, 0]                                                              ## range of median amplitudes accepted per station. Use [0, 0] to use typical ranges of [50, 225] for the current correlator or [0.0004, 0.0018] for the old one.
 ! skip_international       =  True                                                                ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 ! raw_data                 =  False                                                               ## use autoweight, set to True in case you are using raw data
 ! propagatesolutions       =  True                                                                ## use already derived solutions as initial guess for the upcoming time slot
