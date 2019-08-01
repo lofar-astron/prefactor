@@ -141,7 +141,7 @@ pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_co
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
-pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, make_results_mapfile_uncor, move_results_uncor, h5parm_name, structure_function]
+pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, h5parm_name, structure_function]
 
 
 #############################
@@ -855,16 +855,6 @@ make_results_mapfile.control.target_dir                        =   {{ results_di
 make_results_mapfile.control.make_target_dir                   =   True
 make_results_mapfile.control.new_suffix                        =   .pre-cal.ms
 
-# make mapfile with the filenames of the results that we want
-make_results_mapfile_uncor.control.kind                        =   plugin
-make_results_mapfile_uncor.control.type                        =   makeResultsMapfile
-make_results_mapfile_uncor.control.mapfile_dir                 =   input.output.mapfile_dir
-make_results_mapfile_uncor.control.filename                    =   make_results_mapfile2.mapfile
-make_results_mapfile_uncor.control.mapfile_in                  =   check_unflagged_map.output.mapfile
-make_results_mapfile_uncor.control.target_dir                  =   {{ results_directory }}
-make_results_mapfile_uncor.control.make_target_dir             =   True
-make_results_mapfile_uncor.control.new_suffix                  =   .uncorr.ms
-
 # move the results to where we want them
 move_results.control.kind                                      =   recipe
 move_results.control.type                                      =   executable_args
@@ -873,15 +863,6 @@ move_results.control.max_per_node                              =   {{ num_proc_p
 move_results.control.mapfiles_in                               =   [apply_gsmcal.output.mapfile,make_results_mapfile.output.mapfile]
 move_results.control.inputkeys                                 =   [source,destination]
 move_results.control.arguments                                 =   [source,destination]
-
-# move the results to where we want them
-move_results_uncor.control.kind                                =   recipe
-move_results_uncor.control.type                                =   executable_args
-move_results_uncor.control.executable                          =   /bin/mv
-move_results_uncor.control.max_per_node                        =   {{ num_proc_per_node_limit }}
-move_results_uncor.control.mapfiles_in                         =   [check_unflagged_map.output.mapfile,make_results_mapfile_uncor.output.mapfile]
-move_results_uncor.control.inputkeys                           =   [source,destination]
-move_results_uncor.control.arguments                           =   [source,destination]
 
 # set the pointing direction
 h5parm_name.control.type                                       =   pythonplugin
