@@ -70,8 +70,11 @@ def find_skymodel(ra, dec, PathSkyMod, extensionSky = ".skymodel", max_separatio
         Full name (with path) to the matching skymodel 
     """
     
-
-    skymodels = glob.glob(PathSkyMod + "/*" + extensionSky)
+    if os.path.isfile(PathSkyMod):
+        print("Checking the skymodel provided: " + PathSkyMod)
+        skymodels = [PathSkyMod]
+    else:
+        skymodels = glob.glob(PathSkyMod + "/*" + extensionSky)
         
     for skymodel in skymodels:
         check = check_skymodel(skymodel, ra, dec, max_separation_arcmin)
@@ -128,11 +131,7 @@ def main(ms_input, DirSkymodelCal, extensionSky=".skymodel", max_separation_arcm
         Path to the skymodel of the calibrator
     """    
 
-    if os.path.isfile(DirSkymodelCal):
-        print "Using the skymodel provided: " + DirSkymodelCal
-        return { 'SkymodelCal' : DirSkymodelCal, 'SkymodelName': os.path.splitext(os.path.basename(DirSkymodelCal))[0] }
-        
-    elif os.path.isdir(DirSkymodelCal):
+    if os.path.isfile(DirSkymodelCal) or os.path.isdir(DirSkymodelCal):
         ra, dec = grab_pointing(input2strlist_nomapfile(ms_input)[0])
         skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, float(max_separation_arcmin))
         return { 'SkymodelCal' : skymodelCal, 'SkymodelName': skymodelName}
