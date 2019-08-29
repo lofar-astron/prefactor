@@ -27,7 +27,7 @@
 
 ! refant                   =  'CS001HBA0'                                                         ## name of the station that will be used as a reference for the phase-plots, 'closest' will reference to the spatially closest unflagged antenna
 ! flag_baselines           =  []                                                                  ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
-! process_baselines_cal    =  [CR]S*&                                                             ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! process_baselines_cal    =  *&                                                                  ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! filter_baselines         =  {{ process_baselines_cal }}                                         ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                =  False                                                               ## enable or disable baseline-based smoothing
 ! rfistrategy              =  HBAdefault.rfis                                                     ## strategy to be applied with the statistical flagger (AOFlagger)
@@ -37,11 +37,12 @@
 ! skip_international       =  True                                                                ## skip fitting the bandpass for international stations (this avoids flagging them in many cases)
 ! raw_data                 =  False                                                               ## use autoweight, set to True in case you are using raw data
 ! propagatesolutions       =  True                                                                ## use already derived solutions as initial guess for the upcoming time slot
+! flagunconverged          =  False                                                               ## flag solutions for solves that did not converge (if they were also detected to diverge)
 ! maxStddev                =  -1.0                                                                ## Maximum allowable standard deviation when outlier clipping is done. For phases, this should value should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is used for phases and 0.01 for amplitudes
 
 # options for solution transfer (for non-trusted calibrator observations)
 ! solutions2transfer       =  {{ prefactor_directory }}/solutions/3C48.h5                         ## location of h5parm reference solutions to transfer 
-! antennas2transfer        =  [FUSPID].*                                                          ## regular expression of antennas which solutions should be transferred to the final solution set, if none of the trusted calibrators have been observed
+! antennas2transfer        =  [FUSPID].*                                                          ## regular expression of antennas which solutions should be transferred to the final solution set, if none of the trusted calibrators have been observed (by default: all international stations)
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources            =  [CasA,CygA]                                                         ## choose sources to demix (provided as list)
@@ -124,9 +125,9 @@ pipeline.steps.prep        =  [createmap_cal, combine_data_map, check_Ateam_sepa
 
 pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal,  h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
-pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, process_losoto_bandpass, h5exp_cal_bandpass, apply_PA, apply_bandpass, apply_beam, apply_FR]
+pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, prepare_losoto_bandpasstrans, process_losoto_bandpass, h5exp_cal_bandpass, transfer_solutions, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal2, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
-pipeline.steps.finalize    =  [h5parm_name, transfer_solutions {{ final_apply }}]
+pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}]
 
 ###############################
 ## Mapping calibrator files  ##
@@ -435,6 +436,9 @@ calib_cal.argument.solve.maxiter                            =   50
 calib_cal.argument.solve.nchan                              =   1
 calib_cal.argument.solve.solint                             =   1
 calib_cal.argument.solve.propagatesolutions                 =   {{ propagatesolutions }}
+calib_cal.argument.solve.propagateconvergedonly             =   True
+calib_cal.argument.solve.flagunconverged                    =   {{ flagunconverged }}
+calib_cal.argument.solve.flagdivergedonly                   =   True
 calib_cal.argument.solve.tolerance                          =   1e-3
 
 # now run NDPPP on the averaged calibrator data (diagonal only)
@@ -457,6 +461,9 @@ calib_cal2.argument.solve.maxiter                           =   50
 calib_cal2.argument.solve.nchan                             =   1
 calib_cal2.argument.solve.solint                            =   1
 calib_cal2.argument.solve.propagatesolutions                =   {{ propagatesolutions }}
+calib_cal2.argument.solve.propagateconvergedonly            =   True
+calib_cal2.argument.solve.flagunconverged                   =   {{ flagunconverged }}
+calib_cal2.argument.solve.flagdivergedonly                  =   True
 calib_cal2.argument.solve.tolerance                         =   1e-3
 
 
@@ -790,6 +797,34 @@ prepare_losoto_bandpass.control.plotB3.plotFlag             =   True
 prepare_losoto_bandpass.control.plotB3.prefix               =   {{ inspection_directory }}/bandpass_
 prepare_losoto_bandpass.control.plotB3.time.minmaxstep      =   [0,1e20,500000]
 
+# create losoto v2 parset file
+prepare_losoto_bandpasstrans.control.kind                   =   plugin
+prepare_losoto_bandpasstrans.control.type                   =   makeLosotoParset
+prepare_losoto_bandpasstrans.control.steps                  =   [plotB1,plotB2,plotB3]
+prepare_losoto_bandpasstrans.control.filename               =   input.output.job_directory/losoto_transfer.parset
+prepare_losoto_bandpasstrans.control.global.ncpu            =   {{ num_proc_per_node }}
+prepare_losoto_bandpasstrans.control.plotB1.operation       =   PLOT
+prepare_losoto_bandpasstrans.control.plotB1.soltab          =   calibrator/bandpass
+prepare_losoto_bandpasstrans.control.plotB1.axesInPlot      =   [time,freq]
+prepare_losoto_bandpasstrans.control.plotB1.axisInTable     =   ant
+prepare_losoto_bandpasstrans.control.plotB1.plotFlag        =   True
+prepare_losoto_bandpasstrans.control.plotB1.prefix          =   {{ inspection_directory }}/bandpass_transfer_
+prepare_losoto_bandpasstrans.control.plotB2.operation       =   PLOT
+prepare_losoto_bandpasstrans.control.plotB2.soltab          =   calibrator/bandpass
+prepare_losoto_bandpasstrans.control.plotB2.axesInPlot      =   freq
+prepare_losoto_bandpasstrans.control.plotB2.axisInTable     =   ant
+prepare_losoto_bandpasstrans.control.plotB2.axisInCol       =   pol
+prepare_losoto_bandpasstrans.control.plotB2.plotFlag        =   True
+prepare_losoto_bandpasstrans.control.plotB2.prefix          =   {{ inspection_directory }}/bandpass_transfer_
+prepare_losoto_bandpasstrans.control.plotB2.time.minmaxstep =   [0,1e20,500000]
+prepare_losoto_bandpasstrans.control.plotB3.operation       =   PLOT
+prepare_losoto_bandpasstrans.control.plotB3.soltab          =   calibrator/bandpass
+prepare_losoto_bandpasstrans.control.plotB3.axesInPlot      =   freq
+prepare_losoto_bandpasstrans.control.plotB3.axisInCol       =   ant
+prepare_losoto_bandpasstrans.control.plotB3.plotFlag        =   True
+prepare_losoto_bandpasstrans.control.plotB3.prefix          =   {{ inspection_directory }}/bandpass_transfer_
+prepare_losoto_bandpasstrans.control.plotB3.time.minmaxstep =   [0,1e20,500000]
+
 # do the processing on the LoSoTo file
 process_losoto_bandpass.control.kind                        =   recipe
 process_losoto_bandpass.control.type                        =   executable_args
@@ -813,6 +848,19 @@ h5exp_cal_bandpass.argument.insoltab                        =   bandpass
 h5exp_cal_bandpass.argument.outh5parm                       =   {{ cal_solutions }}
 h5exp_cal_bandpass.argument.outsolset                       =   calibrator
 
+# transfer solutions if necessary
+transfer_solutions.control.type                             =   pythonplugin
+transfer_solutions.control.executable                       =   {{ scripts }}/transfer_solutions.py
+transfer_solutions.control.error_tolerance                  =   {{ error_tolerance }}
+transfer_solutions.control.skip_infile                      =   True
+transfer_solutions.control.mapfile_in                       =   sky_cal.output.SkymodelName.mapfile
+transfer_solutions.argument.flags                           =   [{{ cal_solutions }}, {{ solutions2transfer }}]
+transfer_solutions.argument.insolset                        =   calibrator
+transfer_solutions.argument.outsolset                       =   calibrator
+transfer_solutions.argument.insoltab                        =   bandpass
+transfer_solutions.argument.outsoltab                       =   bandpass
+transfer_solutions.argument.antenna                         =   {{ antennas2transfer }}
+transfer_solutions.argument.parset                          =   {{ job_directory }}/losoto_transfer.parset
 
 ################################
 ## calibrate ionosphere       ##
@@ -1128,19 +1176,6 @@ h5parm_name.control.error_tolerance                         =   {{ error_toleran
 h5parm_name.argument.flags                                  =   [{{ cal_solutions }}]
 h5parm_name.argument.solsetName                             =   calibrator
 h5parm_name.argument.pointing                               =   sky_cal.output.SkymodelName.mapfile
-
-# transfer solutions if necessary
-transfer_solutions.control.type                             =   pythonplugin
-transfer_solutions.control.executable                       =   {{ scripts }}/transfer_solutions.py
-transfer_solutions.control.error_tolerance                  =   {{ error_tolerance }}
-transfer_solutions.control.skip_infile                      =   True
-transfer_solutions.control.mapfile_in                       =   sky_cal.output.SkymodelName.mapfile
-transfer_solutions.argument.flags                           =   [{{ cal_solutions }}, {{ solutions2transfer }}]
-transfer_solutions.argument.insolset                        =   calibrator
-transfer_solutions.argument.outsolset                       =   calibrator
-transfer_solutions.argument.insoltab                        =   bandpass
-transfer_solutions.argument.outsoltab                       =   bandpass
-transfer_solutions.argument.antenna                         =   {{ antennas2transfer }}
 
 ########################################################
 ##                                                    ##

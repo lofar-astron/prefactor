@@ -7,8 +7,9 @@ from losoto.lib_operations import *
 import os
 import re
 import numpy
+import subprocess
 ########################################################################
-def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147']):
+def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147'], parset = None):
 
     
     ### Open up the h5parm, get an example value
@@ -114,6 +115,20 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     outsoltab.addHistory('Transferred solutions from ' + os.path.basename(refh5parm) + ' for the stations ' + str(stations_to_transfer).lstrip('[').rstrip(']') )
     outsoltab.flush()
     
+    ### plotting new tables if provided
+    if parset:
+        if os.path.exists(parset):
+            download  = subprocess.Popen(['losoto',  '-v', h5parmdb, parset], stdout=subprocess.PIPE)
+            errorcode = download.wait()
+            if errorcode != 0:
+                logging.error('An error has occured while plotting.')
+                return(1)
+        else:
+            logging.error('Parset file ' + parset + ' has not been found.')
+            return(1)
+    
+    return(0)
+    
 ########################################################################
 if __name__ == '__main__':
     import argparse
@@ -131,7 +146,7 @@ if __name__ == '__main__':
                         help='Name of the input h5parm solution set (default: amplitude000)')
     parser.add_argument('--outsoltab', '--outsoltab', type=str, default='amplitude000',
                         help='Name of the output h5parm solution set (default: amplitude000)')
-    parser.add_argument('--antenna', '--antenna', type=str, default='[CR]S*',
+    parser.add_argument('--antenna', '--antenna', type=str, default='[FUSPID].*',
                         help='Regular expression of antenna solutions to be transferred (default: [FUSPID].*)')
 
     args = parser.parse_args()
@@ -146,4 +161,4 @@ if __name__ == '__main__':
 
     logging.info('Transferring solutions from ' +  args.refh5parm + ' to ' + args.h5parm + '.')
     logging.info('Solutions will be transferred from soltab ' + str(args.insoltab) + ' to ' + str(args.outsoltab) + '.')
-    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna)
+    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = None)
