@@ -1,5 +1,5 @@
 ##########################################################################
-# Pre-Facet Calibrator Calibration Pipeline                              #
+# Pre-Facet Calibrator Calibration Pipeline v3.0 (04/09/2019)            #
 #                                                                        #
 # Calibrator part of the basic Pre-Facet calibration pipeline:           #
 # - requires LOFAR software version  >= 3.1.0                            #
@@ -88,6 +88,7 @@
 ## main directories
 ! lofar_directory          =  $LOFARROOT                                                          ## base directory of your LOFAR installation
 ! job_directory            =  input.output.job_directory                                          ## directory of the prefactor outputs
+! mapfile_dir              =  input.output.mapfile_dir                                            ## specify mapfile directory
 
 ## script and plugin directories
 ! scripts                  =  {{ prefactor_directory }}/scripts
@@ -137,7 +138,7 @@ pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}]
 createmap_cal.control.kind                                  =   plugin
 createmap_cal.control.type                                  =   createMapfile
 createmap_cal.control.method                                =   mapfile_from_folder
-createmap_cal.control.mapfile_dir                           =   input.output.mapfile_dir
+createmap_cal.control.mapfile_dir                           =   {{ mapfile_dir }}
 createmap_cal.control.filename                              =   createmap_cal.mapfile
 createmap_cal.control.folder                                =   {{ cal_input_path }}
 createmap_cal.control.pattern                               =   {{ cal_input_pattern }}
@@ -146,7 +147,7 @@ createmap_cal.control.pattern                               =   {{ cal_input_pat
 combine_data_map.control.kind                               =   plugin
 combine_data_map.control.type                               =   createMapfile
 combine_data_map.control.method                             =   mapfile_all_to_one
-combine_data_map.control.mapfile_dir                        =   input.output.mapfile_dir
+combine_data_map.control.mapfile_dir                        =   {{ mapfile_dir }}
 combine_data_map.control.filename                           =   combine_data_map.mapfile
 combine_data_map.control.mapfile_in                         =   createmap_cal.output.mapfile
 
@@ -165,7 +166,7 @@ check_Ateam_separation.argument.flags                       =   [MSfile]
 # generate a mapfile of the calibrator
 createmap_prepcal.control.kind                              =   plugin
 createmap_prepcal.control.type                              =   makeResultsMapfile
-createmap_prepcal.control.mapfile_dir                       =   input.output.mapfile_dir
+createmap_prepcal.control.mapfile_dir                       =   {{ mapfile_dir }}
 createmap_prepcal.control.filename                          =   createmap_prepcal.mapfile
 createmap_prepcal.control.mapfile_in                        =   createmap_cal.output.mapfile
 createmap_prepcal.control.target_dir                        =   {{ job_directory }}
@@ -184,7 +185,7 @@ create_ateam_model_map.control.kind                         =   plugin
 create_ateam_model_map.control.type                         =   addListMapfile
 create_ateam_model_map.control.hosts                        =   ['localhost']
 create_ateam_model_map.control.files                        =   [ {{ A-team_skymodel }} ]
-create_ateam_model_map.control.mapfile_dir                  =   input.output.mapfile_dir
+create_ateam_model_map.control.mapfile_dir                  =   {{ mapfile_dir }}
 create_ateam_model_map.control.filename                     =   ateam_model_name.mapfile
 
 # make sourcedbs from the A-Team skymodel, length = 1
@@ -204,7 +205,7 @@ expand_sourcedb_ateam.control.kind                          =   plugin
 expand_sourcedb_ateam.control.type                          =   expandMapfile
 expand_sourcedb_ateam.control.mapfile_in                    =   make_sourcedb_ateam.output.mapfile
 expand_sourcedb_ateam.control.mapfile_to_match              =   createmap_cal.output.mapfile
-expand_sourcedb_ateam.control.mapfile_dir                   =   input.output.mapfile_dir
+expand_sourcedb_ateam.control.mapfile_dir                   =   {{ mapfile_dir }}
 expand_sourcedb_ateam.control.filename                      =   expand_sourcedb_ateam.datamap
 
 
@@ -266,7 +267,7 @@ ndppp_prep_cal.argument.demix.instrumentmodel               =   createmap_instca
 combine_data_cal_map.control.kind                           =   plugin
 combine_data_cal_map.control.type                           =   createMapfile
 combine_data_cal_map.control.method                         =   mapfile_all_to_one
-combine_data_cal_map.control.mapfile_dir                    =   input.output.mapfile_dir
+combine_data_cal_map.control.mapfile_dir                    =   {{ mapfile_dir }}
 combine_data_cal_map.control.filename                       =   combine_data_cal_map.mapfile
 combine_data_cal_map.control.mapfile_in                     =   ndppp_prep_cal.output.mapfile
 
@@ -275,7 +276,7 @@ ms_concat.control.type                                      =   pythonplugin
 ms_concat.control.executable                                =   {{ scripts }}/concat_MS.py
 ms_concat.control.error_tolerance                           =   {{ error_tolerance }}
 ms_concat.argument.filename                                 =   concatmapfile.mapfile
-ms_concat.argument.mapfile_dir                              =   input.output.mapfile_dir
+ms_concat.argument.mapfile_dir                              =   {{ mapfile_dir }}
 ms_concat.argument.min_length                               =   {{ min_length }}
 ms_concat.argument.overhead                                 =   {{ overhead }}
 ms_concat.argument.flags                                    =   [combine_data_cal_map.output.mapfile,outputkey]
@@ -290,7 +291,7 @@ expand_memory_map.control.kind                              =   plugin
 expand_memory_map.control.type                              =   expandMapfile
 expand_memory_map.control.mapfile_in                        =   ms_concat.output.memory.mapfile
 expand_memory_map.control.mapfile_to_match                  =   ms_concat_map.output.concatmap
-expand_memory_map.control.mapfile_dir                       =   input.output.mapfile_dir
+expand_memory_map.control.mapfile_dir                       =   {{ mapfile_dir }}
 expand_memory_map.control.filename                          =   expand_memory_map.mapfile
 
 # run aoflagger on the concatenated data
@@ -331,7 +332,7 @@ expand_sourcedb.control.kind                                =   plugin
 expand_sourcedb.control.type                                =   expandMapfile
 expand_sourcedb.control.mapfile_in                          =   make_sourcedb.output.mapfile
 expand_sourcedb.control.mapfile_to_match                    =   ndppp_prep_cal.output.mapfile
-expand_sourcedb.control.mapfile_dir                         =   input.output.mapfile_dir
+expand_sourcedb.control.mapfile_dir                         =   {{ mapfile_dir }}
 expand_sourcedb.control.filename                            =   expand_sourcedb.mapfile
 
 # expand the sourcedb mapfile so that there is one entry for every file, length = nfiles
@@ -339,7 +340,7 @@ expand_skymodel.control.kind                                =   plugin
 expand_skymodel.control.type                                =   expandMapfile
 expand_skymodel.control.mapfile_in                          =   sky_cal.output.SkymodelName.mapfile
 expand_skymodel.control.mapfile_to_match                    =   ndppp_prep_cal.output.mapfile
-expand_skymodel.control.mapfile_dir                         =   input.output.mapfile_dir
+expand_skymodel.control.mapfile_dir                         =   {{ mapfile_dir }}
 expand_skymodel.control.filename                            =   expand_skymodel.mapfile
 
 # generate mapfile with the h5parm names to be used in the calib_cal steps
@@ -348,14 +349,14 @@ calib_cal_parmmap.control.type                              =   createMapfile
 calib_cal_parmmap.control.method                            =   add_suffix_to_file
 calib_cal_parmmap.control.mapfile_in                        =   ndppp_prep_cal.output.mapfile
 calib_cal_parmmap.control.add_suffix_to_file                =   /instrument.h5
-calib_cal_parmmap.control.mapfile_dir                       =   input.output.mapfile_dir
+calib_cal_parmmap.control.mapfile_dir                       =   {{ mapfile_dir }}
 calib_cal_parmmap.control.filename                          =   calib_cal_h5parms.mapfile
 
 # generate a mapfile with all files in a single entry
 h5imp_cal_map.control.kind                                  =   plugin
 h5imp_cal_map.control.type                                  =   compressMapfile
 h5imp_cal_map.control.mapfile_in                            =   calib_cal_parmmap.output.mapfile
-h5imp_cal_map.control.mapfile_dir                           =   input.output.mapfile_dir
+h5imp_cal_map.control.mapfile_dir                           =   {{ mapfile_dir }}
 h5imp_cal_map.control.filename                              =   h5imp_cal_map.mapfile
 
 # interpolate after flagging but before smoothing
@@ -485,7 +486,7 @@ h5imp_cal_PA.argument.outh5parm                             =   outh5parm
 prepare_losoto_PA.control.kind                              =   plugin
 prepare_losoto_PA.control.type                              =   makeLosotoParset
 prepare_losoto_PA.control.steps                             =   [plotP3,plotPd,plotRot3,plotA3,bkp,align,plotAlign,residual,plotPr,plotPr2]
-prepare_losoto_PA.control.filename                          =   input.output.job_directory/losoto.parset
+prepare_losoto_PA.control.filename                          =   {{ job_directory }}/losoto.parset
 prepare_losoto_PA.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_PA.control.plotP3.operation                  =   PLOT
 prepare_losoto_PA.control.plotP3.soltab                     =   sol000/phase000
@@ -566,7 +567,7 @@ process_losoto_PA.control.executable                        =   {{ losoto_direct
 process_losoto_PA.control.max_per_node                      =   {{ num_proc_per_node }}
 process_losoto_PA.control.mapfile_in                        =   h5imp_cal_PA.output.mapfile
 process_losoto_PA.control.inputkey                          =   h5in
-process_losoto_PA.argument.flags                            =   [-v,h5in,input.output.job_directory/losoto.parset]
+process_losoto_PA.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_PA.control.kind                                   =   recipe
@@ -599,7 +600,7 @@ h5imp_cal_FR.argument.outh5parm                             =   outh5parm
 prepare_losoto_FR.control.kind                              =   plugin
 prepare_losoto_FR.control.type                              =   makeLosotoParset
 prepare_losoto_FR.control.steps                             =   [plotP3,plotPd,plotRot3,plotA3,faraday,plotFR,residual,plotPr,plotPr2]
-prepare_losoto_FR.control.filename                          =   input.output.job_directory/losoto.parset
+prepare_losoto_FR.control.filename                          =   {{ job_directory }}/losoto.parset
 prepare_losoto_FR.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_FR.control.plotP3.operation                  =   PLOT
 prepare_losoto_FR.control.plotP3.soltab                     =   sol000/phase000
@@ -671,7 +672,7 @@ process_losoto_FR.control.executable                        =   {{ losoto_direct
 process_losoto_FR.control.max_per_node                      =   {{ num_proc_per_node }}
 process_losoto_FR.control.mapfile_in                        =   h5imp_cal_FR.output.mapfile
 process_losoto_FR.control.inputkey                          =   h5in
-process_losoto_FR.argument.flags                            =   [-v,h5in,input.output.job_directory/losoto.parset]
+process_losoto_FR.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_FR.control.kind                                   =   recipe
@@ -704,7 +705,7 @@ h5imp_cal_bandpass.argument.outh5parm                       =   outh5parm
 prepare_losoto_bandpass.control.kind                        =   plugin
 prepare_losoto_bandpass.control.type                        =   makeLosotoParset
 prepare_losoto_bandpass.control.steps                       =   [duplicateAbkp,plotA1,flag,flagbp,flagextend,plotA2,merge,smooth,bandpass,interp,smoothb,plotB1,plotB2,plotB3]
-prepare_losoto_bandpass.control.filename                    =   input.output.job_directory/losoto.parset
+prepare_losoto_bandpass.control.filename                    =   {{ job_directory }}/losoto.parset
 prepare_losoto_bandpass.control.global.ncpu                 =   {{ num_proc_per_node }}
 prepare_losoto_bandpass.control.duplicateAbkp.operation     =   DUPLICATE
 prepare_losoto_bandpass.control.duplicateAbkp.soltab        =   sol000/amplitude000
@@ -801,7 +802,7 @@ prepare_losoto_bandpass.control.plotB3.time.minmaxstep      =   [0,1e20,500000]
 prepare_losoto_bandpasstrans.control.kind                   =   plugin
 prepare_losoto_bandpasstrans.control.type                   =   makeLosotoParset
 prepare_losoto_bandpasstrans.control.steps                  =   [plotB1,plotB2,plotB3]
-prepare_losoto_bandpasstrans.control.filename               =   input.output.job_directory/losoto_transfer.parset
+prepare_losoto_bandpasstrans.control.filename               =   {{ job_directory }}/losoto_transfer.parset
 prepare_losoto_bandpasstrans.control.global.ncpu            =   {{ num_proc_per_node }}
 prepare_losoto_bandpasstrans.control.plotB1.operation       =   PLOT
 prepare_losoto_bandpasstrans.control.plotB1.soltab          =   calibrator/bandpass
@@ -833,7 +834,7 @@ process_losoto_bandpass.control.executable                  =   {{ losoto_direct
 process_losoto_bandpass.control.max_per_node                =   {{ num_proc_per_node }}
 process_losoto_bandpass.control.mapfile_in                  =   h5imp_cal_bandpass.output.mapfile
 process_losoto_bandpass.control.inputkey                    =   h5in
-process_losoto_bandpass.argument.flags                      =   [-v,h5in,input.output.job_directory/losoto.parset]
+process_losoto_bandpass.argument.flags                      =   [-v,h5in,{{ job_directory }}/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_bandpass.control.kind                             =   recipe
@@ -880,7 +881,7 @@ h5imp_cal_ion.argument.outh5parm                            =   outh5parm
 prepare_losoto_ion.control.kind                             =   plugin
 prepare_losoto_ion.control.type                             =   makeLosotoParset
 prepare_losoto_ion.control.steps                            =   [plotA1,flag,flagextend,plotA2,merge,plotP3,plotPd,duplicatePbkp,{{ cal_ion }},plotClock,plotPr,plotPr3,flagstation]
-prepare_losoto_ion.control.filename                         =   input.output.job_directory/losoto.parset
+prepare_losoto_ion.control.filename                         =   {{ job_directory }}/losoto.parset
 prepare_losoto_ion.control.global.ncpu                      =   {{ num_proc_per_node }}
 prepare_losoto_ion.control.plotA1.operation                 =   PLOT
 prepare_losoto_ion.control.plotA1.soltab                    =   sol000/amplitude000
@@ -1018,7 +1019,7 @@ process_losoto_ion.control.executable                       =   {{ losoto_direct
 process_losoto_ion.control.max_per_node                     =   {{ num_proc_per_node }}
 process_losoto_ion.control.mapfile_in                       =   h5imp_cal_ion.output.mapfile
 process_losoto_ion.control.inputkey                         =   h5in
-process_losoto_ion.argument.flags                           =   [-v,h5in,input.output.job_directory/losoto.parset]
+process_losoto_ion.argument.flags                           =   [-v,h5in,{{ job_directory }}/losoto.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_ion.control.kind                                  =   recipe

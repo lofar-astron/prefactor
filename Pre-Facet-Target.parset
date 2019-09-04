@@ -1,5 +1,5 @@
 ##########################################################################
-# Pre-Facet Target Calibration Pipeline                                  #
+# Pre-Facet Target Calibration Pipeline v3.0 (04/09/2019)                #
 #                                                                        #
 # Target part of the basic Pre-Facet calibration pipeline:               #
 # - requires LOFAR software version  >= 3.1.0                            #
@@ -14,13 +14,13 @@
 ##########################################
 
 ## information about the target data
-! target_input_path         =  /data/scratch/drabent/                 ## specify the directory where your target data is stored
-! target_input_pattern      =  L228163*.MS                            ## regular expression pattern of all your target files
+! target_input_path         =  /data/scratch/drabent/                                             ## specify the directory where your target data is stored
+! target_input_pattern      =  L228163*.MS                                                        ## regular expression pattern of all your target files
 
 ## location of the software
-! prefactor_directory       =  /home/drabent/prefactor                ## path to your prefactor copy
-! losoto_directory          =  /home/drabent/losoto                   ## path to your local LoSoTo installation
-! aoflagger                 =  /home/drabent/aoflagger/bin/aoflagger  ## path to your aoflagger executable
+! prefactor_directory       =  /home/drabent/prefactor                                            ## path to your prefactor copy
+! losoto_directory          =  /home/drabent/losoto                                               ## path to your local LoSoTo installation
+! aoflagger                 =  /home/drabent/aoflagger/bin/aoflagger                              ## path to your aoflagger executable
 
 ## location of the calibrator solutions
 ! cal_solutions             =  input.output.job_directory/../Pre-Facet-Calibrator/results/cal_values/cal_solutions.h5
@@ -29,59 +29,61 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
-! refant                    =  'CS001HBA0'                            ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
-! flag_baselines            =  []                                     ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
-! process_baselines_target  =  [CR]S*&                                ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
-! filter_baselines          =  {{ process_baselines_target }}         ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
-! do_smooth                 =  False                                  ## enable or disable baseline-based smoothing
-! rfistrategy               =  HBAdefault.rfis                        ## strategy to be applied with the statistical flagger (AOFlagger) for wideband flagging
-! interp_windowsize         =  15                                     ## Size of the window over which a value is interpolated. Should be odd.
-! min_unflagged_fraction    =  0.5                                    ## minimum fraction of unflagged data after RFI flagging and A-team clipping
-! compression_bitrate       =  16                                     ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
-! raw_data                  =  False                                  ## use autoweight, set to True in case you are using raw data
-! propagatesolutions        =  True                                   ## use already derived solutions as initial guess for the upcoming time slot
+! refant                    =  'CS001HBA0'                                                        ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
+! flag_baselines            =  []                                                                 ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
+! process_baselines_target  =  [CR]S*&                                                            ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! filter_baselines          =  {{ process_baselines_target }}                                     ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
+! do_smooth                 =  False                                                              ## enable or disable baseline-based smoothing
+! rfistrategy               =  HBAdefault.rfis                                                    ## strategy to be applied with the statistical flagger (AOFlagger) for wideband flagging
+! interp_windowsize         =  15                                                                 ## Size of the window over which a value is interpolated. Should be odd.
+! min_unflagged_fraction    =  0.5                                                                ## minimum fraction of unflagged data after RFI flagging and A-team clipping
+! compression_bitrate       =  16                                                                 ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
+! raw_data                  =  False                                                              ## use autoweight, set to True in case you are using raw data
+! propagatesolutions        =  True                                                               ## use already derived solutions as initial guess for the upcoming time slot
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
-! demix_sources             =  [CasA,CygA]                            ## choose sources to demix (provided as list)
-! demix_target              =  ""                                     ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
-! demix_freqstep            =  16                                     ## number of channels to average when demixing.
-! demix_timestep            =  10                                     ## number of time slots to average when demixing
+! demix_sources             =  [CasA,CygA]                                                        ## choose sources to demix (provided as list)
+! demix_target              =  ""                                                                 ## if given, the target source model (its patch in the SourceDB) is taken into account when solving
+! demix_freqstep            =  16                                                                 ## number of channels to average when demixing.
+! demix_timestep            =  10                                                                 ## number of time slots to average when demixing
 
 # definitions for pipeline options -- do not change!
-! default_flagging          =  flagbaseline,flagelev,flagamp          ## regular flagging after pre-processing by the observatory pipelines
-! raw_flagging              =  flagedge,aoflag,{{ default_flagging }} ## full flagging (usually only necessary for raw data)
-! demix                     =  demix,                                 ## Do not change! Only demix_step should be edited if needed
-! clipATeam                 =  clipATeam,                             ## Do not change! Only clipATeam_step should be edited if needed
-! none                      =                                         ## Do not change!
+! default_flagging          =  flagbaseline,flagelev,flagamp                                      ## regular flagging after pre-processing by the observatory pipelines
+! raw_flagging              =  flagedge,aoflag,{{ default_flagging }}                             ## full flagging (usually only necessary for raw data)
+! demix                     =  demix,                                                             ## Do not change! Only demix_step should be edited if needed
+! clipATeam                 =  clipATeam,                                                         ## Do not change! Only clipATeam_step should be edited if needed
+! none                      =                                                                     ## Do not change!
 
 # pipeline options
-! initial_flagging          =  {{ default_flagging }}                 ## choose {{ raw_flagging }} if you process raw data
-! demix_step                =  {{ none }}                             ## choose {{ demix }} if you want to demix
-! apply_steps               =  applyclock,applybeam,applyRM           ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
-! clipATeam_step            =  {{ clipATeam }}                        ## choose {{ none }} if you want to skip A-team-clipping
-! gsmcal_step               =  phase                                  ## choose tec if you want to fit TEC instead of self-calibrating for phases
-! updateweights             =  True                                   ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
+! initial_flagging          =  {{ default_flagging }}                                             ## choose {{ raw_flagging }} if you process raw data
+! demix_step                =  {{ none }}                                                         ## choose {{ demix }} if you want to demix
+! apply_steps               =  applyclock,applybeam,applyRM                                       ## comma-separated list of apply_steps performed in the target preparation (NOTE: only use applyRM if you have performed RMextract before!)
+! clipATeam_step            =  {{ clipATeam }}                                                    ## choose {{ none }} if you want to skip A-team-clipping
+! gsmcal_step               =  phase                                                              ## choose tec if you want to fit TEC instead of self-calibrating for phases
+! updateweights             =  True                                                               ## update the weights column, in a way consistent with the weights being inverse proportional to the autocorrelations
 
 ##########################################
 ### parameters for pipeline performance ##
 ##########################################
 
-! num_proc_per_node         =  input.output.max_per_node              ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
-! num_proc_per_node_limit   =  4                                      ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
-! max_dppp_threads          =  10                                     ## number of threads per process for NDPPP
-! min_length                =  5                                      ## minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
-! overhead                  =  0.7                                    ## Only use this fraction of the available memory for deriving the amount of data to be concatenated.
-! min_separation            =  30                                     ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
+! num_proc_per_node         =  input.output.max_per_node                                          ## number of processes to use per step per node (usually max_per_node from pipeline.cfg)
+! num_proc_per_node_limit   =  4                                                                  ## number of processes to use per step per node for tasks with high i/o (dppp or cp) or memory (eg calibration)
+! max_dppp_threads          =  10                                                                 ## number of threads per process for NDPPP
+! min_length                =  5                                                                  ## minimum amount of chunks to concatenate in frequency necessary to perform the wide-band flagging in the RAM. It data is too big aoflag will use indirect-read.
+! overhead                  =  0.7                                                                ## Only use this fraction of the available memory for deriving the amount of data to be concatenated.
+! min_separation            =  30                                                                 ## minimal accepted distance to an A-team source on the sky in degrees (will raise a WARNING)
 
-! error_tolerance           =  False                                  ## set this to True if you want the pipeline run to continue if single bands fail
+! error_tolerance           =  False                                                              ## set this to True if you want the pipeline run to continue if single bands fail
 
 ##########################################
 ### parameters you may want to adjust   ##
 ##########################################
 
 ## main directories
-! lofar_directory           =  $LOFARROOT                             ## base directory of your LOFAR installation
-! job_directory             =  input.output.job_directory             ## directory of the prefactor outputs
+! lofar_directory           =  $LOFARROOT                                                         ## base directory of your LOFAR installation
+! job_directory             =  input.output.job_directory                                         ## directory of the prefactor outputs
+! working_directory         =  input.output.working_directory/input.output.job_name               ## specify the working_directory (intermediate data products)
+! mapfile_dir               =  input.output.mapfile_dir                                           ## specify mapfile directory
 
 ## script and plugin directories
 ! scripts                   =  {{ prefactor_directory }}/scripts
@@ -90,38 +92,38 @@ pipeline.pluginpath         =  {{ prefactor_directory }}/plugins
 ## skymodel directory
 ! calibrator_path_skymodel  =  {{ prefactor_directory }}/skymodels
 ! A-team_skymodel           =  {{ calibrator_path_skymodel }}/Ateam_LBA_CC.skymodel
-! target_skymodel           =  {{ job_directory }}/target.skymodel    ## path to the skymodel for the phase-only calibration of the target
-! use_target                =  True                                   ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
-! skymodel_source           =  TGSS                                   ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
+! target_skymodel           =  {{ job_directory }}/target.skymodel                                ## path to the skymodel for the phase-only calibration of the target
+! use_target                =  True                                                               ## download the phase-only calibration skymodel from TGSS, "Force" : always download , "True" download if {{ target_skymodel }} does not exist , "False" : never download
+! skymodel_source           =  TGSS                                                               ## use GSM if you want to use the experimental (!) GSM SkyModel creator using TGSS, NVSS, WENSS and VLSS
 
 ## result directories
-! results_directory         =  {{ job_directory }}/results            ## location of the results
-! inspection_directory      =  {{ results_directory }}/inspection     ## directory where the inspection plots will be stored
-! cal_values_directory      =  {{ results_directory }}/cal_values     ## directory where the final h5parm solution set will be stored
+! results_directory         =  {{ job_directory }}/results                                        ## location of the results
+! inspection_directory      =  {{ results_directory }}/inspection                                 ## directory where the inspection plots will be stored
+! cal_values_directory      =  {{ results_directory }}/cal_values                                 ## directory where the final h5parm solution set will be stored
 
 ## calibrator + target solutions
 ! solutions                 =  {{ cal_values_directory }}/solutions.h5
 
 ## averaging for the target data
-! avg_timeresolution        =  4.                                     ## average to 4 sec/timeslot
-! avg_freqresolution        =  48.82kHz                               ## average to 48.82 kHz/ch (= 4 ch/SB)
-! avg_timeresolution_concat =  8.                                     ## average to 8 sec/timeslot
-! avg_freqresolution_concat =  97.64kHz                               ## average to 97.64 kHz/ch (= 2 ch/SB)
+! avg_timeresolution        =  4.                                                                 ## average to 4 sec/timeslot
+! avg_freqresolution        =  48.82kHz                                                           ## average to 48.82 kHz/ch (= 4 ch/SB)
+! avg_timeresolution_concat =  8.                                                                 ## average to 8 sec/timeslot
+! avg_freqresolution_concat =  97.64kHz                                                           ## average to 97.64 kHz/ch (= 2 ch/SB)
 
 ## concatenating the target data
-! num_SBs_per_group         =  10                                     ## make concatenated measurement-sets with that many subbands, choose a high number if running LBA
-! reference_stationSB       =  None                                   ## station-subband number to use as reference for grouping, "None" -> use lowest frequency input data as reference
+! num_SBs_per_group         =  10                                                                 ## make concatenated measurement-sets with that many subbands, choose a high number if running LBA
+! reference_stationSB       =  None                                                               ## station-subband number to use as reference for grouping, "None" -> use lowest frequency input data as reference
 
 ## RMextract settings
-! ionex_server              =  "ftp://ftp.aiub.unibe.ch/CODE/"        ## to download from the "standard" server
-! ionex_prefix              =  CODG                                   ## the prefix of the IONEX files
-! ionex_path                =  {{ job_directory }}/IONEX/             ## path where the IONEX files can be stored or are already stored
-## Proxy Settings for RMextract                                       ## Only needed if commmunication to the outside world goes via proxy, leave empty otherwise
-! proxy_server              =                                         ## Url "my.proxy.com" or ip of proxy server
-! proxy_port                =                                         ## Port of the server
-! proxy_type                =                                         ## Proxy Type: "socks4" or "socks5"
-! proxy_user                =  None                                   ## username for proxy server. Leave None if you do not need one
-! proxy_pass                =  None                                   ## Password for proxy server. Leave None if you do not need one
+! ionex_server              =  "ftp://ftp.aiub.unibe.ch/CODE/"                                    ## to download from the "standard" server
+! ionex_prefix              =  CODG                                                               ## the prefix of the IONEX files
+! ionex_path                =  {{ job_directory }}/IONEX/                                         ## path where the IONEX files can be stored or are already stored
+## Proxy Settings for RMextract                                                                   ## Only needed if commmunication to the outside world goes via proxy, leave empty otherwise
+! proxy_server              =                                                                     ## Url "my.proxy.com" or ip of proxy server
+! proxy_port                =                                                                     ## Port of the server
+! proxy_type                =                                                                     ## Proxy Type: "socks4" or "socks5"
+! proxy_user                =  None                                                               ## username for proxy server. Leave None if you do not need one
+! proxy_pass                =  None                                                               ## Password for proxy server. Leave None if you do not need one
 
 ########################################################
 ##                                                    ##
@@ -151,7 +153,7 @@ pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5e
 createmap_target.control.kind                                  =   plugin
 createmap_target.control.type                                  =   createMapfile
 createmap_target.control.method                                =   mapfile_from_folder
-createmap_target.control.mapfile_dir                           =   input.output.mapfile_dir
+createmap_target.control.mapfile_dir                           =   {{ mapfile_dir }}
 createmap_target.control.filename                              =   createmap_target.mapfile
 createmap_target.control.folder                                =   {{ target_input_path }}
 createmap_target.control.pattern                               =   {{ target_input_pattern }}
@@ -165,7 +167,7 @@ get_targetname.control.mapfile_in                              =   createmap_tar
 combine_data_target_map.control.kind                           =   plugin
 combine_data_target_map.control.type                           =   createMapfile
 combine_data_target_map.control.method                         =   mapfile_all_to_one
-combine_data_target_map.control.mapfile_dir                    =   input.output.mapfile_dir
+combine_data_target_map.control.mapfile_dir                    =   {{ mapfile_dir }}
 combine_data_target_map.control.filename                       =   combine_data_tar_map.mapfile
 combine_data_target_map.control.mapfile_in                     =   createmap_target.output.mapfile
 
@@ -207,10 +209,10 @@ check_station_mismatch.control.filter                          =   {{ filter_bas
 # generate a mapfile of the target
 createmap_preptarg.control.kind                                =   plugin
 createmap_preptarg.control.type                                =   makeResultsMapfile
-createmap_preptarg.control.mapfile_dir                         =   input.output.mapfile_dir
+createmap_preptarg.control.mapfile_dir                         =   {{ mapfile_dir }}
 createmap_preptarg.control.filename                            =   createmap_preptarg.mapfile
 createmap_preptarg.control.mapfile_in                          =   createmap_target.output.mapfile
-createmap_preptarg.control.target_dir                          =   {{ job_directory }}
+createmap_preptarg.control.target_dir                          =   {{ working_directory }}
 createmap_preptarg.control.make_target_dir                     =   False
 createmap_preptarg.control.new_suffix                          =   .ndppp_prep_target
 
@@ -226,7 +228,7 @@ create_ateam_model_map.control.kind                            =   plugin
 create_ateam_model_map.control.type                            =   addListMapfile
 create_ateam_model_map.control.hosts                           =   ['localhost']
 create_ateam_model_map.control.files                           =   [ {{ A-team_skymodel }} ]
-create_ateam_model_map.control.mapfile_dir                     =   input.output.mapfile_dir
+create_ateam_model_map.control.mapfile_dir                     =   {{ mapfile_dir }}
 create_ateam_model_map.control.filename                        =   ateam_model_name.mapfile
 
 # make sourcedbs from the A-Team skymodel, length = 1
@@ -246,7 +248,7 @@ expand_sourcedb_ateam.control.kind                             =   plugin
 expand_sourcedb_ateam.control.type                             =   expandMapfile
 expand_sourcedb_ateam.control.mapfile_in                       =   make_sourcedb_ateam.output.mapfile
 expand_sourcedb_ateam.control.mapfile_to_match                 =   createmap_target.output.mapfile
-expand_sourcedb_ateam.control.mapfile_dir                      =   input.output.mapfile_dir
+expand_sourcedb_ateam.control.mapfile_dir                      =   {{ mapfile_dir }}
 expand_sourcedb_ateam.control.filename                         =   expand_sourcedb_ateam.datamap
 
 
@@ -415,7 +417,7 @@ plotateamclip.control.executable                               =   {{ scripts }}
 plotateamclip.control.error_tolerance                          =   {{ error_tolerance }}
 plotateamclip.control.skip_infile                              =   True
 plotateamclip.control.mapfile_in                               =   combine_data_target_map.output.mapfile
-plotateamclip.argument.txtfile                                 =   {{ job_directory }}/Ateamclipper.txt
+plotateamclip.argument.txtfile                                 =   {{ working_directory }}/Ateamclipper.txt
 plotateamclip.argument.outfile                                 =   {{ inspection_directory }}/Ateamclipper.png
 
 #############################
@@ -425,7 +427,7 @@ plotateamclip.argument.outfile                                 =   {{ inspection
 combine_target_map.control.kind                                =   plugin
 combine_target_map.control.type                                =   createMapfile
 combine_target_map.control.method                              =   mapfile_all_to_one
-combine_target_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_target_map.control.mapfile_dir                         =   {{ mapfile_dir }}
 combine_target_map.control.filename                            =   combine_target_map.mapfile
 combine_target_map.control.mapfile_in                          =   ndppp_prep_target.output.mapfile
 
@@ -440,8 +442,8 @@ sortmap_target.control.type                                    =   pythonplugin
 sortmap_target.control.executable                              =   {{ scripts }}/sort_times_into_freqGroups.py
 sortmap_target.argument.flags                                  =   [combine_target_map.output.mapfile]
 sortmap_target.argument.filename                               =   sortmap_target
-sortmap_target.argument.mapfile_dir                            =   input.output.mapfile_dir
-sortmap_target.argument.target_path                            =   input.output.working_directory/input.output.job_name
+sortmap_target.argument.mapfile_dir                            =   {{ mapfile_dir }}
+sortmap_target.argument.target_path                            =   {{ working_directory }}
 sortmap_target.argument.numSB                                  =   {{ num_SBs_per_group }}
 sortmap_target.argument.NDPPPfill                              =   True
 sortmap_target.argument.stepname                               =   dpppconcat
@@ -484,7 +486,7 @@ dpppconcat.argument.avg.freqresolution                         =   {{ avg_freqre
 combine_concat_map.control.kind                                =   plugin
 combine_concat_map.control.type                                =   createMapfile
 combine_concat_map.control.method                              =   mapfile_all_to_one
-combine_concat_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_concat_map.control.mapfile_dir                         =   {{ mapfile_dir }}
 combine_concat_map.control.filename                            =   combine_concat_map.mapfile
 combine_concat_map.control.mapfile_in                          =   do_sortmap_maps.output.groupmap
 
@@ -493,7 +495,7 @@ ms_concat_target.control.type                                  =   pythonplugin
 ms_concat_target.control.executable                            =   {{ scripts }}/concat_MS.py
 ms_concat_target.control.error_tolerance                       =   {{ error_tolerance }}
 ms_concat_target.argument.filename                             =   concatmapfile.mapfile
-ms_concat_target.argument.mapfile_dir                          =   input.output.mapfile_dir
+ms_concat_target.argument.mapfile_dir                          =   {{ mapfile_dir }}
 ms_concat_target.argument.min_length                           =   {{ min_length }}
 ms_concat_target.argument.overhead                             =   {{ overhead }}
 ms_concat_target.argument.flags                                =   [combine_concat_map.output.mapfile,outputkey]
@@ -508,7 +510,7 @@ expand_memory_map.control.kind                                 =   plugin
 expand_memory_map.control.type                                 =   expandMapfile
 expand_memory_map.control.mapfile_in                           =   ms_concat_target.output.memory.mapfile
 expand_memory_map.control.mapfile_to_match                     =   ms_concat_target_map.output.concatmap
-expand_memory_map.control.mapfile_dir                          =   input.output.mapfile_dir
+expand_memory_map.control.mapfile_dir                          =   {{ mapfile_dir }}
 expand_memory_map.control.filename                             =   expand_memory_map.mapfile
 
 # run aoflagger on the concatenated data
@@ -538,7 +540,7 @@ check_unflagged.argument.min_fraction                          =   {{ min_unflag
 check_unflagged_map.control.kind                               =   plugin
 check_unflagged_map.control.type                               =   pruneMapfile
 check_unflagged_map.control.mapfile_in                         =   check_unflagged.output.flagged.mapfile
-check_unflagged_map.control.mapfile_dir                        =   input.output.mapfile_dir
+check_unflagged_map.control.mapfile_dir                        =   {{ mapfile_dir }}
 check_unflagged_map.control.filename                           =   check_unflagged_map.mapfile
 check_unflagged_map.control.prune_str                          =   None
 
@@ -546,14 +548,14 @@ check_unflagged_map.control.prune_str                          =   None
 combine_concat_map.control.kind                                =   plugin
 combine_concat_map.control.type                                =   compressMapfile
 combine_concat_map.control.mapfile_in                          =   dpppconcat.output.mapfile
-combine_concat_map.control.mapfile_dir                         =   input.output.mapfile_dir
+combine_concat_map.control.mapfile_dir                         =   {{ mapfile_dir }}
 combine_concat_map.control.filename                            =   combine_concat_map.mapfile
 
 # compress mapfiles for plotting
 combine_frac_map.control.kind                                  =   plugin
 combine_frac_map.control.type                                  =   compressMapfile
 combine_frac_map.control.mapfile_in                            =   check_unflagged.output.unflagged_fraction.mapfile
-combine_frac_map.control.mapfile_dir                           =   input.output.mapfile_dir
+combine_frac_map.control.mapfile_dir                           =   {{ mapfile_dir }}
 combine_frac_map.control.filename                              =   combine_frac_map.mapfile
 
 # plot the unflagged fraction
@@ -578,7 +580,7 @@ create_target_model_map.control.kind                           =   plugin
 create_target_model_map.control.type                           =   addListMapfile
 create_target_model_map.control.hosts                          =   ['localhost']
 create_target_model_map.control.files                          =   [ {{ target_skymodel }} ]
-create_target_model_map.control.mapfile_dir                    =   input.output.mapfile_dir
+create_target_model_map.control.mapfile_dir                    =   {{ mapfile_dir }}
 create_target_model_map.control.filename                       =   target_model_name.mapfile
 
 # make sourcedbs from the target skymodel, length = 1
@@ -598,7 +600,7 @@ expand_sourcedb_target.control.kind                            =   plugin
 expand_sourcedb_target.control.type                            =   expandMapfile
 expand_sourcedb_target.control.mapfile_in                      =   make_sourcedb_target.output.mapfile
 expand_sourcedb_target.control.mapfile_to_match                =   check_unflagged_map.output.mapfile
-expand_sourcedb_target.control.mapfile_dir                     =   input.output.mapfile_dir
+expand_sourcedb_target.control.mapfile_dir                     =   {{ mapfile_dir }}
 expand_sourcedb_target.control.filename                        =   expand_sourcedb_target.datamap
 
 # generate mapfile with the parmDB names to be used in the gsmcal steps
@@ -607,14 +609,14 @@ gsmcal_parmmap.control.type                                    =   createMapfile
 gsmcal_parmmap.control.method                                  =   add_suffix_to_file
 gsmcal_parmmap.control.mapfile_in                              =   check_unflagged_map.output.mapfile
 gsmcal_parmmap.control.add_suffix_to_file                      =   .h5
-gsmcal_parmmap.control.mapfile_dir                             =   input.output.mapfile_dir
+gsmcal_parmmap.control.mapfile_dir                             =   {{ mapfile_dir }}
 gsmcal_parmmap.control.filename                                =   gsmcal_parmdbs.mapfile
 
 # generate a mapfile with all files in a single entry
 h5_gsmsol_map.control.kind                                     =   plugin
 h5_gsmsol_map.control.type                                     =   compressMapfile
 h5_gsmsol_map.control.mapfile_in                               =   gsmcal_parmmap.output.mapfile
-h5_gsmsol_map.control.mapfile_dir                              =   input.output.mapfile_dir
+h5_gsmsol_map.control.mapfile_dir                              =   {{ mapfile_dir }}
 h5_gsmsol_map.control.filename                                 =   h5_imp_gsmsol_map.mapfile
 
 # interpolate after flagging but before smoothing
@@ -720,7 +722,7 @@ h5imp_gsmcal.argument.outh5parm                                =   outh5parm
 prepare_losoto_phase.control.kind                              =   plugin
 prepare_losoto_phase.control.type                              =   makeLosotoParset
 prepare_losoto_phase.control.steps                             =   [plotP, plotP2, plotPd, plotPd2]
-prepare_losoto_phase.control.filename                          =   input.output.job_directory/losoto.parset
+prepare_losoto_phase.control.filename                          =   {{ job_directory }}/losoto.parset
 prepare_losoto_phase.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_phase.control.plotP.operation                   =   PLOT
 prepare_losoto_phase.control.plotP.soltab                      =   sol000/phase000
@@ -762,7 +764,7 @@ prepare_losoto_phase.control.plotPd2.minmax                    =   [-3.14,3.14]
 prepare_losoto_tec.control.kind                                =   plugin
 prepare_losoto_tec.control.type                                =   makeLosotoParset
 prepare_losoto_tec.control.steps                               =   [duplicatePbkp,plotTEC1,dejump,plotTEC2]
-prepare_losoto_tec.control.filename                            =   input.output.job_directory/losoto.parset
+prepare_losoto_tec.control.filename                            =   {{ job_directory }}/losoto.parset
 prepare_losoto_tec.control.global.ncpu                         =   {{ num_proc_per_node }}
 prepare_losoto_tec.control.duplicatePbkp.operation             =   DUPLICATE
 prepare_losoto_tec.control.duplicatePbkp.soltab                =   sol000/tec000
@@ -848,7 +850,7 @@ apply_gsmcal.argument.applygsm.solset                          =   target
 # make mapfile with the filenames of the results that we want
 make_results_mapfile.control.kind                              =   plugin
 make_results_mapfile.control.type                              =   makeResultsMapfile
-make_results_mapfile.control.mapfile_dir                       =   input.output.mapfile_dir
+make_results_mapfile.control.mapfile_dir                       =   {{ mapfile_dir }}
 make_results_mapfile.control.filename                          =   make_results_mapfile.mapfile
 make_results_mapfile.control.mapfile_in                        =   apply_gsmcal.output.mapfile
 make_results_mapfile.control.target_dir                        =   {{ results_directory }}
