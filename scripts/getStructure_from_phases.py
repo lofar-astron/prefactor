@@ -99,6 +99,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             xplot = np.delete(x,flagselect) 
             yplot = np.delete(y,flagselect)
             
+
             bins = np.logspace(np.log10(np.min(xplot)),np.log10(np.max(xplot)),10)
             binys = []
             binxs = []
@@ -137,7 +138,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             xscale("log")
             yscale("log")
             xlim(30,4000)
-            xlabel('baseline length [km]')
+            xlabel('baseline length [m]')
             ylabel('XX phase variance [rad$^2$]')
             title('XX diffractive scale:  %3.1f km'%(float(S0)/1000.))
         myselect=np.logical_and(D2y>0,np.logical_and(np.any(np.logical_and(dvary>1e-7,dvary<.1),axis=0)[np.newaxis],np.any(np.logical_and(dvary>1e-7,dvary<.1),axis=1)[:,np.newaxis]))
@@ -186,7 +187,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             xscale("log")
             yscale("log")
             xlim(30,4000)
-            xlabel('baseline length [km]')
+            xlabel('baseline length [m]')
             ylabel('YY phase variance [rad$^2$]')
             title('YY diffractive scale:  %3.1f km'%(float(S0y)/1000.))
             savefig(output_dir + '/' + outbasename + '_structure.png')
