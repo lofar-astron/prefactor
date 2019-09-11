@@ -99,6 +99,8 @@ def main(MSfiles, h5parmfile, store_basename='caldata_transfer', store_directory
                                         axesVals=[freqs_phase, station_names],
                                         vals=phases_array, weights=weights_phase)
 
+    data.close()
+
     return(0)
 
 

@@ -196,6 +196,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
         S0s.append([S0,S0y])
         betas.append([par[1],pary[1]])
         outfile.write('S0s ****%s**** %s beta %s %s\n'%(S0,S0y,par[1],pary[1]))
+    data.close()
     return(0)
 
 

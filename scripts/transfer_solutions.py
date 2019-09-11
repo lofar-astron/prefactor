@@ -126,6 +126,9 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
         else:
             logging.error('Parset file ' + parset + ' has not been found.')
             return(1)
+
+    data.close()
+    refdata.close()
     
     return(0)
     

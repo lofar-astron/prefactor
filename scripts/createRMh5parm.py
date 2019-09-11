@@ -175,6 +175,7 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
                                    vals=rm_vals,
                                    weights=np.ones_like(rm_vals, dtype=np.float16))
 
+    data.close()
 
     
     ########################################################################

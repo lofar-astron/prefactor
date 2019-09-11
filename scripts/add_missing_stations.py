@@ -103,6 +103,9 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
     else:
         logging.error('There are less antennas in the solset than in the soltab ' + str(soltab_in))
         return(1)
+
+    data.close()
+    refdata.close()
     
     return(0)
 
