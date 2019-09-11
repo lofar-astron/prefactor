@@ -128,7 +128,7 @@ pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, proce
 pipeline.steps.FR          =  [smooth_corrected, calib_cal,  h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
 pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, prepare_losoto_bandpasstrans, process_losoto_bandpass, h5exp_cal_bandpass, transfer_solutions, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal2, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
-pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}]
+pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}, make_summary]
 
 ###############################
 ## Mapping calibrator files  ##
@@ -1177,6 +1177,16 @@ h5parm_name.control.error_tolerance                         =   {{ error_toleran
 h5parm_name.argument.flags                                  =   [{{ cal_solutions }}]
 h5parm_name.argument.solsetName                             =   calibrator
 h5parm_name.argument.pointing                               =   sky_cal.output.SkymodelName.mapfile
+
+# set the pointing direction
+make_summary.control.type                                   =   pythonplugin
+make_summary.control.executable                             =   {{ scripts }}/make_summary.py
+make_summary.control.error_tolerance                        =   {{ error_tolerance }}
+make_summary.control.mapfile_in                             =   combine_data_cal_map.output.mapfile
+make_summary.control.inputkey                               =   infiles
+make_summary.argument.flags                                 =   [input.output.job_name]
+make_summary.argument.observation_directory                 =   input.output.working_directory
+make_summary.argument.MSfile                                =   infiles
 
 ########################################################
 ##                                                    ##

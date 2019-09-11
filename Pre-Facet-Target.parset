@@ -143,7 +143,7 @@ pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_co
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
-pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, move_results, h5parm_name, structure_function]
+pipeline.steps.finalize     =  [process_losoto_gsmcal, add_missing_stations, h5exp_gsm, apply_gsmcal, make_results_mapfile, make_results_compress, move_results, h5parm_name, structure_function, make_summary]
 
 
 #############################
@@ -857,6 +857,13 @@ make_results_mapfile.control.target_dir                        =   {{ results_di
 make_results_mapfile.control.make_target_dir                   =   True
 make_results_mapfile.control.new_suffix                        =   .pre-cal.ms
 
+# compress mapfiles for plotting
+make_results_compress.control.kind                             =   plugin
+make_results_compress.control.type                             =   compressMapfile
+make_results_compress.control.mapfile_in                       =   make_results_mapfile.output.mapfile
+make_results_compress.control.mapfile_dir                      =   {{ mapfile_dir }}
+make_results_compress.control.filename                         =   make_results_compress.mapfile
+
 # move the results to where we want them
 move_results.control.kind                                      =   recipe
 move_results.control.type                                      =   executable_args
@@ -888,6 +895,15 @@ structure_function.argument.soltab                             =   {{ skymodel_s
 structure_function.argument.outbasename                        =   get_targetname.output.targetName
 structure_function.argument.output_dir                         =   {{ inspection_directory }}
 
+# set the pointing direction
+make_summary.control.type                                      =   pythonplugin
+make_summary.control.executable                                =   {{ scripts }}/make_summary.py
+make_summary.control.error_tolerance                           =   {{ error_tolerance }}
+make_summary.control.mapfile_in                                =   make_results_compress.output.mapfile
+make_summary.control.inputkey                                  =   infiles
+make_summary.argument.flags                                    =   [input.output.job_name]
+make_summary.argument.observation_directory                    =   input.output.working_directory
+make_summary.argument.MSfile                                   =   infiles
 
 ########################################################
 ##                                                    ##
