@@ -28,9 +28,13 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     calibrator = numpy.unique(calibrators)
     if len(calibrator) > 1:
         logging.error('There is more than one calibrator used in the target solution set: ' + str(calibrator) + '. No solutions will be transferred.')
+        data.close()
+        refdata.close()
         return(1)
     if calibrator[0].upper() in trusted_sources:
         logging.info(calibrator[0] + ' is a trusted calibrator source. No solutions from a reference solution set will be transferred!')
+        data.close()
+        refdata.close()
         return(0)
     else:
         logging.info(calibrator[0] + ' is not a trusted calibrator source. Solutions from a reference solution set will be transferred!')
@@ -41,6 +45,8 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     stations_to_transfer = [ station_name for station_name in station_names if re.match(antenna, station_name) ]           
     if len(stations_to_transfer) == 0:
         logging.warning('No stations found matching the regular expression: ' + antenna)
+        data.close()
+        refdata.close()
         return(0)
     
     ### Properly define axes order
@@ -72,6 +78,8 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     freq_resolution = numpy.unique(numpy.diff(outsoltab.freq))
     if len(freq_resolution) > 1:
         logging.error('Frequency axis is not equidistant!')
+        data.close()
+        refdata.close()
         return(1)
     
     ### look for nearest neighbours in frequency and write them into a dictionary
@@ -122,14 +130,17 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
             errorcode = download.wait()
             if errorcode != 0:
                 logging.error('An error has occured while plotting.')
+                data.close()
+                refdata.close()
                 return(1)
         else:
             logging.error('Parset file ' + parset + ' has not been found.')
+            data.close()
+            refdata.close()
             return(1)
 
     data.close()
     refdata.close()
-    
     return(0)
     
 ########################################################################

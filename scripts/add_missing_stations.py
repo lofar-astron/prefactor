@@ -71,6 +71,8 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
             out_axes_vals.append(soltab.dir)
         else:
             logging.error('Unknown axis in soltab: ' + str(axis))
+            data.close()
+            refdata.close()
             return 1           
 
     ### just copy if number of antennas is the same
@@ -102,6 +104,8 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
         
     else:
         logging.error('There are less antennas in the solset than in the soltab ' + str(soltab_in))
+        data.close()
+        refdata.close()
         return(1)
 
     data.close()

@@ -42,6 +42,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     soltype = soltab.getType()
     if soltype != 'phase':
         logging.warning("Soltab is of type " + soltype + ", but should be phase. Skipping.")
+        data.close()
         return(0)
     vals  = soltab.val
     station_names = soltab.ant[:]
