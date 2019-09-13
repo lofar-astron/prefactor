@@ -42,26 +42,9 @@ def makesolset(MS, data, solset_name):
     # add the field centre, that is also the direction for Gain and Common*
     sourceTable.append([('pointing',pointing)])
 
-########################################################################
-def input2strlist_nomapfile(invar):
-   """ 
-   from bin/download_IONEX.py
-   give the list of MSs from the list provided as a string
-   """
-   str_list = None
-   if type(invar) is str:
-       if invar.startswith('[') and invar.endswith(']'):
-           str_list = [f.strip(' \'\"') for f in invar.strip('[]').split(',')]
-       else:
-           str_list = [invar.strip(' \'\"')]
-   elif type(invar) is list:
-       str_list = [str(f).strip(' \'\"') for f in invar]
-   else:
-       raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-   return str_list
 
 
-########################################################################
+
 def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
                 ionex_server="ftp://ftp.aiub.unibe.ch/CODE/",
                 ionex_prefix='CODG',ionexPath="./",earth_rot=0,proxyServer=None,proxyPort=None,proxyType=None,proxyUser=None,proxyPass=None):
@@ -80,12 +63,10 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
         into account when interpolating IONEX data. (0 is none, 1 is full)
     '''
     
-    mslist = input2strlist_nomapfile(MSfiles)
-    
-    #try:
-        #mslist = MSfiles.lstrip('[').rstrip(']').replace(' ','').replace("'","").split(',')
-    #except AttributeError:
-        #mslist = MSfiles
+    try:
+        mslist = MSfiles.lstrip('[').rstrip(']').replace(' ','').replace("'","").split(',')
+    except AttributeError:
+        mslist = MSfiles
     
     if len(mslist) == 0:
         raise ValueError("Did not find any existing directory in input MS list!")
@@ -93,7 +74,22 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
     else:
         MS = mslist[0]
         pass
-        
+    
+    if not os.path.exists(h5parmdb):
+        logging.error('Could not find h5parmdb: ' + h5parmdb)
+        return(1)
+    
+    data          = h5parm(h5parmdb, readonly=False)
+    if not solset_name in data.getSolsetNames():
+        makesolset(MS,data,solset_name)
+    solset        = data.getSolset(solset_name)
+    soltabs       = solset.getSoltabs()
+    station_names = sorted(solset.getAnt().keys())
+
+    if 'RMextract' in [s.name for s in soltabs]:
+        logging.warning('Soltab RMextract exists already. Skipping...')
+        return(0)
+    
     #extract the timerange information
     (timerange,timestep,pointing,stat_names,stat_pos) = PosTools.getMSinfo(MS)
     start_time = timerange[0]
@@ -182,17 +178,6 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
                                  "(You can run \"bin/download_IONEX.py\" outside the pipeline if needed.)")
         else:
             raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
- 
-    data          = h5parm(h5parmdb, readonly=False)
-    if not solset_name in data.getSolsetNames():
-        makesolset(MS,data,solset_name)
-    solset        = data.getSolset(solset_name)
-    soltabs       = solset.getSoltabs()
-    station_names = sorted(solset.getAnt().keys())
-
-    if 'RMextract' in [s.name for s in soltabs]:
-        logging.warning('Soltab RMextract exists already. Skipping...')
-        return(0)
         
     logging.info('Adding rotation measure values to: ' + solset_name + ' of ' + h5parmdb)
     rm_vals=np.array([rmdict["RM"][stat].flatten() for stat in station_names])
