@@ -58,6 +58,8 @@ def plugin_main(args, **kwargs):
     for missing_station in missing_stations:
         filter += ';!' + missing_station + '*'
         pass
+
+    data.close()
     
     ## return results
     result = {'filter':str(filter)}

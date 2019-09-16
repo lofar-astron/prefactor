@@ -188,6 +188,7 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
     
     return(0)
 
+    data.close()
 
     
     ########################################################################
