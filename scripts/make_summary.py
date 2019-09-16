@@ -33,42 +33,45 @@ def find_flagged_fraction(ms_file):
    return fraction_flagged
 
 ###############################################################################
-def main(ID, observation_directory = '/data/share/pipeline/Observation', h5parmdb = 'solutions.h5', MSfile = '[]'):
+def main(observation_directory = '/data/share/pipeline/Observation', job_directory = '/data/share/pipeline/Observation', h5parmdb = 'solutions.h5', MSfile = '[]'):
 	"""
-	Creates statistics of a given ID (needs xml_parser.py and plot_statistics.py in the same directioy)
+	Creates summary of a given prefactor3 run
 	
 	Parameters
 	----------
-	ID : str
-	ID to create statistical runtime plots
+	observation_directory: directory where all the processed data and solutions are stored
+	job_directory: directory where all the log files are stored
+	h5parmdb: name of the solutions h5parm database
+	MSfile: pattern of the final MS files
 	
 	"""
-	summary = observation_directory + '/' + ID + '.log'
+	ID = os.path.basename(job_directory)
+	summary = os.path.normpath(job_directory + '/../' + ID + '.log')
 	f_summary = open(summary, 'w')
 	
 	# location of logfile
 	print('Summary logfile is written to ' + summary)
 
 	try:
-		log_date = os.walk(observation_directory + ID + '/logs/').next()[1][0]
+		log_date = os.walk(job_directory + '/logs/').next()[1][0]
 		pass
 	except:
-		f_summary.write(observation_directory + ID + '/logs/ does not exist. Please check your ID or you observation directory!')
+		f_summary.write(job_directory + '/logs/ does not exist or is empty. Please check your job directory set!')
 		f_summary.close()
 		return(1)
 		pass      
 	
 	## get logfile/statistical information
-	pipeline_log = observation_directory + ID + '/logs/' + log_date + '/pipeline.log'
+	pipeline_log = job_directory + '/logs/' + log_date + '/pipeline.log'
 	
 	## check for the h5parm
-	if os.path.exists(observation_directory  + ID + '/results/cal_values/' + h5parmdb):
-		h5parmdb = observation_directory + ID + '/results/cal_values/' + h5parmdb
+	if os.path.exists(observation_directory  + '/results/cal_values/' + h5parmdb):
+		h5parmdb = observation_directory + '/results/cal_values/' + h5parmdb
 		pass
-	elif os.path.exists(observation_directory + ID + '/results/cal_values/cal_' + h5parmdb):
-		h5parmdb =  observation_directory + ID + '/results/cal_values/cal_' + h5parmdb
+	elif os.path.exists(observation_directory + '/results/cal_values/cal_' + h5parmdb):
+		h5parmdb =  observation_directory + '/results/cal_values/cal_' + h5parmdb
 	else:
-		f_summary.write('No h5parm solutions file found in ' + observation_directory + ID + '/results/cal_values/' + h5parmdb)
+		f_summary.write('No h5parm solutions file found in ' + observation_directory + '/results/cal_values/' + h5parmdb)
 		f_summary.close()
 		return(1)
 		pass
@@ -141,7 +144,7 @@ def main(ID, observation_directory = '/data/share/pipeline/Observation', h5parmd
 	f_summary.write('\n')
 	
 	## diffractive scale
-	structure_file = observation_directory  + ID + '/results/inspection/' + source + '_structure.txt'
+	structure_file = observation_directory + '/results/inspection/' + source + '_structure.txt'
 	if os.path.exists(structure_file):
 		with open(structure_file, 'r') as infile:
 			for line in infile:
@@ -214,16 +217,16 @@ def main(ID, observation_directory = '/data/share/pipeline/Observation', h5parmd
 
 if __name__=='__main__':
     
-	parser = argparse.ArgumentParser(description='Creates statistics of a given ID (needs xml_parser.py and plot_statistics.py in the same directioy)') 
-	parser.add_argument('ID', type=str, help='ID to evaluate statistics.')
-	parser.add_argument('--obsdir', type=str, default='/data/share/pipeline/Observation', help='Directory (followed by ID) where to find the log subdirectory.')
+	parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3 run.') 
+	parser.add_argument('--obsdir', type=str, default='/data/scratch/pipeline/Observation', help='Directory where to find the processed data and solutions.')
+	parser.add_argument('--jobdir', type=str, default='/data/share/pipeline/Observation', help='Directory where to find the log and parset files.')
 	parser.add_argument('--h5parm', '--h5parm', type=str, default='solutions.h5', help='Name of the h5parm solutions file (default: solutions.h5)')
 	parser.add_argument('--MSfile', '--MSfile', type=str, default='[]', help='List of MS to be analysed (default: [])')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.ID, args.obsdir, args.h5parm, args.MSfile)
+	main(args.obsdir, args.jobdir, args.h5parm, args.MSfile)
 	
 	sys.exit(0)
 	pass

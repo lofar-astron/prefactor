@@ -901,8 +901,8 @@ make_summary.control.executable                                =   {{ scripts }}
 make_summary.control.error_tolerance                           =   {{ error_tolerance }}
 make_summary.control.mapfile_in                                =   make_results_compress.output.mapfile
 make_summary.control.inputkey                                  =   infiles
-make_summary.argument.flags                                    =   [input.output.job_name]
-make_summary.argument.observation_directory                    =   input.output.working_directory
+make_summary.argument.observation_directory                    =   {{ working_directory }}
+make_summary.argument.job_directory                            =   {{ job_directory }}
 make_summary.argument.MSfile                                   =   infiles
 
 ########################################################
