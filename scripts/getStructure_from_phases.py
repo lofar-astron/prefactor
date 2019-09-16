@@ -56,11 +56,12 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     for vals, coord, selection in soltab.getValuesIter(returnAxes=soltab.getAxesNames(), weight=False):
         try:
             vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq', 'dir'])
+            vals = vals.squeeze()
         except:
             vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq'])
             
-    valx = np.squeeze(vals[0])
-    valy = np.squeeze(vals[1])
+    valx = vals[0]
+    valy = vals[1]
     for i,station_name in enumerate(station_names):
         if not "CS" in station_name:
             continue
