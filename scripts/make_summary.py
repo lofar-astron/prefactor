@@ -58,18 +58,6 @@ def main(observation_directory = '/data/share/pipeline/Observation', logfile = '
 		return(1)
 		pass
 	
-	#try:
-		#log_date = os.walk(job_directory + '/logs/').next()[1][0]
-		#pass
-	#except:
-		#f_summary.write(job_directory + '/logs/ does not exist or is empty. Please check your job directory set!')
-		#f_summary.close()
-		#return(1)
-		#pass      
-	
-	## get logfile/statistical information
-	#pipeline_log = job_directory + '/logs/' + log_date + '/pipeline.log'
-	
 	## check for the h5parm
 	if os.path.exists(observation_directory  + '/results/cal_values/' + h5parmdb):
 		h5parmdb = observation_directory + '/results/cal_values/' + h5parmdb
