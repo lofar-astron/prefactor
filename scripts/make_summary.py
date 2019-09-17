@@ -33,36 +33,42 @@ def find_flagged_fraction(ms_file):
    return fraction_flagged
 
 ###############################################################################
-def main(observation_directory = '/data/share/pipeline/Observation', job_directory = '/data/share/pipeline/Observation', h5parmdb = 'solutions.h5', MSfile = '[]'):
+def main(observation_directory = '/data/share/pipeline/Observation', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = 'solutions.h5', MSfile = '[]'):
 	"""
 	Creates summary of a given prefactor3 run
 	
 	Parameters
 	----------
 	observation_directory: directory where all the processed data and solutions are stored
-	job_directory: directory where all the log files are stored
+	logfile: directory where all the log files are stored
 	h5parmdb: name of the solutions h5parm database
 	MSfile: pattern of the final MS files
 	
 	"""
-	ID = os.path.basename(job_directory)
-	summary = os.path.normpath(job_directory + '/../' + ID + '.log')
+	ID = os.path.basename(observation_directory)
+	summary = os.path.normpath(observation_directory + '/../' + ID + '.log')
 	f_summary = open(summary, 'w')
 	
 	# location of logfile
 	print('Summary logfile is written to ' + summary)
-
-	try:
-		log_date = os.walk(job_directory + '/logs/').next()[1][0]
-		pass
-	except:
-		f_summary.write(job_directory + '/logs/ does not exist or is empty. Please check your job directory set!')
+	
+	if not os.path.exists(logfile):
+		f_summary.write(logfile + ' does not exist. Skipping!')
 		f_summary.close()
 		return(1)
-		pass      
+		pass
+	
+	#try:
+		#log_date = os.walk(job_directory + '/logs/').next()[1][0]
+		#pass
+	#except:
+		#f_summary.write(job_directory + '/logs/ does not exist or is empty. Please check your job directory set!')
+		#f_summary.close()
+		#return(1)
+		#pass      
 	
 	## get logfile/statistical information
-	pipeline_log = job_directory + '/logs/' + log_date + '/pipeline.log'
+	#pipeline_log = job_directory + '/logs/' + log_date + '/pipeline.log'
 	
 	## check for the h5parm
 	if os.path.exists(observation_directory  + '/results/cal_values/' + h5parmdb):
@@ -126,14 +132,14 @@ def main(observation_directory = '/data/share/pipeline/Observation', job_directo
 		pass
 	
 	## get the list of removed stations:
-	baseline_list = list(set([ str(line.split(";")[1:]) for line in open(pipeline_log) if 'baseline:' in line and ';' in line ]))
+	baseline_list = list(set([ str(line.split(";")[1:]) for line in open(logfile) if 'baseline:' in line and ';' in line ]))
 	bad_antennas  = list(set(re.sub("[\[\]\"\ '!*]", "", str(baseline_list)).replace('\\n','').replace('\\','').split(',')))
 	if len(bad_antennas) == 1 and bad_antennas[0] == '':
 		bad_antennas = 'NONE'
 		pass
 	
 	## check for A-Team warning:
-	Ateam_list = list(set([ str(line.split('source ')[-1]).split(' is')[0] for line in open(pipeline_log) if 'WARNING: The A-Team source' in line ]))
+	Ateam_list = list(set([ str(line.split('source ')[-1]).split(' is')[0] for line in open(logfile) if 'WARNING: The A-Team source' in line ]))
 	if len(Ateam_list) == 0:
 		Ateam_list = 'NONE'
 		pass
@@ -219,14 +225,14 @@ if __name__=='__main__':
     
 	parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3 run.') 
 	parser.add_argument('--obsdir', type=str, default='/data/scratch/pipeline/Observation', help='Directory where to find the processed data and solutions.')
-	parser.add_argument('--jobdir', type=str, default='/data/share/pipeline/Observation', help='Directory where to find the log and parset files.')
+	parser.add_argument('--logfile', type=str, default='/data/share/pipeline/Observation/logs/pipeline.log', help='Location of the pipeline logfile.')
 	parser.add_argument('--h5parm', '--h5parm', type=str, default='solutions.h5', help='Name of the h5parm solutions file (default: solutions.h5)')
 	parser.add_argument('--MSfile', '--MSfile', type=str, default='[]', help='List of MS to be analysed (default: [])')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.obsdir, args.jobdir, args.h5parm, args.MSfile)
+	main(args.obsdir, args.logfile, args.h5parm, args.MSfile)
 	
 	sys.exit(0)
 	pass

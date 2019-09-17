@@ -89,6 +89,7 @@
 ! lofar_directory          =  $LOFARROOT                                                          ## base directory of your LOFAR installation
 ! job_directory            =  input.output.job_directory                                          ## directory of the prefactor outputs
 ! working_directory        =  input.output.working_directory/input.output.job_name                ## specify the working_directory (intermediate data products)
+! log_file                 =  input.output.log_file                                               ## location of the logfile
 ! mapfile_dir              =  input.output.mapfile_dir                                            ## specify mapfile directory
 
 ## script and plugin directories
@@ -1186,7 +1187,7 @@ make_summary.control.error_tolerance                        =   {{ error_toleran
 make_summary.control.mapfile_in                             =   combine_data_cal_map.output.mapfile
 make_summary.control.inputkey                               =   infiles
 make_summary.argument.observation_directory                 =   {{ working_directory }}
-make_summary.argument.job_directory                         =   {{ job_directory }}
+make_summary.argument.logfile                               =   {{ log_file }}
 make_summary.argument.MSfile                                =   infiles
 
 ########################################################
