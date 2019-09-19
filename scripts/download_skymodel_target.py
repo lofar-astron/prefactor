@@ -85,6 +85,8 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True", Source="TGSS"):
     if (not FileExists and os.path.exists(SkymodelPath)):
         raise ValueError("download_tgss_skymodel_target: Path: \"%s\" exists but is not a file!"%(SkymodelPath))
     download_flag = False
+    if not os.path.exists(os.path.dirname(SkymodelPath)):
+        os.makedirs(os.path.dirname(SkymodelPath))
     if DoDownload.upper() == "FORCE":
         if FileExists:
             os.remove(SkymodelPath)
