@@ -198,7 +198,7 @@ if __name__ == '__main__':
 
     parser.add_argument('MSfiles', type=str, nargs='+',
                         help='MS for which the parmdb should be created.')
-    parser.add_argument('--h5parm', type=str,
+    parser.add_argument('h5parm', type=str,
                         help='H5parm to which the results of the CommonRotationAngle is added.')
     parser.add_argument('--server', type=str, default='ftp://ftp.aiub.unibe.ch/CODE/',
                         help='URL of the server to use. (default: ftp://ftp.aiub.unibe.ch/CODE/)')
