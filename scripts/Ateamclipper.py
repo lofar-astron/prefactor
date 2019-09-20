@@ -17,7 +17,7 @@ cliplevellba = 50.0
 t = pt.table(msname, readonly=False)
 data = t.getcol('MODEL_DATA')
 flag = t.getcol('FLAG')
-freq_tab= pt.table(msname + '/SPECTRAL_WINDOW')
+freq_tab= pt.table(msname + '::SPECTRAL_WINDOW')
 freq    = freq_tab.getcol('REF_FREQUENCY')
 
 if freq[0] > 100e6:

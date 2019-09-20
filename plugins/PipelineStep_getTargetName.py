@@ -35,7 +35,7 @@ def plugin_main(args, **kwargs):
     mslist         = [data[i].file for i in xrange(len(data))]
     msfile         = mslist[0]
     
-    observationTable = pyrap.tables.table(msfile + '/OBSERVATION')
+    observationTable = pyrap.tables.table(msfile + '::OBSERVATION')
     targetName       = observationTable.getcol('LOFAR_TARGET')['array'][0]
         
     ## return results
