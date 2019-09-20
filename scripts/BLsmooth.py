@@ -64,7 +64,7 @@ if not os.path.exists(msfile):
 # open input/output MS
 ms = pt.table(msfile, readonly=False, ack=False)
         
-freqtab = pt.table(msfile + '/SPECTRAL_WINDOW', ack=False)
+freqtab = pt.table(msfile + '::SPECTRAL_WINDOW', ack=False)
 freq = freqtab.getcol('REF_FREQUENCY')[0]
 freqtab.close()
 wav = 299792458. / freq

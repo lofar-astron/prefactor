@@ -23,7 +23,7 @@ def grab_pointing(MS):
         NB: we suppose that all the calibrators' observations have this field filled in (MS/Observation, column LOFAR_TARGET)
     """
     
-    [ra, dec] = pt.table(MS+'/FIELD', readonly=True, ack=False).getcol('PHASE_DIR')[0][0] * 180 / math.pi
+    [ra, dec] = pt.table(MS+'::FIELD', readonly=True, ack=False).getcol('PHASE_DIR')[0][0] * 180 / math.pi
     return ra, dec
 
     
