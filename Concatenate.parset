@@ -24,9 +24,6 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
-## interpolation for the target data
-! interp_windowsize         =  15                                    ## Size of the window over which a value is interpolated. Should be odd.
-
 ## averaging for the target data
 ! avg_timeresolution_concat=  8.                                     ## average to 8 sec/timeslot
 ! avg_freqresolution_concat=  97.64kHz                               ## average to 97.64 kHz/ch (= 2 ch/SB)
@@ -118,9 +115,7 @@ dpppconcat.argument.msout.writefullresflag                     =   False
 dpppconcat.argument.msout.overwrite                            =   True
 dpppconcat.argument.msout.storagemanager                       =   "Dysco"
 dpppconcat.argument.msout.storagemanager.databitrate           =   0
-dpppconcat.argument.steps                                      =   [interp,avg]
-dpppconcat.argument.interp.type                                =   interpolate
-dpppconcat.argument.interp.windowsize                          =   {{ interp_windowsize }}
+dpppconcat.argument.steps                                      =   [avg]
 dpppconcat.argument.avg.type                                   =   average
 dpppconcat.argument.avg.timeresolution                         =   {{ avg_timeresolution_concat }}
 dpppconcat.argument.avg.freqresolution                         =   {{ avg_freqresolution_concat }}

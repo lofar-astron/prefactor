@@ -35,7 +35,6 @@
 ! filter_baselines          =  {{ process_baselines_target }}                                     ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                 =  False                                                              ## enable or disable baseline-based smoothing
 ! rfistrategy               =  HBAdefault.rfis                                                    ## strategy to be applied with the statistical flagger (AOFlagger) for wideband flagging
-! interp_windowsize         =  15                                                                 ## Size of the window over which a value is interpolated. Should be odd.
 ! min_unflagged_fraction    =  0.5                                                                ## minimum fraction of unflagged data after RFI flagging and A-team clipping
 ! compression_bitrate       =  16                                                                 ## defines the bitrate of Dysco compression of the data after the final step, choose 0 if you do NOT want to compress the data
 ! raw_data                  =  False                                                              ## use autoweight, set to True in case you are using raw data
@@ -140,7 +139,7 @@ pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_t
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar, plotateamclip]
 pipeline.steps.concat       =  [combine_target_map, check_bad_antennas, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
-pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_concat_map, combine_frac_map, plot_unflagged, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, interp_target, smooth_data]
+pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_concat_map, combine_frac_map, plot_unflagged, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, smooth_data]
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
@@ -312,7 +311,7 @@ ndppp_prep_target.argument.msout.writefullresflag              =   False
 ndppp_prep_target.argument.msout.overwrite                     =   True
 ndppp_prep_target.argument.msout.storagemanager                =   "Dysco"
 ndppp_prep_target.argument.msout.storagemanager.databitrate    =   0
-ndppp_prep_target.argument.steps                               =   [filter,{{ initial_flagging }},{{ demix_step }}applyPA,applybandpass,{{ apply_steps }},interp,avg]
+ndppp_prep_target.argument.steps                               =   [filter,{{ initial_flagging }},{{ demix_step }}applyPA,applybandpass,{{ apply_steps }},avg]
 ndppp_prep_target.argument.filter.type                         =   filter
 ndppp_prep_target.argument.filter.baseline                     =   check_station_mismatch.output.filter
 ndppp_prep_target.argument.filter.remove                       =   true
@@ -356,12 +355,10 @@ ndppp_prep_target.argument.applybeam.type                      =   applybeam
 ndppp_prep_target.argument.applybeam.usechannelfreq            =   True
 ndppp_prep_target.argument.applybeam.updateweights             =   {{ updateweights }}
 ndppp_prep_target.argument.applybeam.invert                    =   True
-ndppp_prep_target.argument.interp.type                         =   interpolate
-ndppp_prep_target.argument.interp.windowsize                   =   {{ interp_windowsize }}
 ndppp_prep_target.argument.avg.type                            =   average
 ndppp_prep_target.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_target.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
-ndppp_prep_target.argument.demix.type                          =   demixer 
+ndppp_prep_target.argument.demix.type                          =   demixer
 ndppp_prep_target.argument.demix.baseline                      =   {{ process_baselines_target }}
 ndppp_prep_target.argument.demix.demixfreqstep                 =   {{ demix_freqstep }}
 ndppp_prep_target.argument.demix.demixtimestep                 =   {{ demix_timestep }}
@@ -476,9 +473,7 @@ dpppconcat.argument.msout.writefullresflag                     =   False
 dpppconcat.argument.msout.overwrite                            =   True
 dpppconcat.argument.msout.storagemanager                       =   "Dysco"
 dpppconcat.argument.msout.storagemanager.databitrate           =   0
-dpppconcat.argument.steps                                      =   [filter,interp,avg]
-dpppconcat.argument.interp.type                                =   interpolate
-dpppconcat.argument.interp.windowsize                          =   {{ interp_windowsize }}
+dpppconcat.argument.steps                                      =   [filter,avg]
 dpppconcat.argument.avg.type                                   =   average
 dpppconcat.argument.avg.timeresolution                         =   {{ avg_timeresolution_concat }}
 dpppconcat.argument.avg.freqresolution                         =   {{ avg_freqresolution_concat }}
@@ -620,24 +615,7 @@ h5_gsmsol_map.control.mapfile_in                               =   gsmcal_parmma
 h5_gsmsol_map.control.mapfile_dir                              =   {{ mapfile_dir }}
 h5_gsmsol_map.control.filename                                 =   h5_imp_gsmsol_map.mapfile
 
-# interpolate after flagging but before smoothing
-interp_target.control.type                                     =   dppp
-interp_target.control.inplace                                  =   True
-interp_target.control.max_per_node                             =   {{ num_proc_per_node_limit }}
-interp_target.control.error_tolerance                          =   {{ error_tolerance }}
-interp_target.control.mapfile_in                               =   check_unflagged_map.output.mapfile
-interp_target.control.inputkey                                 =   msfile
-interp_target.argument.msin                                    =   msfile
-interp_target.argument.numthreads                              =   {{ max_dppp_threads }}
-interp_target.argument.msin.datacolumn                         =   DATA
-interp_target.argument.msout.datacolumn                        =   INTERP_DATA
-interp_target.argument.msout.storagemanager                    =   "Dysco"
-interp_target.argument.msout.storagemanager.databitrate        =   0
-interp_target.argument.steps                                   =   [interp]
-interp_target.argument.interp.type                             =   interpolate
-interp_target.argument.interp.windowsize                       =   {{ interp_windowsize }}
-
-# baseline-dependent smooting
+# baseline-dependent smoothing
 smooth_data.control.type                                       =   executable_args
 smooth_data.control.inplace                                    =   True
 smooth_data.control.max_per_node                               =   {{ num_proc_per_node }}
@@ -645,7 +623,7 @@ smooth_data.control.error_tolerance                            =   {{ error_tole
 smooth_data.control.executable                                 =   {{ scripts }}/BLsmooth.py
 smooth_data.control.mapfile_in                                 =   check_unflagged_map.output.mapfile
 smooth_data.control.inputkey                                   =   msin
-smooth_data.argument.flags                                     =   [-S,{{ do_smooth }},-r,-f,0.2,-i,INTERP_DATA,-o,SMOOTHED_DATA,msin]
+smooth_data.argument.flags                                     =   [-S,{{ do_smooth }},-r,-f,0.2,-i,DATA,-o,SMOOTHED_DATA,msin]
 
 # solve/store direction-independent phase-only self-calibration corrected UV-data to a fully Dysco compressed new MS
 gsmcal_phase.control.type                                      =   dppp
@@ -686,7 +664,7 @@ gsmcal_tec.argument.numthreads                                 =   {{ num_proc_p
 gsmcal_tec.argument.msin.datacolumn                            =   SMOOTHED_DATA
 gsmcal_tec.argument.steps                                      =   [teccal]
 gsmcal_tec.argument.teccal.type                                =   ddecal
-gsmcal_tec.argument.teccal.mode                                =   tec 
+gsmcal_tec.argument.teccal.mode                                =   tec
 gsmcal_tec.argument.teccal.h5parm                              =   parmdb
 gsmcal_tec.argument.teccal.sourcedb                            =   sourcedb
 gsmcal_tec.argument.teccal.uvlambdamin                         =   100
@@ -696,7 +674,7 @@ gsmcal_tec.argument.teccal.nchan                               =   8
 gsmcal_tec.argument.teccal.tolerance                           =   1e-3
 gsmcal_tec.argument.teccal.stepsize                            =   0.2
 gsmcal_tec.argument.teccal.approximatetec                      =   True
-gsmcal_tec.argument.teccal.maxapproxiter                       =   400 
+gsmcal_tec.argument.teccal.maxapproxiter                       =   400
 gsmcal_tec.argument.teccal.approxtolerance                     =   1e-3
 gsmcal_tec.argument.teccal.propagatesolutions                  =   {{ propagatesolutions }}
 gsmcal_tec.argument.teccal.usebeammodel                        =   True
@@ -833,7 +811,7 @@ h5exp_gsm.argument.outh5parm                                   =   {{ solutions 
 ## final step (EXPERIMENTAL)  ##
 ################################
 
-# apply the final solutions to the data, interpolate, and compress it
+# apply the final solutions to the data and compress it
 apply_gsmcal.control.type                                      =   dppp
 apply_gsmcal.control.error_tolerance                           =   {{ error_tolerance }}
 apply_gsmcal.control.max_per_node                              =   {{ num_proc_per_node_limit }}
