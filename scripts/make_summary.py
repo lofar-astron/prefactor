@@ -142,8 +142,9 @@ def main(observation_directory = '/data/share/pipeline/Observation', logfile = '
 	if os.path.exists(structure_file):
 		with open(structure_file, 'r') as infile:
 			for line in infile:
-				diffractive_scale_XX = float(line.split()[2])
+				diffractive_scale_XX = float(line.split()[1].replace('*',''))
 				diffractive_scale_YY = float(line.split()[2])
+				break
 		f_summary.write('XX diffractive scale: %3.1f km'%(diffractive_scale_XX/1000.) + '\n')
 		f_summary.write('YY diffractive scale: %3.1f km'%(diffractive_scale_YY/1000.) + '\n') 
 	
