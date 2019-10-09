@@ -56,10 +56,10 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     timestep=int(nrtimes/nr_grid)
     for vals, coord, selection in soltab.getValuesIter(returnAxes=soltab.getAxesNames(), weight=False):
         try:
-            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq', 'dir'])
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol', 'dir'])
             vals = vals[:,:,:,:,0]
         except:
-            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq'])
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'])
             
     valx = vals[0]
     valy = vals[1]
