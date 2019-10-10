@@ -33,7 +33,7 @@ def find_flagged_fraction(ms_file):
    return fraction_flagged
 
 ###############################################################################
-def main(observation_directory = '/data/share/pipeline/Observation', inspection_directory = '/data/share/pipeline/Observation/results/inspection', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = 'solutions.h5', MSfile = '[]'):
+def main(observation_directory = '/data/share/pipeline/Observation', inspection_directory = '/data/share/pipeline/Observation/results/inspection', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = '/data/share/pipeline/Observation/results/cal_values/solutions.h5', MSfile = '[]'):
 	"""
 	Creates summary of a given prefactor3 run
 	
