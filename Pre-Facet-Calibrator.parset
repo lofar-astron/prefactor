@@ -1168,6 +1168,8 @@ make_summary.control.mapfile_in                             =   combine_data_cal
 make_summary.control.inputkey                               =   infiles
 make_summary.argument.observation_directory                 =   {{ working_directory }}
 make_summary.argument.logfile                               =   {{ log_file }}
+make_summary.argument.h5parmdb                              =   {{ cal_solutions }}
+make_summary.argument.inspection_directory                  =   {{ inspection_directory }}
 make_summary.argument.MSfile                                =   infiles
 
 ########################################################

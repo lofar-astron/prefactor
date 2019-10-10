@@ -33,15 +33,16 @@ def find_flagged_fraction(ms_file):
    return fraction_flagged
 
 ###############################################################################
-def main(observation_directory = '/data/share/pipeline/Observation', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = 'solutions.h5', MSfile = '[]'):
+def main(observation_directory = '/data/share/pipeline/Observation', inspection_directory = '/data/share/pipeline/Observation/results/inspection', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = 'solutions.h5', MSfile = '[]'):
 	"""
 	Creates summary of a given prefactor3 run
 	
 	Parameters
 	----------
 	observation_directory: directory where all the processed data and solutions are stored
+	inspection_directory: directory where the structure function file is stored
 	logfile: directory where all the log files are stored
-	h5parmdb: name of the solutions h5parm database
+	h5parmdb: location of the solutions h5parm database
 	MSfile: pattern of the final MS files
 	
 	"""
@@ -59,13 +60,8 @@ def main(observation_directory = '/data/share/pipeline/Observation', logfile = '
 		pass
 	
 	## check for the h5parm
-	if os.path.exists(observation_directory  + '/results/cal_values/' + h5parmdb):
-		h5parmdb = observation_directory + '/results/cal_values/' + h5parmdb
-		pass
-	elif os.path.exists(observation_directory + '/results/cal_values/cal_' + h5parmdb):
-		h5parmdb =  observation_directory + '/results/cal_values/cal_' + h5parmdb
-	else:
-		f_summary.write('No h5parm solutions file found in ' + observation_directory + '/results/cal_values/' + h5parmdb)
+	if not os.path.isfile(h5parmdb):
+		f_summary.write('No h5parm solutions file found in ' + h5parmdb)
 		f_summary.close()
 		return(1)
 		pass
@@ -138,7 +134,7 @@ def main(observation_directory = '/data/share/pipeline/Observation', logfile = '
 	f_summary.write('\n')
 	
 	## diffractive scale
-	structure_file = observation_directory + '/results/inspection/' + source + '_structure.txt'
+	structure_file = inspection_directory + '/' + source + '_structure.txt'
 	if os.path.exists(structure_file):
 		with open(structure_file, 'r') as infile:
 			for line in infile:
@@ -214,14 +210,15 @@ if __name__=='__main__':
     
 	parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3 run.') 
 	parser.add_argument('--obsdir', type=str, default='/data/scratch/pipeline/Observation', help='Directory where to find the processed data and solutions.')
+	parser.add_argument('--inspdir', type=str, default='/data/scratch/pipeline/Observation/results/inspection', help='Directory where to find the structure function file (inspection_directory)')
 	parser.add_argument('--logfile', type=str, default='/data/share/pipeline/Observation/logs/pipeline.log', help='Location of the pipeline logfile.')
-	parser.add_argument('--h5parm', '--h5parm', type=str, default='solutions.h5', help='Name of the h5parm solutions file (default: solutions.h5)')
+	parser.add_argument('--h5parm', '--h5parm', type=str, default='/data/share/pipeline/Observation/results/cal_values/solutions.h5', help='Name of the h5parm solutions file (default: /data/share/pipeline/Observation/results/cal_values/solutions.h5)')
 	parser.add_argument('--MSfile', '--MSfile', type=str, default='[]', help='List of MS to be analysed (default: [])')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.obsdir, args.logfile, args.h5parm, args.MSfile)
+	main(args.obsdir, args.inspdir, args.logfile, args.h5parm, args.MSfile)
 	
 	sys.exit(0)
 	pass
