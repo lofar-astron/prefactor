@@ -167,7 +167,7 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 			weights = losoto.reorderAxes(weights, soltab.getAxesNames(), axes)
 		for i, antenna in enumerate(antennas):
 			flagged_fraction = 1. - float(numpy.mean(weights[i]))
-			flagged_solutions[soltab_name][antenna] = soltab_len.format('{: 6.2f}'.format(100 * flagged_fraction) + '%')
+			flagged_solutions[soltab_name][antenna] = soltab_len.format('{:6.2f}'.format(100 * flagged_fraction) + '%')
 	soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltabs ])
 	f_summary.write('Amount of flagged solutions per station and solution table:\n')
 	f_summary.write(antenna_len.format('Station') + ' ' + soltab_names + '\n')
