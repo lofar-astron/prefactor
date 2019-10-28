@@ -49,30 +49,33 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     stations = solset.getAnt()
     phx=[]
     phy=[]
-    allposx=[]
-    allposy=[]
+    allposx = []
+    allposy = []
     nrtimes = len(soltab.time)
-    nrfreqss = len(soltab.freq)
+    nrfreqs = len(soltab.freq)
+    #nr_grid = nrfreqs
     timestep=int(nrtimes/nr_grid)
     for vals, coord, selection in soltab.getValuesIter(returnAxes=soltab.getAxesNames(), weight=False):
         try:
-            vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol', 'dir'])
-            vals = vals[:,:,:,:,0]
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['dir', 'pol', 'ant', 'time', 'freq'])
+            vals = vals[0]
         except:
-            vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'])
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol', 'ant', 'time', 'freq'])
             
-    valx = vals[0]
-    valy = vals[1]
+    valsx = vals[0]
+    valsy = vals[1]
     for i,station_name in enumerate(station_names):
         if not "CS" in station_name:
             continue
-        phx.append(valx[i,:,0].flatten())
+        valx = valsx[i,:,0].flatten()
+        valy = valsy[i,:,0].flatten()
+        phx.append(np.nan_to_num(valx))
+        phy.append(np.nan_to_num(valy))
         allposx.append(stations[station_name])
-        phy.append(valy[i,:,0].flatten())
         allposy.append(stations[station_name])
 
     phx=np.array(phx)
-    phy=np.array(phy)   
+    phy=np.array(phy) 
     allposx=np.array(allposx)
     allposy=np.array(allposy)
     D=allposx[:,np.newaxis,:]-allposx[np.newaxis,:]
@@ -100,7 +103,6 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             flagselect = np.where(y > 1.0)
             xplot = np.delete(x,flagselect) 
             yplot = np.delete(y,flagselect)
-            
 
             bins = np.logspace(np.log10(np.min(xplot)),np.log10(np.max(xplot)),10)
             binys = []
