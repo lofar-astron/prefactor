@@ -19,8 +19,7 @@
 #   - the average amplitude scale set                                            #
 #   - the average clock offsets removed                                          #
 #   - the LOFAR beam towards the phase center corrected                          #
-# - in the CORRECTED_DATA column:                                                #
-#   - the DATA calibrated with the gains                                         #
+#   - the gains applied                                                          #
 # The Pre-Facet-Cal pipelines will supply exactly this kind of data.             #
 #                                                                                #
 # IDG version                                                                    #
