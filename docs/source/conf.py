@@ -40,7 +40,7 @@ release = '3.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.mathjax'
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
 ]
