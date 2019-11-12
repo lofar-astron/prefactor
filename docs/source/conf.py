@@ -41,8 +41,6 @@ release = '3.0'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax'
-    'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
