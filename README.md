@@ -20,11 +20,11 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 
 ### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
-* [LoSoTo](https://github.com/revoltek/losoto) (version >= 2.0)
-* [LSMTool](https://github.com/darafferty/LSMTool) (version >= 1.4)
-* [RMextract](https://github.com/maaijke/RMextract)
+* [LoSoTo](https://github.com/revoltek/losoto) (version of Nov 6, 2019 or later; tag "pref3" points to a suitable version)
+* [LSMTool](https://github.com/darafferty/LSMTool) (version >= 1.4.2)
+* [RMextract](https://github.com/maaijke/RMextract) (commit a618fff or later)
 * Python (including matplotlib, scipy, and astropy)
-* [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
+* [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/) (version 2.14 or later)
 * [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
 * for Initial-Subtract-IDG(-LowMemory).parset and Pre-Facet-Image.parset: WSClean must be compiled with [IDG](https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract and Pre-Facet-Image)
@@ -43,7 +43,7 @@ Once downloaded, the installation is complete; to set up a run, see the detailed
 
 ### Directory Structure
 prefactor contains the following sub-directories:
-* **bin** scripts for your convenience. At the moment, these consist only of a state-file manipulation tool for changing the state of a previously run pipeline
+* **bin** scripts for your convenience
 * **plugins** scripts for manipulating mapfiles
 * **rfistrategies** strategies for statistical RFI mitigation using [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
 * **scripts** scripts that the pipeline calls to process data, generate plots, etc.
@@ -81,10 +81,10 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 With special thanks to Stefan Fröhlich for developing the genericpipeline.
 
 ### Acknowledgement
-Prefactor3 procedure is described in this paper:
+The Prefactor v3 procedure is described in this paper:
 * de Gasperin, F.; Dijkema, T. J.; Drabent, A.; Mevius, M.; Rafferty, van Weeren, R., et al. 2019, [A&A, 662, A5](http://adsabs.harvard.edu/abs/2018arXiv181107954D)
 
-Fator procedure is described in these papers:
+The Factor procedure is described in these papers:
 * van Weeren, R. J., Williams, W. L., Hardcastle, M. J., et al. 2016, [ApJS, 223, 2](http://adsabs.harvard.edu/abs/2016ApJS..223....2V)
 * Williams, W. L., van Weeren, R. J., Röttgering, H. J. A., et al. 2016, [MNRAS, 460, 2385W](http://adsabs.harvard.edu/abs/2016MNRAS.460.2385W)
 

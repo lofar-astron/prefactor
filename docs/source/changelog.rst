@@ -4,8 +4,8 @@ Changelog
 =========
 
 
-Version 3.0 (not yet released)
-------------------------------
+Version 3.0
+-----------
 
     * Major overhaul of calibrator and target pipelines to support LBA and HBA data
     * Addition of production versions of calibrator, target, and image pipelines
