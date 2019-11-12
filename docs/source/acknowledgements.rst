@@ -3,7 +3,7 @@
 Acknowledgements
 ================
 
-The Pre-Facet-Calibration pipeline and its scripts where developed by:
+The Pre-Facet-Calibration pipeline and its scripts were developed by:
 
     * Alexander Drabent
     * David Rafferty
