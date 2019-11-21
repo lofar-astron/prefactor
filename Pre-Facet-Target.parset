@@ -802,7 +802,7 @@ h5exp_gsm.control.executable                                   =   {{ losoto_dir
 h5exp_gsm.control.error_tolerance                              =   {{ error_tolerance }}
 h5exp_gsm.control.mapfile_in                                   =   h5imp_gsmcal.output.mapfile
 h5exp_gsm.control.inputkey                                     =   h5in
-h5exp_gsm.argument.flags                                       =   [-q,-v,h5in]
+h5exp_gsm.argument.flags                                       =   [-q,-v,-H,h5in]
 h5exp_gsm.argument.insoltab                                    =   {{ skymodel_source }}{{ gsmcal_step }}
 h5exp_gsm.argument.outsolset                                   =   target
 h5exp_gsm.argument.outh5parm                                   =   {{ solutions }}
@@ -882,7 +882,7 @@ make_summary.control.mapfile_in                                =   make_results_
 make_summary.control.inputkey                                  =   infiles
 make_summary.argument.observation_directory                    =   {{ working_directory }}
 make_summary.argument.logfile                                  =   {{ log_file }}
-make_summary.argument.h5parmdb                                 =   {{ cal_solutions }}
+make_summary.argument.h5parmdb                                 =   {{ solutions }}
 make_summary.argument.inspection_directory                     =   {{ inspection_directory }}
 make_summary.argument.MSfile                                   =   infiles
 

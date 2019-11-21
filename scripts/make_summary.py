@@ -142,18 +142,31 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 				diffractive_scale_YY = float(line.split()[2])
 				break
 		f_summary.write('XX diffractive scale: %3.1f km'%(diffractive_scale_XX/1000.) + '\n')
-		f_summary.write('YY diffractive scale: %3.1f km'%(diffractive_scale_YY/1000.) + '\n') 
+		f_summary.write('YY diffractive scale: %3.1f km'%(diffractive_scale_YY/1000.) + '\n')
+		f_summary.write('\n')
 	
 	## check whether reference has been used
 	if 'bandpass' in soltabs:
 		soltab  = solset.getSoltab('bandpass')
 		history = soltab.getHistory()
 		if not history.strip('\n') == '':
+			f_summary.write('Changes applied to ' + os.path.basename(h5parmdb) + ':\n')
 			f_summary.write(history + '\n')
+			f_summary.write('\n')
+			pass
+                    
+	## check whether phases have been added
+	phase = [ soltab for soltab in soltabs if 'phase' in soltab ]
+	if len(phase) > 0:
+		soltab  = solset.getSoltab(phase[0])
+		history = soltab.getHistory()
+		if not history.strip('\n') == '':
+			f_summary.write('Changes applied to ' + os.path.basename(h5parmdb) + ':\n')
+			f_summary.write(history + '\n')
+			f_summary.write('\n')
 			pass
 	
 	## get table of flagged solutions
-	f_summary.write('\n')
 	flagged_solutions = {}
 	import losoto.lib_operations as losoto
 	for soltab_name in soltabs:

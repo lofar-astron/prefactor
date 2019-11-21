@@ -85,8 +85,9 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
 
         # define proper shape of array
         logging.info('Adding missing antennas to the soltab: ' + str(soltab_out))
-        dimension    = list(np.shape(vals))
-        dimension[1] = len(new_station_names)
+        dimension      = list(np.shape(vals))
+        dimension[1]   = len(new_station_names)
+        added_stations = []
         
         if soltab_type == 'amplitude':
             new_vals    = np.ones(tuple(dimension))
@@ -99,8 +100,11 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
                 ant_index        = list(soltab.ant).index(new_station)
                 new_vals[:,i]    = vals[:,ant_index]
                 new_weights[:,i] = weights[:,ant_index]
+            else:
+                added_stations.append(new_station)
             
         new_soltab = solset.makeSoltab(soltype=soltab_type, soltabName=soltab_out, axesNames=out_axes, axesVals=out_axes_vals, vals=new_vals, weights=new_weights)
+        new_soltab.addHistory('Added stations ' + str(added_stations).lstrip('[').rstrip(']') + ' with zero phases.')
         
     else:
         logging.error('There are less antennas in the solset than in the soltab ' + str(soltab_in))
@@ -108,6 +112,9 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
         refdata.close()
         return(1)
 
+    if len(bad_antennas_list) > 1:
+        new_soltab.addHistory('Bad stations ' + str(bad_antennas_list[1:]).lstrip('[').rstrip(']') + ' have not been added back.')
+    
     data.close()
     refdata.close()
     
