@@ -20,7 +20,7 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 
 ### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
-* [LoSoTo](https://github.com/revoltek/losoto) (version of Nov 6, 2019 or later; tag "pref3" points to a suitable version)
+* [LoSoTo](https://github.com/revoltek/losoto) (version of Nov 21, 2019 or later, commit [a7790a6](https://github.com/revoltek/losoto/tree/a7790a6a38ce77f3128ba9a3889181579af37bf6))
 * [LSMTool](https://github.com/darafferty/LSMTool) (version >= 1.4.2)
 * [RMextract](https://github.com/maaijke/RMextract) (commit a618fff or later)
 * Python (including matplotlib, scipy, and astropy)
