@@ -101,7 +101,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
 
     separations = []
 
-    print('SEPERATION from A-Team sources')
+    print('SEPARATION from A-Team sources')
     print('------------------------------')
     print('The minimal accepted distance to an A-Team source is: ' + str(min_separation) + ' deg.')
     for target in targets:
@@ -114,10 +114,8 @@ def main(ms_input, min_separation = 30, outputimage = None):
             ra_qa  = qa.quantity( target['ra'], 'rad' )
             dec_qa = qa.quantity( target['dec'], 'rad' )
             direction =  me.direction('j2000', ra_qa, dec_qa)
-            pass
         else :
             direction =  me.direction(target['name'])
-            pass
       
         separations.append(me.separation(pointing, direction))
 
@@ -130,7 +128,6 @@ def main(ms_input, min_separation = 30, outputimage = None):
             a = me.measure(direction, 'azel')
             elevation = a['m1']
             el.append(elevation['value']/pylab.pi*180)
-            pass
         
         el = numpy.array(el)
         pylab.plot(time1, el)
@@ -139,10 +136,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
             print(target['name'] + ': ' + str(me.separation(pointing, direction)))
             if int(float(min_separation)) > int(float(str(me.separation(pointing, direction)).split(' deg')[0])):
                 print('WARNING: The A-Team source ' + target['name'] + ' is closer than ' + str(min_separation) + ' deg to the phase reference center. Calibration might not perform as expected.')
-                pass
-            pass
-        
-        pass
+
     print('------------------------------')
     pylab.title('Pointing Elevation')
     pylab.title('Elevation')
@@ -155,15 +149,11 @@ def main(ms_input, min_separation = 30, outputimage = None):
         if not os.path.exists(inspection_directory) and inspection_directory != '':
             os.makedirs(inspection_directory)
             print('Directory ' + inspection_directory +  ' created.')
-            pass
         elif inspection_directory != '':
             print('Directory ' + inspection_directory + ' already exists.')
-            pass
         print('Plotting A-Team elevation to: ' + outputimage)
         pylab.savefig(outputimage)
-        pass
     return 0
-    pass
 
    
 ########################################################################
@@ -178,5 +168,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     main(args.MSfile, args.min_separation, args.outputimage)
-    
-    pass
+
