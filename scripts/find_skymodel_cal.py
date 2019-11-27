@@ -47,7 +47,7 @@ def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
     pass
 
 ########################################################################
-def find_skymodel(ra, dec, PathSkyMod, extensionSky = ".skymodel", max_separation_arcmin = 1.0):
+def find_skymodel(ra, dec, PathSkyMod='/data/skymodels', extensionSky = ".skymodel", max_separation_arcmin = 1.0):
     """
     Find in the provided folder the correponding skymodel for the given source
 
@@ -146,16 +146,19 @@ if __name__ == '__main__':
     
     parser.add_argument('MSfile', type=str, nargs='+',
                         help='One (or more MSs) for which we search the matching skymodel.')
-    parser.add_argument('DirSky', type=str, 
+    parser.add_argument('--DirSky', type=str, 
                         help='Path to the skymodel file, or to the folder where the skymodels are stored.')
     parser.add_argument('--extsky', type=str, 
                         help='extension of the skymodel files. (default: \".skymodel\")')
         
     args = parser.parse_args()
-    extensionSky='.skymodel'
+    extensionSky = '.skymodel'
+    DirSkymodelCal = '/data/skymodels'
     if args.extsky:
         extensionSky=args.extsky
+    if args.DirSky:
+        DirSkymodelCal = args.DirSky
     
-    main(args.MSfile,args.DirSky, extensionSky)
+    main(args.MSfile, DirSkymodelCal, extensionSky)
     
     pass
