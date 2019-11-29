@@ -127,7 +127,7 @@ pipeline.steps.prep        =  [createmap_cal, combine_data_map, check_Ateam_sepa
 
 pipeline.steps.PA          =  [calib_cal, h5imp_cal_PA, prepare_losoto_PA, process_losoto_PA, h5exp_cal_PA, apply_PA, apply_beam]
 pipeline.steps.FR          =  [smooth_corrected, calib_cal,  h5imp_cal_FR, prepare_losoto_FR, process_losoto_FR, h5exp_cal_FR, apply_FR]
-pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, prepare_losoto_bandpasstrans, process_losoto_bandpass, h5exp_cal_bandpass, transfer_solutions, apply_PA, apply_bandpass, apply_beam, apply_FR]
+pipeline.steps.bandpass    =  [smooth_corrected, calib_cal2, h5imp_cal_bandpass, prepare_losoto_bandpass, prepare_losoto_bandpasstrans, process_losoto_bandpass, h5exp_cal_bandpass, h5parm_name, transfer_solutions, apply_PA, apply_bandpass, apply_beam, apply_FR]
 pipeline.steps.ion         =  [smooth_corrected, calib_cal2, h5imp_cal_ion, prepare_losoto_ion, process_losoto_ion, h5exp_cal_ion]
 pipeline.steps.finalize    =  [h5parm_name {{ final_apply }}, make_summary]
 
@@ -247,8 +247,6 @@ ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_cal.argument.avg.type                            =   average
 ndppp_prep_cal.argument.avg.timeresolution                  =   {{ avg_timeresolution }}
 ndppp_prep_cal.argument.avg.freqresolution                  =   {{ avg_freqresolution }}
-ndppp_prep_cal.argument.flagamp.type                        =   preflagger
-ndppp_prep_cal.argument.flagamp.amplmin                     =   1e-30
 ndppp_prep_cal.argument.demix.type                          =   demixer
 ndppp_prep_cal.argument.demix.baseline                      =   {{ process_baselines_cal }}
 ndppp_prep_cal.argument.demix.demixfreqstep                 =   {{ demix_freqstep }}
