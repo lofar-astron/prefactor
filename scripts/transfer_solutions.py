@@ -106,7 +106,7 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
                 weight = inweights[nearest_freq[j], ref_ant_index]
             if counts_elements[list(unique_elements).index(nearest_freq[j])] > 1:
                 if frequency < insoltab.freq[0] or frequency > insoltab.freq[-1]:
-                    counts_elements[nearest_freq[j]] -= 1
+                    counts_elements[list(unique_elements).index(nearest_freq[j])] -= 1
                     logging.warning('No entry for frequency ' + str(frequency) + '. Solution will be flagged.')
                     weight = 0
             for i, time in enumerate(outsoltab.time):
