@@ -88,7 +88,7 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     for i, frequency in enumerate(numpy.array(outsoltab.freq)):
         nearest_freq[i] = numpy.abs(frequency - numpy.array(insoltab.freq)).argmin()
         freq_idx.append(nearest_freq[i])
-    
+
     ### do the job!
     for station_to_transfer in stations_to_transfer:
         logging.info('Transferring solutions for antenna: ' + str(station_to_transfer))
@@ -104,7 +104,7 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
                 weight = inweights[nearest_freq[j], ref_ant_index, 0]
             else:
                 weight = inweights[nearest_freq[j], ref_ant_index]
-            if counts_elements[nearest_freq[j]] > 1:
+            if counts_elements[list(unique_elements).index(nearest_freq[j])] > 1:
                 if frequency < insoltab.freq[0] or frequency > insoltab.freq[-1]:
                     counts_elements[nearest_freq[j]] -= 1
                     logging.warning('No entry for frequency ' + str(frequency) + '. Solution will be flagged.')
