@@ -35,7 +35,6 @@ def residuals(coeffs, y, t):
     return y - model(t, coeffs)
 
 def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outbasename='ionosphere',output_dir='./',dofilter=True):
-    outfile = open(str(output_dir) + '/' + outbasename +'_structure.txt','w')
     data    = h5parm(h5parmfile)
     solset  = data.getSolset(solset)
     soltab  = solset.getSoltab(soltab)
@@ -44,6 +43,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
         logging.warning("Soltab is of type " + soltype + ", but should be phase. Skipping.")
         data.close()
         return(0)
+    outfile = open(str(output_dir) + '/' + outbasename +'_structure.txt','w')
     vals  = soltab.val
     station_names = soltab.ant[:]
     stations = solset.getAnt()
@@ -53,7 +53,6 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     allposy = []
     nrtimes = len(soltab.time)
     nrfreqs = len(soltab.freq)
-    #nr_grid = nrfreqs
     timestep=int(nrtimes/nr_grid)
     for vals, coord, selection in soltab.getValuesIter(returnAxes=soltab.getAxesNames(), weight=False):
         try:
