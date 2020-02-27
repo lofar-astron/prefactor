@@ -39,6 +39,7 @@ def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
     if any(dist_deg * 60.0 < max_separation_arcmin):
         patch_position = int(numpy.where(dist_deg * 60 < max_separation_arcmin)[0][0])
         patch_name = s.getPatchNames()[patch_position]
+        print(patch_name)
         return (True, patch_name)
         pass
     else:
@@ -79,7 +80,7 @@ def find_skymodel(ra, dec, PathSkyMod='/data/skymodels', extensionSky = ".skymod
     for skymodel in skymodels:
         check = check_skymodel(skymodel, ra, dec, max_separation_arcmin)
         if check[0]:
-            print "The following skymodel will be used for the calibrator: " + skymodel.split("/")[-1] + " (in " + PathSkyMod + ")"
+            print("The following skymodel will be used for the calibrator: " + skymodel.split("/")[-1] + " (in " + PathSkyMod + ")")
             return (skymodel, check[-1])
             pass
         else:
@@ -148,17 +149,22 @@ if __name__ == '__main__':
                         help='One (or more MSs) for which we search the matching skymodel.')
     parser.add_argument('--DirSky', type=str, 
                         help='Path to the skymodel file, or to the folder where the skymodels are stored.')
+    parser.add_argument('--max_separation_arcmin', type=str, 
+                        help='define the maximum seperation between pointing and model direction in arcmin.')
     parser.add_argument('--extsky', type=str, 
                         help='extension of the skymodel files. (default: \".skymodel\")')
         
     args = parser.parse_args()
     extensionSky = '.skymodel'
     DirSkymodelCal = '/data/skymodels'
+    max_separation_arcmin = 1.0
     if args.extsky:
         extensionSky=args.extsky
     if args.DirSky:
         DirSkymodelCal = args.DirSky
+    if args.max_separation_arcmin:
+        max_separation_arcmin = args.max_separation_arcmin
     
-    main(args.MSfile, DirSkymodelCal, extensionSky)
+    main(args.MSfile, DirSkymodelCal, extensionSky, max_separation_arcmin)
     
     pass
