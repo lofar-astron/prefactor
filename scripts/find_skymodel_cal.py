@@ -39,7 +39,6 @@ def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
     if any(dist_deg * 60.0 < max_separation_arcmin):
         patch_position = int(numpy.where(dist_deg * 60 < max_separation_arcmin)[0][0])
         patch_name = s.getPatchNames()[patch_position]
-        print(patch_name)
         return (True, patch_name)
         pass
     else:
