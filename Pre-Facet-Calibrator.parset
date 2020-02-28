@@ -170,7 +170,7 @@ createmap_prepcal.control.type                              =   makeResultsMapfi
 createmap_prepcal.control.mapfile_dir                       =   {{ mapfile_dir }}
 createmap_prepcal.control.filename                          =   createmap_prepcal.mapfile
 createmap_prepcal.control.mapfile_in                        =   createmap_cal.output.mapfile
-createmap_prepcal.control.target_dir                        =   {{ job_directory }}
+createmap_prepcal.control.target_dir                        =   {{ working_directory }}
 createmap_prepcal.control.make_target_dir                   =   False
 createmap_prepcal.control.new_suffix                        =   .ndppp_prep_cal
 
