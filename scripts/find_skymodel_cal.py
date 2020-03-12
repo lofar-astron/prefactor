@@ -24,7 +24,7 @@ def grab_pointing(MS):
     """
     
     [ra, dec] = pt.table(MS+'::FIELD', readonly=True, ack=False).getcol('PHASE_DIR')[0][0] * 180 / math.pi
-    return ra, dec
+    return(ra, dec)
 
     
 
@@ -39,12 +39,9 @@ def check_skymodel(skymodel, ra, dec, max_separation_arcmin = 1.0):
     if any(dist_deg * 60.0 < max_separation_arcmin):
         patch_position = int(numpy.where(dist_deg * 60 < max_separation_arcmin)[0][0])
         patch_name = s.getPatchNames()[patch_position]
-        return (True, patch_name)
-        pass
+        return(True, patch_name)
     else:
-        return (False, '')
-        pass
-    pass
+        return(False, '')
 
 ########################################################################
 def find_skymodel(ra, dec, PathSkyMod='/data/skymodels', extensionSky = ".skymodel", max_separation_arcmin = 1.0):
@@ -80,14 +77,11 @@ def find_skymodel(ra, dec, PathSkyMod='/data/skymodels', extensionSky = ".skymod
         check = check_skymodel(skymodel, ra, dec, max_separation_arcmin)
         if check[0]:
             print("The following skymodel will be used for the calibrator: " + skymodel.split("/")[-1] + " (in " + PathSkyMod + ")")
-            return (skymodel, check[-1])
-            pass
+            return(skymodel, check[-1])
         else:
             pass
-        pass
     
     raise TypeError('find_skymodel: SKYMODEL FOR THE CALIBRATOR NOT FOUND IN ' + PathSkyMod)
-    pass
             
 ########################################################################
 def input2strlist_nomapfile(invar):
@@ -131,9 +125,10 @@ def main(ms_input, DirSkymodelCal, extensionSky=".skymodel", max_separation_arcm
         Path to the skymodel of the calibrator
     """    
 
+    max_separation_arcmin = float(max_separation_arcmin) 
     if os.path.isfile(DirSkymodelCal) or os.path.isdir(DirSkymodelCal):
         ra, dec = grab_pointing(input2strlist_nomapfile(ms_input)[0])
-        skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, float(max_separation_arcmin))
+        skymodelCal, skymodelName  = find_skymodel(ra, dec, DirSkymodelCal, extensionSky, max_separation_arcmin)
         return { 'SkymodelCal' : skymodelCal, 'SkymodelName': skymodelName}
     else:
         raise ValueError("find_skymodel_cal: The path \"%s\" is neither a file nor a directory!"%(DirSkymodelCal))

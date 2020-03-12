@@ -79,12 +79,12 @@ def meanclip(indata, clipsig=4.0, maxiter=10, converge_num=0.001, verbose=0):
     mean = numpy.mean(skpix)
     sigma = robust_sigma(skpix)
 
-    return mean, sigma
+    return(mean, sigma)
 
 
 def find_imagenoise(data):
     mean, rms = meanclip(data)
-    return rms
+    return(rms)
 
 
 def robust_sigma(in_y, zero=0):
@@ -148,7 +148,7 @@ def robust_sigma(in_y, zero=0):
     if mad < eps:
         mad = del_y.mean() / c2
     if mad < eps:
-        return 0.0
+        return(0.0)
 
     # Now the biweighted value:
     u = dy / (c3 * mad)
@@ -158,7 +158,7 @@ def robust_sigma(in_y, zero=0):
     if count < min_points:
         print('ROBUST_SIGMA: This distribution is TOO WEIRD! '
               'Returning {}'.format(c_err))
-        return c_err
+        return(c_err)
 
     numerator = numpy.sum((y[q] - y0)**2.0 * (1.0 - uu[q])**4.0)
     n = y.size
@@ -170,7 +170,7 @@ def robust_sigma(in_y, zero=0):
     else:
         out_val = 0.0
 
-    return out_val
+    return(out_val)
 
 
 def main(fitsimage, outfilename, outdir=None):

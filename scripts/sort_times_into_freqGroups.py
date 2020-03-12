@@ -22,42 +22,42 @@ def _calc_edge_chans(inmap, numch, edgeFactor=32):
     outmap = DataMap([])
     for group in inmap:
         flaglist = []
-        for i in xrange(len(group.file)):
+        for i in range(len(group.file)):
             flaglist.extend(range(i*numch,i*numch+numch/edgeFactor))
             flaglist.extend(range((i+1)*numch-numch/edgeFactor,(i+1)*numch))
         outmap.append(DataProduct(group.host,str(flaglist).replace(' ',''),group.skip))
-        print '_calc_edge_chans: flaglist:', str(flaglist).replace(' ','')
-    return outmap
+        print('_calc_edge_chans: flaglist:', str(flaglist).replace(' ',''))
+    return(outmap)
 
 def input2bool(invar):
     if invar == None:
-        return None
+        return(None)
     if isinstance(invar, bool):
-        return invar
+        return(invar)
     elif isinstance(invar, str):
         if invar.upper() == 'TRUE' or invar == '1':
-            return True
+            return(True)
         elif invar.upper() == 'FALSE' or invar == '0':
-            return False
+            return(False)
         else:
             raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
     elif isinstance(invar, int) or isinstance(invar, float):
-        return bool(invar)
+        return(bool(invar))
     else:
         raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
   
 def input2int(invar):
     if invar == None:
-        return None
+        return(None)
     if isinstance(invar, int):
-        return invar
+        return(invar)
     elif isinstance(invar, float):
-        return int(invar)
+        return(int(invar))
     elif isinstance(invar, str):
         if invar.strip().upper() == 'NONE' or invar == 'FALSE':
-            return None
+            return(None)
         else:
-            return int(invar)
+            return(int(invar))
     else:
         raise TypeError('input2int: Unsupported data type:'+str(type(invar)))
 
@@ -150,7 +150,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     if not hosts:
         hosts = ['localhost']
     numhosts = len(hosts)
-    print "sort_times_into_freqGroups: Working on",len(ms_list),"files (including flagged files)."
+    print("sort_times_into_freqGroups: Working on",len(ms_list),"files (including flagged files).")
 
     time_groups = {}
     # sort by time
@@ -167,10 +167,10 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                 time_groups[timestamp]['files'].append(ms)
             else:
                 time_groups[timestamp] = {'files': [ ms ], 'basename' : os.path.splitext(ms)[0] }
-    print "sort_times_into_freqGroups: found",len(time_groups),"time-groups"
+    print("sort_times_into_freqGroups: found",len(time_groups),"time-groups")
 
     # sort time-groups by frequency
-    timestamps = time_groups.keys()
+    timestamps = list(time_groups.keys())
     timestamps.sort()   # not needed now, but later
     first = True
     nchans = 0
@@ -193,11 +193,11 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
                 freqset.add(freq)
             freqs.append(freq)
             sw.close()
-        time_groups[time]['freq_names'] = zip(freqs,time_groups[time]['files'])
+        time_groups[time]['freq_names'] = list(zip(freqs,time_groups[time]['files']))
         time_groups[time]['freq_names'].sort(key=lambda pair: pair[0])
         #time_groups[time]['files'] = [name for (freq,name) in freq_names]
         #time_groups[time]['freqs'] = [freq for (freq,name) in freq_names]
-    print "sort_times_into_freqGroups: Collected the frequencies for the time-groups"
+    print("sort_times_into_freqGroups: Collected the frequencies for the time-groups")
 
     freqliste = np.array(list(freqset))
     freqliste.sort()
@@ -229,12 +229,12 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         minfreq = np.min(freqliste)-freq_width/2.
     groupBW = freq_width*numSB
     if groupBW < 1e6 and groupBW > 0:
-        print 'sort_times_into_freqGroups: ***WARNING***: Bandwidth of concatenated MS is lower than 1 MHz. This may cause conflicts with the concatenated file names!'
+        print('sort_times_into_freqGroups: ***WARNING***: Bandwidth of concatenated MS is lower than 1 MHz. This may cause conflicts with the concatenated file names!')
     if groupBW < 0:
-	# this is the case for concatenating all subbands
-	groupBW = maxfreq-minfreq
-	truncateLastSBs = input2bool(False)
-	NDPPPfill = input2bool(True)
+    # this is the case for concatenating all subbands
+       groupBW = maxfreq-minfreq
+    truncateLastSBs = input2bool(False)
+    NDPPPfill = input2bool(True)
     freqborders = np.arange(minfreq,maxfreq,groupBW)
     if mergeLastGroup:
         freqborders[-1] = maxfreq
@@ -250,12 +250,12 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     if ngroups == 0:
         raise ValueError('sort_times_into_freqGroups: Not enough input subbands to create at least one full (frequency-)group!')
     
-    print "sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each."
+    print("sort_times_into_freqGroups: Will create",ngroups,"group(s) with",numSB,"file(s) each.")
 
     hostID = 0
     for time in timestamps:
         (freq,fname) = time_groups[time]['freq_names'].pop(0)
-        for groupIdx in xrange(ngroups):
+        for groupIdx in range(ngroups):
             files = []
             skip_this = True
             filefreqs_low = np.arange(freqborders[groupIdx],freqborders[groupIdx+1],freq_width)
@@ -283,7 +283,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
         if freq < 1e12:
             orphan_files += 1
         if orphan_files > 0:
-            print "sort_times_into_freqGroups: Had %d unassigned files in time-group %xt."%(orphan_files, time)
+            print("sort_times_into_freqGroups: Had %d unassigned files in time-group %xt."%(orphan_files, time))
     filemapname = os.path.join(mapfile_dir, filename)
     filemap.save(filemapname)
     groupmapname = os.path.join(mapfile_dir, filename+'_groups')
@@ -293,7 +293,7 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     flagmapname = os.path.join(mapfile_dir, filename+'_flags')
     flagmap.save(flagmapname)
     result = {'mapfile': filemapname, 'groupmapfile': groupmapname, 'flagmapfile': flagmapname}
-    return result
+    return(result)
 
 class MultiDataProduct(DataProduct):
     """
@@ -308,13 +308,13 @@ class MultiDataProduct(DataProduct):
 
     def __repr__(self):
         """Represent an instance as a Python dict"""
-        return (
+        return(
             "{{'host': '{0}', 'file': {1}, 'skip': {2}}}".format(self.host, self.file, str(self.skip))
         )
 
     def __str__(self):
         """Print an instance as 'host:[filelist]'"""
-        return ':'.join((self.host, str(self.file)))
+        return(':'.join((self.host, str(self.file))))
 
     def _set_file(self, data):
         try:
@@ -330,13 +330,13 @@ class MultiDataProduct(DataProduct):
             raise DataProduct("No known method to set a filelist from %s" % str(file))
 
     def _from_dataproduct(self, prod):
-        print 'setting filelist from DataProduct'
+        print('setting filelist from DataProduct')
         self.host = prod.host
         self.file = prod.file
         self.skip = prod.skip
 
     def _from_datamap(self, inmap):
-        print 'setting filelist from DataMap'
+        print('setting filelist from DataMap')
         filelist = {}
         for item in inmap:
             if not item.host in filelist:
@@ -376,7 +376,7 @@ class MultiDataMap(DataMap):
     def split_list(self, number):
         mdplist = []
         for item in self.data:
-            for i in xrange(0, len(item.file), number):
+            for i in range(0, len(item.file), number):
                 chunk = item.file[i:i+number]
                 mdplist.append(MultiDataProduct(item.host, chunk, item.skip))
         self._set_data(mdplist)
@@ -414,9 +414,9 @@ if __name__ == '__main__':
 
     groupmap = DataMap.load(ergdict['groupmapfile'])
     filemap = MultiDataMap.load(ergdict['mapfile'])
-    print "len(groupmap) : %d , len(filemap) : %d " % (len(groupmap),len(filemap)) 
+    print("len(groupmap) : %d , len(filemap) : %d " % (len(groupmap),len(filemap)))
     if len(groupmap) != len(filemap):
-        print "groupmap and filemap have different length!"
+        print("groupmap and filemap have different length!")
         sys.exit(1)
-    for i in xrange(len(groupmap)):
-        print "Group \"%s\" has %d entries."%(groupmap[i].file,len(filemap[i].file))
+    for i in range(len(groupmap)):
+        print("Group \"%s\" has %d entries."%(groupmap[i].file,len(filemap[i].file)))

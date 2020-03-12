@@ -20,7 +20,7 @@ def main(infile, xypadsize):
     if xsize > pad_xsize or ysize > pad_ysize:
         raise ValueError('pad_image: padded size is smaller than current size!')
     if xsize == pad_xsize and ysize == pad_ysize:
-        return
+        return()
 
     xoffset = (pad_xsize - xsize) / 2
     yoffset = (pad_ysize - ysize) / 2

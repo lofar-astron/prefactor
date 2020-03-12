@@ -47,8 +47,8 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     vals  = soltab.val
     station_names = soltab.ant[:]
     stations = solset.getAnt()
-    phx=[]
-    phy=[]
+    phx = []
+    phy = []
     allposx = []
     allposy = []
     nrtimes = len(soltab.time)
@@ -64,26 +64,26 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
     valsx = vals[0]
     valsy = vals[1]
     for i,station_name in enumerate(station_names):
-        if not "CS" in station_name:
+        if "CS" not in station_name:
             continue
         valx = valsx[i,:,0].flatten()
         valy = valsy[i,:,0].flatten()
         phx.append(np.nan_to_num(valx))
         phy.append(np.nan_to_num(valy))
-        allposx.append(stations[station_name])
-        allposy.append(stations[station_name])
+        allposx.append(stations[station_name.encode()])
+        allposy.append(stations[station_name.encode()])
 
-    phx=np.array(phx)
-    phy=np.array(phy) 
-    allposx=np.array(allposx)
-    allposy=np.array(allposy)
-    D=allposx[:,np.newaxis,:]-allposx[np.newaxis,:]
-    D2=np.sqrt(np.sum(D**2,axis=-1))
-    Dy=allposy[:,np.newaxis,:]-allposy[np.newaxis,:]
-    D2y=np.sqrt(np.sum(Dy**2,axis=-1))
-    S0s=[]
-    betas=[]
-    for itime in xrange(nr_grid+1):
+    phx = np.array(phx)
+    phy = np.array(phy) 
+    allposx = np.array(allposx)
+    allposy = np.array(allposy)
+    D = allposx[:,np.newaxis,:]-allposx[np.newaxis,:]
+    D2 = np.sqrt(np.sum(D**2,axis=-1))
+    Dy = allposy[:,np.newaxis,:]-allposy[np.newaxis,:]
+    D2y = np.sqrt(np.sum(Dy**2,axis=-1))
+    S0s = []
+    betas = []
+    for itime in range(nr_grid+1):
         tm=[0,1000000000]
         if itime<nr_grid:
             tm[0]=int(itime*timestep)
@@ -115,7 +115,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             x0 = [0.1,1.0,1.0]
             xfit, flag = scipy.optimize.leastsq(residuals, x0, args=(binys,binxs))
             flagselect = np.where(y > model(x,xfit))
-            print xfit,'fitting'
+            print(xfit,'fitting')
         if doplot:
             x=D2[myselect]
             y=dvarx[myselect]
@@ -164,7 +164,7 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
             x0 = [0.1,1.0,1.0]
             xfit, flag = scipy.optimize.leastsq(residuals, x0, args=(binys,binxs))
             flagselect = np.where(y > model(x,xfit))
-            print xfit,'fitting'
+            print(xfit,'fitting')
         if doplot:
             x=D2y[myselect]
             y=dvary[myselect]

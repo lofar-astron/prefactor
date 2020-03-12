@@ -11,7 +11,10 @@ try:
     matplotlib.use('Agg')
 except (RuntimeError, ImportError):
     pass
-import bdsf
+try:
+    import bdsf
+except ImportError:
+    from lofar import bdsm as bdsf
 import lsmtool
 
 

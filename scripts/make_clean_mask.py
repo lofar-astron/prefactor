@@ -21,7 +21,7 @@ import os
 try:
     import matplotlib
     matplotlib.use('Agg')
-except (RuntimeError, ImportError):
+except(RuntimeError, ImportError):
     pass
 try:
     import bdsf
@@ -186,7 +186,7 @@ class Polygon:
         # If input values were scalar then the output should be too
         if scalar:
             mindst = float(mindst)
-        return mindst
+        return(mindst)
 
 
 
@@ -196,7 +196,7 @@ def read_vertices(filename):
     """
     with open(filename, 'r') as f:
         direction_dict = pickle.load(f)
-    return direction_dict['vertices']
+    return(direction_dict['vertices'])
 
 
 def read_casa_polys(filename, image):
@@ -322,7 +322,7 @@ def read_casa_polys(filename, image):
             print('Only CASA regions of type "poly", "box", or "ellipse" are supported')
             sys.exit(1)
 
-    return polys
+    return(polys)
 
 
 def make_template_image(image_name, reference_ra_deg, reference_dec_deg,
@@ -632,11 +632,11 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
         # Copy region file and return if source detection was not done
         os.system('cp {0} {1}'.format(region_file.strip('[]"'), mask_name))
         if threshold_format == 'float':
-            return {'threshold_5sig': threshold}
+            return({'threshold_5sig': threshold})
         elif threshold_format == 'str_with_units':
             # This is done to get around the need for quotes around strings in casapy scripts
             # 'casastr/' is removed by the generic pipeline
-            return {'threshold_5sig': 'casastr/{0}Jy'.format(threshold)}
+            return({'threshold_5sig': 'casastr/{0}Jy'.format(threshold)})
     elif not skip_source_detection:
         img.export_image(img_type='island_mask', mask_dilation=0, outfile=mask_name,
                          img_format=img_format, clobber=True)
@@ -745,14 +745,14 @@ def main(image_name, mask_name, atrous_do=False, threshisl=0.0, threshpix=0.0, r
 
     if not skip_source_detection:
         if threshold_format == 'float':
-            return {'threshold_5sig': nsig * img.clipped_rms, 'multiscale': has_large_isl}
+            return({'threshold_5sig': nsig * img.clipped_rms, 'multiscale': has_large_isl})
         elif threshold_format == 'str_with_units':
             # This is done to get around the need for quotes around strings in casapy scripts
             # 'casastr/' is removed by the generic pipeline
-            return {'threshold_5sig': 'casastr/{0}Jy'.format(nsig * img.clipped_rms),
-                'multiscale': has_large_isl}
+            return({'threshold_5sig': 'casastr/{0}Jy'.format(nsig * img.clipped_rms),
+                'multiscale': has_large_isl})
     else:
-        return {'threshold_5sig': '0.0'}
+        return({'threshold_5sig': '0.0'})
 
 
 if __name__ == '__main__':
@@ -790,4 +790,4 @@ if __name__ == '__main__':
                vertices_file=args.vertices_file, atrous_jmax=args.atrous_jmax,
                pad_to_size=args.pad_to_size, skip_source_detection=args.skip_source_detection,
                region_file=args.region_file)
-    print erg
+    print(erg)

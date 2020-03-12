@@ -28,7 +28,7 @@ def input2strlist_nomapfile(invar):
        str_list = [str(f).strip(' \'\"') for f in invar]
    else:
        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-   return str_list
+   return(str_list)
 
 
 def main(ms_list, frac_list, outfile='unflagged_fraction.png'):

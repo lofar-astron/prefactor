@@ -23,14 +23,14 @@ def input2strlist_nomapfile(invar):
        str_list = [str(f).strip(' \'\"') for f in invar]
    else:
        raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-   return str_list
+   return(str_list)
 
 ###############################################################################
 def find_flagged_fraction(ms_file):
     
    outputs  = os.popen('DPPP msin=' + ms_file + ' msout=. steps=[count] count.type=counter count.warnperc=0.0000001 | grep NOTE').readlines()
    fraction_flagged = { output.split('(')[-1].rstrip(')\n'):output.split('%')[0][-5:].strip() for output in outputs if 'station' in output }
-   return fraction_flagged
+   return(fraction_flagged)
 
 ###############################################################################
 def main(observation_directory = '/data/share/pipeline/Observation', inspection_directory = '/data/share/pipeline/Observation/results/inspection', logfile = '/data/share/pipeline/Observation/logs/pipeline.log', h5parmdb = '/data/share/pipeline/Observation/results/cal_values/solutions.h5', MSfile = '[]'):
@@ -57,14 +57,12 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 		f_summary.write(logfile + ' does not exist. Skipping!')
 		f_summary.close()
 		return(1)
-		pass
 	
 	## check for the h5parm
 	if not os.path.isfile(h5parmdb):
 		f_summary.write('No h5parm solutions file found in ' + h5parmdb)
 		f_summary.close()
 		return(1)
-		pass
 	
 	## convert stringlist to list
 	mslist = input2strlist_nomapfile(MSfile)
@@ -74,15 +72,12 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 	data = h5parm(h5parmdb, readonly = True)
 	if 'target' in data.getSolsetNames():
 		solset = 'target'
-		pass
 	elif 'calibrator' in data.getSolsetNames():
 		solset = 'calibrator'
-		pass
 	else:
 		f_summary.write('Neither calibrator or target solset has been found in ' + h5parmdb)
 		f_summary.close()
 		return(1)
-		pass
 	
 	## get antenna information
 	solset       = data.getSolset(solset)
@@ -113,20 +108,17 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
                                                            + modules_version   )
 	except OSError:
 		f_summary.write('Could not find all LOFAR or related software packages. Could not determine the used software versions.\n')
-		pass
 	
 	## get the list of removed stations:
 	baseline_list = list(set([ str(line.split(";")[1:]) for line in open(logfile) if 'baseline:' in line and ';' in line ]))
 	bad_antennas  = list(set(re.sub("[\[\]\"\ '!*]", "", str(baseline_list)).replace('\\n','').replace('\\','').split(',')))
 	if len(bad_antennas) == 1 and bad_antennas[0] == '':
 		bad_antennas = 'NONE'
-		pass
 	
 	## check for A-Team warning:
 	Ateam_list = list(set([ str(line.split('source ')[-1]).split(' is')[0] for line in open(logfile) if 'WARNING: The A-Team source' in line ]))
 	if len(Ateam_list) == 0:
 		Ateam_list = 'NONE'
-		pass
 	
 	f_summary.write('\n')
 	f_summary.write('Antennas removed from the data: ' + re.sub("[\[\]']", "", str(bad_antennas)) + '\n')
@@ -153,7 +145,6 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 			f_summary.write('Changes applied to ' + os.path.basename(h5parmdb) + ':\n')
 			f_summary.write(history + '\n')
 			f_summary.write('\n')
-			pass
                     
 	## check whether phases have been added
 	phase = [ soltab for soltab in soltabs if 'phase' in soltab ]
@@ -164,7 +155,6 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 			f_summary.write('Changes applied to ' + os.path.basename(h5parmdb) + ':\n')
 			f_summary.write(history + '\n')
 			f_summary.write('\n')
-			pass
 	
 	## get table of flagged solutions
 	flagged_solutions = {}
@@ -216,7 +206,7 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 		f_summary.write(antenna_len.format(antenna) + ' ' + '{:>10}'.format('{:.2f}'.format(flagged_fraction_data[antenna]) + '%') + '\n')
 	
 	print('Summary has been created.')
-	return 0
+	return(0)
 
 
 if __name__=='__main__':
@@ -234,4 +224,3 @@ if __name__=='__main__':
 	main(args.obsdir, args.inspdir, args.logfile, args.h5parm, args.MSfile)
 	
 	sys.exit(0)
-	pass

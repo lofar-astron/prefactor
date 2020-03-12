@@ -7,9 +7,10 @@
 
 import numpy
 import pyrap.tables as pt
-import os, sys
+import os
+import sys
 
-msname  = str(sys.argv[1])
+msname = str(sys.argv[1])
 
 cliplevelhba = 5.0
 cliplevellba = 50.0

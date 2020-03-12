@@ -26,6 +26,7 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     for i in numpy.arange(len(sources)):
         calibrators.append(sources[i][0])
     calibrator = numpy.unique(calibrators)
+    calibrator = [c.decode() for c in calibrator]
     if len(calibrator) > 1:
         logging.error('There is more than one calibrator used in the target solution set: ' + str(calibrator) + '. No solutions will be transferred.')
         data.close()
@@ -66,13 +67,11 @@ def main(h5parmdb, refh5parm, insolset='sol000', outsolset='sol000', insoltab='a
     for outvals, outweights, coord, selection in outsoltab.getValuesIter(returnAxes=out_axes, weight=True):
         outvals = reorderAxes( outvals, outsoltab.getAxesNames(), out_axes)
         outweights = reorderAxes( outweights,  outsoltab.getAxesNames(), out_axes )
-        pass
     
     ### resort the val and weights array according to the new axes order
     for invals, inweights, coord, selection in insoltab.getValuesIter(returnAxes=in_axes, weight=True):
         invals = reorderAxes( invals, insoltab.getAxesNames(), in_axes)
         inweights = reorderAxes( inweights,  insoltab.getAxesNames(), in_axes )
-        pass
     
     ### check for equistance in frequency
     freq_resolution = numpy.unique(numpy.diff(outsoltab.freq))

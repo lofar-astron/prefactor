@@ -36,7 +36,7 @@ def grab_coord_MS(MS):
     dec_deg = dec/np.pi*180.
 
     # and sending the coordinates in deg
-    return ra_deg,dec_deg
+    return(ra_deg,dec_deg)
 
 
 ########################################################################
@@ -55,7 +55,7 @@ def input2strlist_nomapfile(invar):
         str_list = [str(f).strip(' \'\"') for f in invar]
     else:
         raise TypeError('input2strlist: Type '+str(type(invar))+' unknown!')
-    return str_list
+    return(str_list)
 
 
 ########################################################################
@@ -93,20 +93,20 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True", Source="TGSS"):
         download_flag = True
     elif DoDownload.upper() == "TRUE" or DoDownload.upper() == "YES":
         if FileExists:
-            print "USING the exising skymodel in "+ SkymodelPath
-            return
+            print("USING the exising skymodel in "+ SkymodelPath)
+            return(0)
         else:
             download_flag = True
     elif DoDownload.upper() == "FALSE" or DoDownload.upper() == "NO":
          if FileExists:
-            print "USING the exising skymodel in "+ SkymodelPath
-            return
+            print("USING the exising skymodel in "+ SkymodelPath)
+            return(0)
          else:
             raise ValueError("download_tgss_skymodel_target: Path: \"%s\" does not exist and skymodel download is disabled!"%(SkymodelPath))
 
     # If we got here, then we are supposed to download the skymodel.
     assert download_flag is True # Jaja, belts and suspenders...
-    print "DOWNLOADING skymodel for the target into "+ SkymodelPath
+    print("DOWNLOADING skymodel for the target into "+ SkymodelPath)
 
     # Reading a MS to find the coordinate (pyrap)
     [RATar,DECTar]=grab_coord_MS(input2strlist_nomapfile(ms_input)[0])
@@ -117,13 +117,10 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True", Source="TGSS"):
     while errorcode != 0 and tries < 5:
         if Source == 'TGSS':
             errorcode = os.system("wget -O "+SkymodelPath+ " \'http://tgssadr.strw.leidenuniv.nl/cgi-bin/gsmv4.cgi?coord="+str(RATar)+","+str(DECTar)+"&radius="+str(Radius)+"&unit=deg&deconv=y\' ")
-            pass
         elif Source == 'GSM':
             errorcode = os.system("wget -O "+SkymodelPath+ " \'https://lcs165.lofar.eu/cgi-bin/gsmv1.cgi?coord="+str(RATar)+","+str(DECTar)+"&radius="+str(Radius)+"&unit=deg&deconv=y\' ")
-            pass
         time.sleep(5)
         tries += 1
-        pass
 
     if not os.path.isfile(SkymodelPath):
         raise IOError("download_tgss_skymodel_target: Path: \"%s\" does not exist after trying to download the skymodel."%(SkymodelPath))
@@ -133,7 +130,7 @@ def main(ms_input, SkymodelPath, Radius="5.", DoDownload="True", Source="TGSS"):
     skymodel.group('single')
     skymodel.write(clobber=True)
     
-    return
+    return(0)
 
 
 ########################################################################

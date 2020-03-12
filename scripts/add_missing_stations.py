@@ -39,6 +39,7 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
     
     ### Get antenna information of the solset
     ref_station_names = sorted(refsolset.getAnt().keys())
+    ref_station_names = [ref_station_name.decode() for ref_station_name in ref_station_names]
     bad_antennas_list = bad_antennas.lstrip(filter).replace('!','').replace('*','').replace('&','').split(';')
     new_station_names = [ ref_station_name for ref_station_name in ref_station_names if ref_station_name not in bad_antennas_list ]
     
@@ -55,7 +56,6 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=out_axes, weight=True):
         vals = reorderAxes( vals, soltab.getAxesNames(), out_axes)
         weights = reorderAxes( weights,  soltab.getAxesNames(), out_axes )
-        pass
 
     ### setting the proper soltab_axis
     for axis in out_axes:
@@ -107,7 +107,7 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
         new_soltab.addHistory('Added stations ' + str(added_stations).lstrip('[').rstrip(']') + ' with zero phases.')
         
     else:
-        logging.error('There are less antennas in the solset than in the soltab ' + str(soltab_in))
+        logging.error('There are fewer antennas in the solset than in the soltab ' + str(soltab_in))
         data.close()
         refdata.close()
         return(1)

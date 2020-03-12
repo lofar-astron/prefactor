@@ -55,7 +55,7 @@ class Band(object):
         if cellsize_lowres_deg:
             self.cellsize_lowres_deg = cellsize_lowres_deg
         if not hasattr(self, 'mean_el_rad'):
-            for MS_id in xrange(self.numMS):
+            for MS_id in range(self.numMS):
                 # calculate mean elevation
                 tab = pt.table(self.files[MS_id], ack=False)
                 el_values = pt.taql("SELECT mscal.azel1()[1] AS el from "
@@ -73,7 +73,7 @@ class Band(object):
                                                      /self.cellsize_highres_deg * fieldsize_highres)
         self.imsize_low_res = self.get_optimum_size(self.fwhm_deg
                                                     /self.cellsize_lowres_deg * fieldsize_lowres)
-        return (self.imsize_high_res, self.imsize_low_res)
+        return(self.imsize_high_res, self.imsize_low_res)
 
     def get_optimum_size(self, size):
         """
@@ -100,7 +100,7 @@ class Band(object):
             lastresult = n
             sqlast=int(numpy.sqrt(n))+1
             if n == 1:
-                return [1]
+                return([1])
             c=2
             while 1:
                  if (lastresult == 1) or (c > sqlast):
@@ -116,7 +116,7 @@ class Band(object):
                  factors.append(c)
                  lastresult /= c
             if (factors==[]): factors=[n]
-            return  numpy.unique(factors).tolist() if douniq else factors
+            return(numpy.unique(factors).tolist() if douniq else factors)
 
         n = int(size)
         if (n%2 != 0):
@@ -131,8 +131,8 @@ class Band(object):
         newlarge=numpy.product(fac)
         for k in range(n, newlarge, 2):
             if ((numpy.max(prime_factors(k)) < 8)):
-                return k
-        return newlarge
+                return(k)
+        return(newlarge)
 
     def get_averaging_steps(self):
         """
@@ -164,7 +164,7 @@ class Band(object):
         initsubtract_freqstep = freq_divisors[np.argmin(np.abs(freq_divisors-initsubtract_freqstep))]
         initsubtract_timestep = max(1, int(round(20.0 / self.timestep_sec)))
 
-        return (initsubtract_freqstep, initsubtract_timestep)
+        return(initsubtract_freqstep, initsubtract_timestep)
 
     def nwavelengths(self, cellsize_highres_deg, cellsize_lowres_deg, initsubtract_timestep):
         int_time_sec = self.timestep_sec * initsubtract_timestep
@@ -172,25 +172,25 @@ class Band(object):
         max_baseline_in_nwavelenghts_l = 1.0/(cellsize_lowres_deg*3.0*np.pi/180.0)
         self.nwavelengths_high	=	max_baseline_in_nwavelenghts_h*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)/2
         self.nwavelengths_low	=	max_baseline_in_nwavelenghts_l*2.0*np.pi*int_time_sec/(24.0*60.0*60.0)/2
-        return (self.nwavelengths_high, self.nwavelengths_low)
+        return(self.nwavelengths_high, self.nwavelengths_low)
 
 
 def input2bool(invar):
     if invar is None:
-        return None
+        return(None)
     if isinstance(invar, bool):
-        return invar
+        return(invar)
     elif isinstance(invar, str):
         if invar.upper() == 'TRUE' or invar == '1':
-            return True
+            return(True)
         elif invar.upper() == 'FALSE' or invar == '0':
-            return False
+            return(False)
         else:
-            raise ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!')
+            raise(ValueError('input2bool: Cannot convert string "'+invar+'" to boolean!'))
     elif isinstance(invar, int) or isinstance(invar, float):
-        return bool(invar)
+        return(bool(invar))
     else:
-        raise TypeError('input2bool: Unsupported data type:'+str(type(invar)))
+        raise(TypeError('input2bool: Unsupported data type:'+str(type(invar))))
 
 
 def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.00208, cellsize_lowres_deg=0.00694,
@@ -234,7 +234,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
 
     """
     if not outmapname or not mapfile_dir:
-        raise ValueError('sort_times_into_freqGroups: outmapname and mapfile_dir are needed!')
+        raise(ValueError('sort_times_into_freqGroups: outmapname and mapfile_dir are needed!'))
     if type(ms_input) is str:
         if ms_input.startswith('[') and ms_input.endswith(']'):
             ms_list = [f.strip(' \'\"') for f in ms_input.strip('[]').split(',')]
@@ -251,7 +251,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     elif type(ms_input) is list:
         ms_list = [str(f).strip(' \'\"') for f in ms_input]
     else:
-        raise TypeError('sort_into_freqBands: type of "ms_input" unknown!')
+        raise(TypeError('sort_into_freqBands: type of "ms_input" unknown!'))
 
     cellsize_highres_deg = float(cellsize_highres_deg)
     cellsize_lowres_deg = float(cellsize_lowres_deg)
@@ -274,7 +274,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         else:
             msdict[msfreq] = [ms]
     bands = []
-    print "InitSubtract_sort_and_compute.py: Putting files into bands."
+    print("InitSubtract_sort_and_compute.py: Putting files into bands.")
     for MSkey in msdict.keys():
         bands.append( Band(msdict[MSkey]) )
 
@@ -286,7 +286,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     low_paddedsize_map = DataMap([])
     numfiles = 0
     for i, band in enumerate(bands):
-        print "InitSubtract_sort_and_compute.py: Working on Band:",band.name
+        print("InitSubtract_sort_and_compute.py: Working on Band:",band.name)
         group_map.append(MultiDataProduct('localhost', band.files, False))
         numfiles += len(band.files)
         for filename in band.files:
@@ -298,7 +298,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         if calc_y_axis_stretch:
             if i == 0:
                 y_axis_stretch = 1.0 / np.sin(band.mean_el_rad)
-                print "InitSubtract_sort_and_compute.py: Using y-axis stretch of:",y_axis_stretch
+                print("InitSubtract_sort_and_compute.py: Using y-axis stretch of:",y_axis_stretch)
                 y_axis_stretch_lowres = y_axis_stretch
                 y_axis_stretch_highres = y_axis_stretch
         else:
@@ -329,7 +329,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
         imsize_low_pad_stretch = band.get_optimum_size(int(imsize_low_res*image_padding*y_axis_stretch_lowres))
         low_paddedsize_map.append(DataProduct('localhost', str(imsize_low_pad)+" "+str(imsize_low_pad_stretch), False))
 
-    print "InitSubtract_sort_and_compute.py: Computing averaging steps."
+    print("InitSubtract_sort_and_compute.py: Computing averaging steps.")
     (freqstep, timestep) = bands[0].get_averaging_steps()
     (nwavelengths_high, nwavelengths_low) = bands[0].nwavelengths(cellsize_highres_deg,
         cellsize_lowres_deg, timestep)
@@ -339,7 +339,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
     timestep_map = DataMap([])
     nwavelengths_high_map = DataMap([])
     nwavelengths_low_map = DataMap([])
-    for index in xrange(numfiles):
+    for index in range(numfiles):
         freqstep_map.append(DataProduct('localhost', str(freqstep), False))
         timestep_map.append(DataProduct('localhost', str(timestep), False))
         freqstep_map.append(DataProduct('localhost', str(freqstep), False))
@@ -373,7 +373,7 @@ def main(ms_input, outmapname=None, mapfile_dir=None, cellsize_highres_deg=0.002
               'high_padsize_mapfile' : high_padsize_name, 'low_padsize_mapfile' : low_padsize_name,
               'freqstep' : freqstepname, 'timestep' : timestepname, 'nwavelengths_high_mapfile': nwavelengths_high_name,
               'nwavelengths_low_mapfile': nwavelengths_low_name}
-    return result
+    return(result)
 
 
 class MultiDataProduct(DataProduct):
@@ -396,7 +396,7 @@ class MultiDataProduct(DataProduct):
 
     def __str__(self):
         """Print an instance as 'host:[filelist]'"""
-        return ':'.join((self.host, str(self.file)))
+        return(':'.join((self.host, str(self.file))))
 
     def _set_file(self, data):
         try:
@@ -409,16 +409,16 @@ class MultiDataProduct(DataProduct):
                 self._from_datamap(data)
 
         except TypeError:
-            raise DataProduct("No known method to set a filelist from %s" % str(file))
+            raise(DataProduct("No known method to set a filelist from %s" % str(file)))
 
     def _from_dataproduct(self, prod):
-        print 'setting filelist from DataProduct'
+        print('setting filelist from DataProduct')
         self.host = prod.host
         self.file = prod.file
         self.skip = prod.skip
 
     def _from_datamap(self, inmap):
-        print 'setting filelist from DataMap'
+        print('setting filelist from DataMap')
         filelist = {}
         for item in inmap:
             if not item.host in filelist:
@@ -448,7 +448,7 @@ class MultiDataMap(DataMap):
                 if file_entry.startswith('[') and file_entry.endswith(']'):
                     file_list = [e.strip(' \'\"') for e in file_entry.strip('[]').split(',')]
                     datamap[i] = {'host': d['host'], 'file': file_list, 'skip': d['skip']}
-            return cls(datamap)
+            return(cls(datamap))
 
     @DataMap.data.setter
     def data(self, data):
@@ -473,7 +473,7 @@ class MultiDataMap(DataMap):
     def split_list(self, number):
         mdplist = []
         for item in self.data:
-            for i in xrange(0, len(item.file), number):
+            for i in range(0, len(item.file), number):
                 chunk = item.file[i:i+number]
                 mdplist.append(MultiDataProduct(item.host, chunk, item.skip))
         self._set_data(mdplist)
