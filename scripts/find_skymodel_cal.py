@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 import glob
-import pyrap.tables as pt
+import casacore.tables as pt
 import math
 import lsmtool
 import numpy
