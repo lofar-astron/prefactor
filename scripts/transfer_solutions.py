@@ -4,6 +4,7 @@
 from losoto.h5parm import h5parm
 from losoto.lib_operations import *
 
+import logging
 import os
 import re
 import numpy
