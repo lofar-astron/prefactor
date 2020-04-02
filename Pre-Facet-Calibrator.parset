@@ -1158,7 +1158,7 @@ h5parm_name.argument.flags                                  =   [{{ cal_solution
 h5parm_name.argument.solsetName                             =   calibrator
 h5parm_name.argument.pointing                               =   sky_cal.output.SkymodelName.mapfile
 
-# set the pointing direction
+# create a summary
 make_summary.control.type                                   =   pythonplugin
 make_summary.control.executable                             =   {{ scripts }}/make_summary.py
 make_summary.control.error_tolerance                        =   {{ error_tolerance }}
