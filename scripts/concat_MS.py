@@ -2,7 +2,7 @@
 import sys
 import glob
 import re
-import pyrap.tables as pt
+import casacore.tables as pt
 import numpy
 import os
 from lofarpipe.support.data_map import DataMap, DataProduct
