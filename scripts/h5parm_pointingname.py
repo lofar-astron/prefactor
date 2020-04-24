@@ -4,10 +4,13 @@ from losoto.h5parm import h5parm
 from losoto.lib_operations import *
 
 import numpy
+import logging
 ########################################################################
 def main(h5parmdb, solsetName='sol000', pointing='POINTING'):
 
 
+    logging.info("Setting " + str(pointing) + " as pointing direction for the solset " + str(solsetName) + " in " + str(h5parmdb))
+    
     data          = h5parm(h5parmdb, readonly = False)       
     solset        = data.getSolset(solsetName)
     
@@ -35,6 +38,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    format_stream = logging.Formatter("%(asctime)s\033[1m %(levelname)s:\033[0m %(message)s","%Y-%m-%d %H:%M:%S")
+    format_file   = logging.Formatter("%(asctime)s %(levelname)s: %(message)s","%Y-%m-%d %H:%M:%S")
+    logging.root.setLevel(logging.INFO)
+
+    log      = logging.StreamHandler()
+    log.setFormatter(format_stream)
+    logging.root.addHandler(log)
+    
     h5parmdb = args.h5parmdb
-    logging.info("Working on: %s" % (h5parmdb))
     main(h5parmdb, solsetName=args.solsetName, pointing=args.pointing)

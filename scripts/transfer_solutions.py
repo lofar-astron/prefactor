@@ -13,6 +13,9 @@ import subprocess
 def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147'], parset = None):
 
     
+    logging.info('Transferring solutions from ' +  str(refh5parm) + ' to ' + str(h5parmdb) + '.')
+    logging.info('Solutions will be transferred from soltab ' + str(insoltab) + ' to ' + str(outsoltab) + '.')
+    
     ### Open up the h5parm, get an example value
     data           = h5parm(h5parmdb, readonly=False)
     refdata        = h5parm(refh5parm, readonly=True)
@@ -162,6 +165,8 @@ if __name__ == '__main__':
                         help='Name of the output h5parm solution set (default: amplitude000)')
     parser.add_argument('--antenna', '--antenna', type=str, default='[FUSPID].*',
                         help='Regular expression of antenna solutions to be transferred (default: [FUSPID].*)')
+    parser.add_argument('--parset', '--parset', type=str, default=None,
+                        help='Parset for plotting diagnostic plots after transfer with LoSoTo.')
 
     args = parser.parse_args()
     
@@ -173,6 +178,4 @@ if __name__ == '__main__':
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
 
-    logging.info('Transferring solutions from ' +  args.refh5parm + ' to ' + args.h5parm + '.')
-    logging.info('Solutions will be transferred from soltab ' + str(args.insoltab) + ' to ' + str(args.outsoltab) + '.')
-    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = None)
+    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = args.parset)
