@@ -5,6 +5,7 @@ Identify fully flagged antennas
 
 from lofarpipe.support.data_map import DataMap, DataProduct
 import pyrap.tables
+from losoto.h5parm import h5parm
 
 def find_flagged_antennas(ms_file):
     
