@@ -50,6 +50,7 @@ def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', out
     stations_to_transfer = [ station_name for station_name in station_names if re.match(antenna, station_name) ]           
     if len(stations_to_transfer) == 0:
         logging.warning('No stations found matching the regular expression: ' + antenna)
+        logging.info('No solutions have been transferred.')
         data.close()
         refdata.close()
         return(0)
