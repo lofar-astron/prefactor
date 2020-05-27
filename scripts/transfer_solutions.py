@@ -10,8 +10,12 @@ import re
 import numpy
 import subprocess
 ########################################################################
-def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147'], parset = None):
+def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147'], parset = None, do_transfer = True):
 
+    
+    if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
+        logging.info('Transferring solutions will be skipped due to user input.')
+        return(0)
     
     logging.info('Transferring solutions from ' +  str(refh5parm) + ' to ' + str(h5parmdb) + '.')
     logging.info('Solutions will be transferred from soltab ' + str(insoltab) + ' to ' + str(outsoltab) + '.')

@@ -30,6 +30,7 @@
 ! process_baselines_cal    =  *&                                                                  ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! filter_baselines         =  {{ process_baselines_cal }}                                         ## selects only this set of baselines to be processed. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! do_smooth                =  False                                                               ## enable or disable baseline-based smoothing
+! do_transfer              =  True                                                                ## enable or disable transfer of bandpass solutions from a reference to the final solutions
 ! rfistrategy              =  HBAdefault.rfis                                                     ## strategy to be applied with the statistical flagger (AOFlagger)
 ! max2interpolate          =  30                                                                  ## amount of channels in which interpolation should be performed for deriving the bandpass
 ! ampRange                 =  [0, 0]                                                              ## range of median amplitudes accepted per station. Use [0, 0] to use typical ranges of [50, 225] for the current correlator or [0.0004, 0.0018] for the old one.
@@ -842,6 +843,7 @@ transfer_solutions.argument.insoltab                        =   bandpass
 transfer_solutions.argument.outsoltab                       =   bandpass
 transfer_solutions.argument.antenna                         =   {{ antennas2transfer }}
 transfer_solutions.argument.parset                          =   {{ job_directory }}/losoto_transfer.parset
+transfer_solutions.argument.do_transfer                     =   {{ do_transfer }}
 
 ################################
 ## calibrate ionosphere       ##
