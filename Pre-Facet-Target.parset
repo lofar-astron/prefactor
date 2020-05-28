@@ -29,7 +29,7 @@
 ### parameters you may need to adjust   ##
 ##########################################
 
-! refant                    =  'CS001HBA0'                                                        ## name of the station that will be used as a reference for the phase plots, 'closest' will reference to the spatially closest unflagged antenna
+! refant                    =  'CS00.*'                                                           ## regular expression of reference antennas from which to choose. 
 ! flag_baselines            =  []                                                                 ## NDPPP-compatible pattern for baselines or stations to be flagged (may be an empty list, i.e.: [] )
 ! process_baselines_target  =  [CR]S*&                                                            ## performs A-Team-clipping/demixing and direction-independent phase-only self-calibration only on these baselines. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
 ! filter_baselines          =  {{ process_baselines_target }}                                     ## selects only this set of baselines to be processed for the full pipeline. Choose [CR]S*& if you want to process only cross-correlations and remove international stations.
@@ -139,7 +139,7 @@ pipeline.steps.prep         =  [createmap_target, get_targetname, combine_data_t
 
 pipeline.steps.clipATeam    =  [predict_ateam, ateamcliptar, plotateamclip]
 pipeline.steps.concat       =  [combine_target_map, check_bad_antennas, sortmap_target, do_sortmap_maps, dpppconcat, combine_concat_map, ms_concat_target, ms_concat_target_map, expand_memory_map, aoflag]
-pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_concat_map, combine_frac_map, plot_unflagged, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, smooth_data]
+pipeline.steps.prep_gsmcal  =  [check_unflagged, check_unflagged_map, combine_concat_map, combine_frac_map, plot_unflagged, sky_tar, create_target_model_map, make_sourcedb_target, expand_sourcedb_target, gsmcal_parmmap, h5_gsmsol_map, smooth_data, find_refant]
 pipeline.steps.phase        =  [gsmcal_phase, h5imp_gsmcal, prepare_losoto_phase]
 pipeline.steps.tec          =  [gsmcal_tec,   h5imp_gsmcal, prepare_losoto_tec  ]
 
@@ -682,6 +682,11 @@ gsmcal_tec.argument.teccal.usechannelfreq                      =   True
 gsmcal_tec.argument.teccal.beammode                            =   array_factor
 gsmcal_tec.argument.teccal.onebeamperpatch                     =   False
 
+# get the target name
+find_refant.control.kind                                      =   plugin
+find_refant.control.type                                      =   findRefAnt
+find_refant.control.mapfile_in                                =   check_unflagged_map.output.mapfile
+find_refant.control.station_filter                            =   {{ refant }}
 
 ###########################
 ## Analyze cal           ##
@@ -709,7 +714,7 @@ prepare_losoto_phase.control.plotP.axesInPlot                  =   [time,freq]
 prepare_losoto_phase.control.plotP.axisInTable                 =   ant
 prepare_losoto_phase.control.plotP.plotFlag                    =   True
 prepare_losoto_phase.control.plotP.prefix                      =   {{ inspection_directory }}/ph_
-prepare_losoto_phase.control.plotP.refAnt                      =   {{ refant }}
+prepare_losoto_phase.control.plotP.refAnt                      =   find_refant.output.refant
 prepare_losoto_phase.control.plotP.minmax                      =   [-3.14,3.14]
 prepare_losoto_phase.control.plotP2.operation                  =   PLOT
 prepare_losoto_phase.control.plotP2.soltab                     =   sol000/phase000
@@ -718,7 +723,7 @@ prepare_losoto_phase.control.plotP2.axisInTable                =   ant
 prepare_losoto_phase.control.plotP2.axisInCol                  =   pol
 prepare_losoto_phase.control.plotP2.plotFlag                   =   True
 prepare_losoto_phase.control.plotP2.prefix                     =   {{ inspection_directory }}/ph_
-prepare_losoto_phase.control.plotP2.refAnt                     =   {{ refant }}
+prepare_losoto_phase.control.plotP2.refAnt                     =   find_refant.output.refant
 prepare_losoto_phase.control.plotP2.minmax                     =   [-3.14,3.14]
 prepare_losoto_phase.control.plotPd.operation                  =   PLOT
 prepare_losoto_phase.control.plotPd.soltab                     =   sol000/phase000
@@ -727,7 +732,7 @@ prepare_losoto_phase.control.plotPd.axisInTable                =   ant
 prepare_losoto_phase.control.plotPd.axisDiff                   =   pol
 prepare_losoto_phase.control.plotPd.plotFlag                   =   True
 prepare_losoto_phase.control.plotPd.prefix                     =   {{ inspection_directory }}/ph_poldif
-prepare_losoto_phase.control.plotPd.refAnt                     =   {{ refant }}
+prepare_losoto_phase.control.plotPd.refAnt                     =   find_refant.output.refant
 prepare_losoto_phase.control.plotPd.minmax                     =   [-3.14,3.14]
 prepare_losoto_phase.control.plotPd2.operation                 =   PLOT
 prepare_losoto_phase.control.plotPd2.soltab                    =   sol000/phase000
@@ -736,7 +741,7 @@ prepare_losoto_phase.control.plotPd2.axisInTable               =   ant
 prepare_losoto_phase.control.plotPd2.axisDiff                  =   pol
 prepare_losoto_phase.control.plotPd2.plotFlag                  =   True
 prepare_losoto_phase.control.plotPd2.prefix                    =   {{ inspection_directory }}/ph_poldif_
-prepare_losoto_phase.control.plotPd2.refAnt                    =   {{ refant }}
+prepare_losoto_phase.control.plotPd2.refAnt                    =   find_refant.output.refant
 prepare_losoto_phase.control.plotPd2.minmax                    =   [-3.14,3.14]
 
 # create losoto v2 parset file
@@ -755,10 +760,10 @@ prepare_losoto_tec.control.plotTEC1.axisInTable                =   ant
 prepare_losoto_tec.control.plotTEC1.plotFlag                   =   True
 prepare_losoto_tec.control.plotTEC1.minmax                     =   [-0.5,0.5]
 prepare_losoto_tec.control.plotTEC1.prefix                     =   {{ inspection_directory }}/tec
-prepare_losoto_tec.control.plotTEC1.refAnt                     =   {{ refant }}
+prepare_losoto_tec.control.plotTEC1.refAnt                     =   find_refant.output.refant
 prepare_losoto_tec.control.dejump.operation                    =   TECJUMP
 prepare_losoto_tec.control.dejump.soltab                       =   sol000/tec000
-prepare_losoto_tec.control.dejump.refAnt                       =   {{ refant }}
+prepare_losoto_tec.control.dejump.refAnt                       =   find_refant.output.refant
 prepare_losoto_tec.control.plotTEC2.operation                  =   PLOT
 prepare_losoto_tec.control.plotTEC2.soltab                     =   sol000/tec000
 prepare_losoto_tec.control.plotTEC2.axesInPlot                 =   time
@@ -766,7 +771,7 @@ prepare_losoto_tec.control.plotTEC2.axisInTable                =   ant
 prepare_losoto_tec.control.plotTEC2.plotFlag                   =   True
 prepare_losoto_tec.control.plotTEC2.minmax                     =   [-0.5,0.5]
 prepare_losoto_tec.control.plotTEC2.prefix                     =   {{ inspection_directory }}/tec_nojump
-prepare_losoto_tec.control.plotTEC2.refAnt                     =   {{ refant }}
+prepare_losoto_tec.control.plotTEC2.refAnt                     =   find_refant.output.refant
 
 # do the processing on the LoSoTo file
 process_losoto_gsmcal.control.kind                             =   recipe
