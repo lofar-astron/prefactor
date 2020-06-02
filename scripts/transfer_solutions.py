@@ -9,13 +9,25 @@ import os
 import re
 import numpy
 import subprocess
+import math
+
+calibrator_positions = {
+    '3C147': [85.65041667 , 49.85194444],
+    '3C196': [123.4       , 48.21666667],
+    '3C286': [202.78458333, 30.50916667],
+    '3C287': [202.65708333, 25.15305556],
+    '3C295': [212.836     , 52.20258333],
+    '3C380': [277.3825    , 48.74611111],
+    '3C48' : [24.42208333 , 33.15972222]
+}
+
 ########################################################################
-def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = ['3C48', '3C147'], parset = None, do_transfer = True):
+def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147', parset = None, max_separation_arcmin = 1.0):
 
     
-    if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
-        logging.info('Transferring solutions will be skipped due to user input.')
-        return(0)
+    #if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
+        #logging.info('Transferring solutions will be skipped due to user input.')
+        #return(0)
     
     logging.info('Transferring solutions from ' +  str(refh5parm) + ' to ' + str(h5parmdb) + '.')
     logging.info('Solutions will be transferred from soltab ' + str(insoltab) + ' to ' + str(outsoltab) + '.')
@@ -40,13 +52,27 @@ def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', out
         data.close()
         refdata.close()
         return(1)
-    if calibrator[0].upper() in trusted_sources:
-        logging.info(calibrator[0] + ' is a trusted calibrator source. No solutions from a reference solution set will be transferred!')
+    
+    calibrator = calibrator[0].upper()
+    ra  = ((float(sources[0][-1][0])  / math.pi * 180) + 360) % 360
+    dec = ((float(sources[0][-1][-1]) / math.pi * 180) + 360) % 360
+    logging.info('The input direction is (RA/DEC): ' + str(ra) + ' deg, ' + str(dec) + ' deg')
+    for reference_calibrator in calibrator_positions.keys():
+        ra2 = calibrator_positions[reference_calibrator][0]
+        dec2 = calibrator_positions[reference_calibrator][-1]
+        distance = math.degrees(math.acos(math.sin(math.radians(dec)) * math.sin(math.radians(dec2)) + math.cos(math.radians(dec)) * math.cos(math.radians(dec2)) * math.cos(math.radians(ra) - math.radians(ra2))))
+        if distance * 60.0 < float(max_separation_arcmin):
+            logging.info('Position matches with the calibrator source ' + str(reference_calibrator))
+            calibrator = reference_calibrator
+            break
+
+    if calibrator in trusted_sources.split(','):
+        logging.info(calibrator + ' is a trusted calibrator source. No solutions from a reference solution set will be transferred!')
         data.close()
         refdata.close()
         return(0)
     else:
-        logging.info(calibrator[0] + ' is not a trusted calibrator source. Solutions from a reference solution set will be transferred!')
+        logging.info(calibrator + ' is not a trusted calibrator source. Solutions from a reference solution set will be transferred!')
     
   
     ### check for matching antennas
@@ -172,6 +198,11 @@ if __name__ == '__main__':
                         help='Regular expression of antenna solutions to be transferred (default: [FUSPID].*)')
     parser.add_argument('--parset', '--parset', type=str, default=None,
                         help='Parset for plotting diagnostic plots after transfer with LoSoTo.')
+    parser.add_argument('--max_separation_arcmin', type=float, default=1.0,
+                        help='define the maximum seperation between pointing and model direction in arcmin.')
+    parser.add_argument('--trusted', type=str, default='3C48,3C147',
+                        help='comma-separated list of sources to be trusted.')
+
 
     args = parser.parse_args()
     
@@ -183,4 +214,4 @@ if __name__ == '__main__':
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
 
-    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = args.parset)
+    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = args.parset, max_separation_arcmin = args.max_separation_arcmin, trusted_sources = args.trusted)
