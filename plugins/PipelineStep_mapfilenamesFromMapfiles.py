@@ -36,7 +36,7 @@ def plugin_main(args, **kwargs):
             if len(keyname) < 10:
                 raise ValueError("MapfilenamesFromMapfiles: Key: "+keyname+" is too short!")
         else:
-            print "MapfilenamesFromMapfiles: input key:",keyname,"in unkown!"
+            print("MapfilenamesFromMapfiles: input key:",keyname,"in unkown!")
     for keyname in mapfile_keys:
         inmap = DataMap.load(kwargs[keyname])
         if len(inmap) != 1:

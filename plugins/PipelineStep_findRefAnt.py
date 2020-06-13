@@ -21,7 +21,7 @@ def plugin_main(args, **kwargs):
 	mapfile_in     = kwargs['mapfile_in']
 	station_filter = kwargs['station_filter']
 	data           = DataMap.load(mapfile_in)
-	mslist         = [data[i].file for i in xrange(len(data))]
+	mslist         = [data[i].file for i in range(len(data))]
 	
 	## derive the fraction of flagged data of the entire observation
 	print('Reading data.')
