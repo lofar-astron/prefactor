@@ -62,6 +62,6 @@ def plugin_main(args, **kwargs):
     
     ## return results
     result = {'filter':str(filter)}
-    return result
+    return(result)
     
     pass    

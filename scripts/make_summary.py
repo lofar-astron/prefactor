@@ -82,18 +82,18 @@ def main(observation_directory = '/data/share/pipeline/Observation', inspection_
 	## get antenna information
 	solset       = data.getSolset(solset)
 	soltabs      = list([soltab.name for soltab in solset.getSoltabs()])
-	source       = solset.obj._f_get_child('source')[0][0]
+	source       = solset.obj._f_get_child('source')[0][0].decode('utf-8')
 	antenna_len  = '{:<' + str(max([ len(antenna)     for antenna     in solset.getAnt()])) + '}'
 	soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltabs        ])) + '}'
 	
 	## get software versions
 	try:
-		DPPP_version      =             subprocess.Popen(['DPPP', '-v'], stdout=subprocess.PIPE).stdout.read()
-		losoto_version    = 'losoto ' + subprocess.Popen(['losoto', '--version'], stderr=subprocess.PIPE).stderr.read()
-		lsmtool_version   =             subprocess.Popen(['lsmtool', '--version'], stdout=subprocess.PIPE).stdout.read()
-		aoflagger_version =             subprocess.Popen(['aoflagger', '--version'], stdout=subprocess.PIPE).stdout.read()
-		wsclean_version   =             subprocess.Popen(['wsclean', '--version'], stdout=subprocess.PIPE).stdout.read().split('\n')[1] + '\n'
-		python_version    =             subprocess.Popen(['python', '--version'], stderr=subprocess.PIPE).stderr.read()
+		DPPP_version      =             subprocess.Popen(['DPPP', '-v'], stdout=subprocess.PIPE).stdout.read().decode('utf-8')
+		losoto_version    = 'losoto ' + subprocess.Popen(['losoto', '--version'], stderr=subprocess.PIPE).stderr.read().decode('utf-8')
+		lsmtool_version   =             subprocess.Popen(['lsmtool', '--version'], stdout=subprocess.PIPE).stdout.read().decode('utf-8')
+		aoflagger_version =             subprocess.Popen(['aoflagger', '--version'], stdout=subprocess.PIPE).stdout.read().decode('utf-8')
+		wsclean_version   =             subprocess.Popen(['wsclean', '--version'], stdout=subprocess.PIPE).stdout.read().decode('utf-8').split('\n')[1] + '\n'
+		python_version    =             subprocess.Popen(['python', '--version'], stderr=subprocess.PIPE).stderr.read().decode('utf-8')
 		
 		import matplotlib, scipy, astropy
 		modules_version   = 'matplotlib ' + str(matplotlib.__version__) + ', scipy ' + str(scipy.__version__) + ', astropy ' + str(astropy.__version__) + '\n'
