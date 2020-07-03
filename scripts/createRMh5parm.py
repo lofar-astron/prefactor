@@ -214,6 +214,17 @@ if __name__ == '__main__':
                         in interpolation of the IONEX files. 1.0 means time interpolation assumes \
                         ionosphere rotates in opposite direction of the Earth. 0.0 (default) means \
                         no rotation applied',dest="earth_rot",)
+    parser.add_argument('--proxyserver', type=str, default=None,
+                        help='Name of a proxy server to use (default: None)')
+    parser.add_argument('--proxyport', type=int, default=None,
+                        help='Name of a proxy server port to use (default: None)')
+    parser.add_argument('--proxytype', type=str, default=None,
+                        help='Name of a proxy server type to use (default: None)')
+    parser.add_argument('--proxyuser', type=str, default=None,
+                        help='Name of a proxy server user to use (default: None)')
+    parser.add_argument('--proxypass', type=str, default=None,
+                        help='Password of the proxy server user to use (default: None)')
+
 
     args = parser.parse_args()
 
@@ -222,5 +233,6 @@ if __name__ == '__main__':
     logging.info("Working on: %s %s" % (MS, h5parmdb))
     main(MS, h5parmdb, ionex_server=args.server, ionex_prefix=args.prefix, 
                  ionexPath=args.ionexpath, solset_name=args.solsetName, 
-                 timestepRM=args.timestep, earth_rot=args.earth_rot)
+                 timestepRM=args.timestep, earth_rot=args.earth_rot, proxyServer=args.proxyserver,
+                 proxyPort=args.proxyport,proxyType=args.proxytype,proxyUser=args.proxyuser,proxyPass=args.proxypass)
     
