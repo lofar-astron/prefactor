@@ -31,7 +31,7 @@ def main(MSfile, h5parmdb, solset_name = 'calibrator', filter = '*&'):
     msfile = input2strlist_nomapfile(MSfile)[0]
 
     ## reading ANTENNA table of MS
-    logging.info('Collecting information from the ANTENNA table.')
+    logging.info('Collecting information from the ANTENNA table of ' + str(msfile))
     antennaTable = pt.table(msfile + "::ANTENNA", ack = False)
     antennaNames = antennaTable.getcol('NAME')
     
@@ -39,6 +39,8 @@ def main(MSfile, h5parmdb, solset_name = 'calibrator', filter = '*&'):
     data   = h5parm(h5parmdb, readonly = True)
     solset = data.getSolset(solset_name)
     station_names = solset.getAnt().keys()
+    
+    station_names = [station_name.decode('utf-8') for station_name in station_names]
     
     ## check whether there are more stations in the target than in the calibrator solutions
     missing_stations = list(set(antennaNames) - set(station_names))
