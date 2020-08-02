@@ -516,6 +516,7 @@ prepare_losoto_PA.control.align.operation                   =   POLALIGN
 prepare_losoto_PA.control.align.soltabOut                   =   polalign
 prepare_losoto_PA.control.align.average                     =   True
 prepare_losoto_PA.control.align.replace                     =   True
+prepare_losoto_PA.control.align.maxResidual                 =   1.0
 prepare_losoto_PA.control.align.fitOffset                   =   False
 prepare_losoto_PA.control.align.refAnt                      =   find_refant.output.refant
 prepare_losoto_PA.control.plotAlign.operation               =   PLOT
