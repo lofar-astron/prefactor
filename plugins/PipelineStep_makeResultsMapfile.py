@@ -28,6 +28,10 @@ def plugin_main(args, **kwargs):
     return result
 
 def string2bool(instring):
+    try:
+        basestring
+    except NameError:
+        basestring = str
     if not isinstance(instring, basestring):
         raise ValueError('string2bool: Input is not a basic string!')
     if instring.upper() == 'TRUE' or instring == '1':
@@ -42,7 +46,7 @@ class MiniMapfileManager(DataMap):
     # just copy&paste the methods in here into the "real" MapfileManager
 
     def change_directory(self, newDirectory):
-	for i, item in enumerate(self._data):
+        for i, item in enumerate(self._data):
             basename = os.path.basename(item.file)
             if not basename:
                 raise ValueError('MiniMapfileManager.change_directory: basename of',item.file,'is empty!')
