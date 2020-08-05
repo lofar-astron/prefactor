@@ -5,6 +5,7 @@ Script to sort a list of MSs by into frequency groups by time-stamp
 import pyrap.tables as pt
 import sys, os
 import numpy as np
+import logging
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import DataProduct
 
@@ -205,7 +206,8 @@ def main(ms_input, filename=None, mapfile_dir=None, numSB=-1, hosts=None, NDPPPf
     if file_bandwidth > freq_width:
         raise ValueError("Bandwidth of files is larger than minimum frequency step between two files!")
     if file_bandwidth < (freq_width*0.51):
-        raise ValueError("Bandwidth of files is smaller than 51% of the minimum frequency step between two files! (More than about half the data is missing.)")
+        #raise ValueError("Bandwidth of files is smaller than 51% of the minimum frequency step between two files! (More than about half the data is missing.)")
+        logging.warning("Bandwidth of files is smaller than 51% of the minimum frequency step between two files! (More than about half the data is missing.)")
     #the new output map
     filemap = MultiDataMap()
     groupmap = DataMap()
