@@ -40,7 +40,7 @@ def main(MSfile, h5parmdb, solset_name = 'calibrator', filter = '*&'):
     solset = data.getSolset(solset_name)
     station_names = solset.getAnt().keys()
     
-    station_names = [station_name.decode('utf-8') for station_name in station_names]
+    #station_names = [station_name.decode('utf-8') for station_name in station_names]
     
     ## check whether there are more stations in the target than in the calibrator solutions
     missing_stations = list(set(antennaNames) - set(station_names))
