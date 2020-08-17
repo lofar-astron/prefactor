@@ -178,7 +178,7 @@ def main(MSfiles, h5parmdb, solset_name = "sol000",timestepRM=300,
             raise ValueError("Couldn't get RM information from RMextract! (But I don't know why.)")
         
     logging.info('Adding rotation measure values to: ' + solset_name + ' of ' + h5parmdb)
-    if type(station_names[0]) != str:
+    if type(list(station_names)[0]) != str:
         rm_vals = np.array([rmdict["RM"][stat.decode()].flatten() for stat in station_names])
     else:
         rm_vals = np.array([rmdict["RM"][stat].flatten() for stat in station_names])
