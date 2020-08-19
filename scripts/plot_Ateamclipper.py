@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('txtfile', type=str,
                         help='Input text file containing frequency and flag fraction of the XX and YY polarization.')
     parser.add_argument('outfile', type=str,
-                        help='Input text file containing frequency and flag fraction of the XX and YY polarization.')
+                        help='Output image file containing frequency and flag fraction of the XX and YY polarization.')
 
 
     args = parser.parse_args()
