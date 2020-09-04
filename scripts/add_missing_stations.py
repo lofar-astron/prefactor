@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Adds phases and amplitudes to any missing station if they appear in an h5parm, but not in a particular soltab.')
 
     parser.add_argument('h5parm', type=str,
-                        help='H5parm to which this action should be performed .')
+                        help='H5parm to which this action should be performed.')
     parser.add_argument('--refh5', type=str,
                         help='External H5parm from which the full list of antennas is used from.')
     parser.add_argument('--solset', type=str, default='sol000',
@@ -135,6 +135,10 @@ if __name__ == "__main__":
                         help='Input solution table')
     parser.add_argument('--soltab_out', type=str, default='GSMphase',
                         help='Output solution table (has to be different from input solution table)')
+    parser.add_argument('--filter', type=str, default='[CR]S*&',
+                        help='Filter these antenna string from the processing')
+    parser.add_argument('--bad_antennas', type=str, default='[CR]S*&',
+                        help='Antenna string to be processed')
 
 
     args = parser.parse_args()
@@ -147,5 +151,5 @@ if __name__ == "__main__":
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
 
-    main(h5parmfile=args.h5parm, refh5=args.refh5, solset=args.solset, refsolset=args.refsolset, soltab_in=args.soltab_in, soltab_out=args.soltab_out)
+    main(h5parmfile=args.h5parm, refh5=args.refh5, solset=args.solset, refsolset=args.refsolset, soltab_in=args.soltab_in, soltab_out=args.soltab_out, filter=args.filter, bad_antennas=args.bad_antennas)
 
