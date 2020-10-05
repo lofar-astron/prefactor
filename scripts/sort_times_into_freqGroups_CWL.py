@@ -236,6 +236,7 @@ def main(MSfile, numSB=10, NDPPPfill=True, stepname=None, mergeLastGroup=False, 
                 groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
                 if type(stepname) is str:
                     groupname += stepname
+                groupname = os.path.basename(groupname)
                 groupnames.append(groupname)
                 filenames[groupname] = files
 
