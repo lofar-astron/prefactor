@@ -33,7 +33,7 @@ def main(h5parmfile, refh5 = None, solset='sol000', refsolset='sol000', soltab_i
 
     ### Open up the h5parm, get an example value
     data       = h5parm(h5parmfile, readonly = False)
-    refdata    = h5parm(refh5, readonly = False)
+    refdata    = h5parm(refh5, readonly = True)
     solset     = data.getSolset(solset)
     refsolset  = refdata.getSolset(refsolset)
     
