@@ -71,8 +71,13 @@ def main(h5parmfile,solset='sol000',soltab='phase000',nr_grid=1,doplot=True,outb
         valy = valsy[i,:,0].flatten()
         phx.append(np.nan_to_num(valx))
         phy.append(np.nan_to_num(valy))
-        allposx.append(stations[station_name.encode()])
-        allposy.append(stations[station_name.encode()])
+        if type(station_name) != str:
+            allposx.append(stations[station_name.decode()])
+            allposy.append(stations[station_name.decode()])
+        else:
+            allposx.append(stations[station_name])
+            allposy.append(stations[station_name])
+
 
     phx = np.array(phx)
     phy = np.array(phy) 
