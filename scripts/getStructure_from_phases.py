@@ -18,6 +18,7 @@ import scipy
 from scipy.optimize import leastsq
 import argparse
 import logging
+import numpy
 
 def mad(arr):
     """ Median Absolute Deviation: a "Robust" version of standard deviation.
