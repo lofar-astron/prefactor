@@ -22,12 +22,12 @@ calibrator_positions = {
 }
 
 ########################################################################
-def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147', parset = None, max_separation_arcmin = 1.0):
+def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147', parset = None, max_separation_arcmin = 1.0, do_transfer = True):
 
     
-    #if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
-        #logging.info('Transferring solutions will be skipped due to user input.')
-        #return(0)
+    if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
+        logging.info('Transferring solutions will be skipped due to user input.')
+        return(0)
     
     logging.info('Transferring solutions from ' +  str(refh5parm) + ' to ' + str(h5parmdb) + '.')
     logging.info('Solutions will be transferred from soltab ' + str(insoltab) + ' to ' + str(outsoltab) + '.')
