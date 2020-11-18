@@ -233,7 +233,7 @@ def main(MSfile, numSB=10, NDPPPfill=True, stepname=None, mergeLastGroup=False, 
                     files.append('dummy.ms')
             if not skip_this:
                 freqID = int((freqborders[groupIdx]+freqborders[groupIdx+1])/2e6)
-                groupname = time_groups[time]['basename']+'_%Xt_%dMHz.ms'%(time,freqID)
+                groupname = time_groups[time]['basename']+'_%Xt_%dMHz'%(time,freqID)
                 if type(stepname) is str:
                     groupname += stepname
                 groupname = os.path.basename(groupname)
