@@ -18,6 +18,8 @@ It includes:
 
 The full documentation can be found at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
 
+**WARNING**: The current skymodels used for 3C196 and 3C295 are not using the Scaife&Heald flux density scale.
+
 ### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
 * [LoSoTo](https://github.com/revoltek/losoto) (version of Jun 15, 2020, commit [c8fbd61](https://github.com/revoltek/losoto/tree/c8fbd6194074bef4009cb66dd7ecd59e98664d63))
