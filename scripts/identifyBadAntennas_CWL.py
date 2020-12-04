@@ -4,7 +4,6 @@ Identify fully flagged antennas
 """
 
 import os
-import multiprocessing
 import logging
 
 ########################################################################
@@ -33,24 +32,23 @@ def find_flagged_antennas(ms_file):
    flaggedants = [ output.split('(')[-1].rstrip(')\n') for output in outputs if 'station' in output ]
    return(flaggedants)
 ########################################################################
-def main(MSfile, filter = '*&'):
+def main(MSfile):
 
-    mslist         = input2strlist_nomapfile(MSfile)
+    ms_file         = input2strlist_nomapfile(MSfile)[0]
     
-    pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
-    flaggedants_list = pool.map(find_flagged_antennas, mslist)
+    flaggedants     = find_flagged_antennas(ms_file)
 
-    flagged_antenna_list = set.intersection(*map(set, flaggedants_list)) 
+    #flagged_antenna_list = set.intersection(*map(set, flaggedants_list)) 
 
-    for flagged_antenna in flagged_antenna_list:
-        filter += ';!' + flagged_antenna + '*&&*'
-        pass
+    #for flagged_antenna in flagged_antenna_list:
+        #filter += ';!' + flagged_antenna + '*&&*'
+        #pass
 
-    print('Identified bad antennas: ' + str(flagged_antenna_list))
+    #print('Identified bad antennas: ' + str(flagged_antenna_list))
 
     ## return results
-    result = {'filter':str(filter)}
-    logging.info('The following stations should be used for further processing: ' + str(result['filter']))
+    result = {'flaggedants':str(flaggedants)}
+    logging.info(str(flaggedants) + ' are flagged in ' + str(ms_file))
     return(result)
 
 ########################################################################
@@ -60,8 +58,6 @@ if __name__ == '__main__':
 
     parser.add_argument('MSfiles', type=str, nargs='+',
                         help='One (or more MSs) for which you want to get the antenna list.')
-    parser.add_argument('--filter', type=str, default='*&',
-                        help='Stations to include in the check. Use LOFAR antenna selection syntax.')
 
     args = parser.parse_args()
 
@@ -73,4 +69,4 @@ if __name__ == '__main__':
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
     
-    main(args.MSfile, filter = args.filter)
+    main(args.MSfile)
