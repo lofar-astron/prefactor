@@ -30,21 +30,13 @@ def find_flagged_antennas(ms_file):
    logging.info('Reading ' + str(ms_file))
    outputs = os.popen('DPPP msin=' + ms_file + ' msout=. steps=[count] count.type=counter count.warnperc=100 | grep NOTE').readlines()
    flaggedants = [ output.split('(')[-1].rstrip(')\n') for output in outputs if 'station' in output ]
-   return(flaggedants)
+   return(','.join(flaggedants))
 ########################################################################
 def main(MSfile):
 
     ms_file         = input2strlist_nomapfile(MSfile)[0]
-    
+
     flaggedants     = find_flagged_antennas(ms_file)
-
-    #flagged_antenna_list = set.intersection(*map(set, flaggedants_list)) 
-
-    #for flagged_antenna in flagged_antenna_list:
-        #filter += ';!' + flagged_antenna + '*&&*'
-        #pass
-
-    #print('Identified bad antennas: ' + str(flagged_antenna_list))
 
     ## return results
     result = {'flaggedants':str(flaggedants)}
