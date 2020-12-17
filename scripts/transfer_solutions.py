@@ -202,6 +202,8 @@ if __name__ == '__main__':
                         help='define the maximum seperation between pointing and model direction in arcmin.')
     parser.add_argument('--trusted', type=str, default='3C48,3C147',
                         help='comma-separated list of sources to be trusted.')
+    parser.add_argument('--do_transfer', type=str, default='False',
+                        help='Do the transfer.')
 
 
     args = parser.parse_args()
@@ -213,5 +215,5 @@ if __name__ == '__main__':
     log      = logging.StreamHandler()
     log.setFormatter(format_stream)
     logging.root.addHandler(log)
-
-    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = args.parset, max_separation_arcmin = args.max_separation_arcmin, trusted_sources = args.trusted)
+    
+    main(args.h5parm, refh5parm = args.refh5parm, insolset=args.insolset, outsolset=args.outsolset, insoltab=args.insoltab, outsoltab=args.outsoltab, antenna = args.antenna, parset = args.parset, max_separation_arcmin = args.max_separation_arcmin, trusted_sources = args.trusted, do_transfer = args.do_transfer)
