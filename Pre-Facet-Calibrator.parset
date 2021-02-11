@@ -111,7 +111,7 @@ pipeline.pluginpath        =  {{ prefactor_directory }}/plugins
 ! cal_solutions            =  {{ cal_values_directory }}/cal_solutions.h5
 
 ## averaging for the calibrator data
-! avg_timeresolution       =  4.                                                                  ## average to 4 sec/timeslot
+! avg_timeresolution       =  4.                                                                  ## average to 4 sec/timeslot, units here are seconds
 ! avg_freqresolution       =  48.82kHz                                                            ## average to 48.82 kHz/ch (= 4 ch/SB)
 ! bandpass_freqresolution  =  195.3125kHz                                                         ## resolution of the bandpass table is 195.3125kHz (= 1 ch/SB)
 
