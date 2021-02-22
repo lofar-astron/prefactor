@@ -100,11 +100,12 @@ def main(ms_input, ms_output, min_length, overhead = 0.8, filename=None, mapfile
         pt.msconcat(filelist[set_ranges[i]:set_ranges[i + 1]], f)
         #map_out.data.append(DataProduct('localhost', f, False))
 
-    fileid = os.path.join(mapfile_dir, filename)
+    #fileid = os.path.join(mapfile_dir, filename)
     #map_out.save(fileid)
-    result = {'concatmapfile': fileid, 'memory': memory}
+    #print(filename)
+    #result = {'concatfile': filename, 'memory': memory}
 
-    return(result)
+    return(0)
 
 ########################################################################
 if __name__ == '__main__':
