@@ -22,7 +22,7 @@ calibrator_positions = {
 }
 
 ########################################################################
-def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147', parset = None, max_separation_arcmin = 1.0, do_transfer = True):
+def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147,3C196,3C295', parset = None, max_separation_arcmin = 1.0, do_transfer = False):
 
     
     if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
@@ -200,7 +200,7 @@ if __name__ == '__main__':
                         help='Parset for plotting diagnostic plots after transfer with LoSoTo.')
     parser.add_argument('--max_separation_arcmin', type=float, default=1.0,
                         help='define the maximum seperation between pointing and model direction in arcmin.')
-    parser.add_argument('--trusted', type=str, default='3C48,3C147',
+    parser.add_argument('--trusted', type=str, default='3C48,3C147,3C196,3C295',
                         help='comma-separated list of sources to be trusted.')
     parser.add_argument('--do_transfer', type=str, default='False',
                         help='Do the transfer.')
