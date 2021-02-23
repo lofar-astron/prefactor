@@ -22,7 +22,7 @@ calibrator_positions = {
 }
 
 ########################################################################
-def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147,3C196,3C295', parset = None, max_separation_arcmin = 1.0, do_transfer = False):
+def main(h5parmdb, refh5parm = '/data/solutions/3C48.h5', insolset='sol000', outsolset='sol000', insoltab='amplitude000', outsoltab='amplitude000', antenna = '[FUSPID].*', trusted_sources = '3C48,3C147,3C196,3C295', parset = None, max_separation_arcmin = 1.0, do_transfer = True):
 
     
     if not do_transfer or do_transfer == 'False' or do_transfer == 'F':
