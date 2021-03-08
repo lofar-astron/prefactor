@@ -22,12 +22,13 @@ The full documentation can be found at the [prefactor webpage](https://www.astro
 
 ### Software requirements:
 * the full "offline" LOFAR software installation (version >= 3.1)
+* [DPPP](https://github.com/lofar-astron/DP3) (version v4.2)
 * [LoSoTo](https://github.com/revoltek/losoto) (version of Jun 15, 2020, commit [c8fbd61](https://github.com/revoltek/losoto/tree/c8fbd6194074bef4009cb66dd7ecd59e98664d63))
 * [LSMTool](https://github.com/darafferty/LSMTool) (version >= 1.4.2)
 * [RMextract](https://github.com/maaijke/RMextract) (commit a618fff or later)
 * Python (including matplotlib, scipy, and astropy)
-* [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/) (version 2.14 or later)
-* [WSClean](https://sourceforge.net/projects/wsclean) (for Initial-Subtract; version >= 2.5)
+* [AOFlagger](https://gitlab.com/aroffringa/aoflagger) (version 2.14)
+* [WSClean](https://gitlab.com/aroffringa/wsclean) (for Initial-Subtract; version >= 2.5)
 * for Initial-Subtract-IDG(-LowMemory).parset and Pre-Facet-Image.parset: WSClean must be compiled with [IDG](https://gitlab.com/astron-idg/idg)
 * APLpy (for Initial-Subtract and Pre-Facet-Image)
 
