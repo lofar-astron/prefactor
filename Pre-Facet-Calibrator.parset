@@ -44,7 +44,7 @@
 ! do_transfer              =  False                                                               ## enable or disable transfer of bandpass solutions from a reference to the final solutions. WARNING: Bad calibrator results may have strong impacts on further calibration results.
 ! solutions2transfer       =  {{ prefactor_directory }}/solutions/3C48.h5                         ## location of h5parm reference solutions to transfer
 ! antennas2transfer        =  [FUSPID].*                                                          ## regular expression of antennas which solutions should be transferred to the final solution set, if none of the trusted calibrators have been observed (by default: all international stations)
-! trusted_sources          =  3C48,3C147,3C196,3C295
+! trusted_sources          =  3C48,3C147,3C196,3C295,3C380
 
 # demixing options (only used if demix step is added to the prep_cal_strategy variable)
 ! demix_sources            =  [CasA,CygA]                                                         ## choose sources to demix (provided as list)
