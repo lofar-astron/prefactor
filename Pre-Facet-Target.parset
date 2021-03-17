@@ -813,7 +813,7 @@ h5exp_gsm.argument.outsolset                                   =   target
 h5exp_gsm.argument.outh5parm                                   =   {{ solutions }}
 
 ################################
-## final step (EXPERIMENTAL)  ##
+## final step                 ##
 ################################
 
 # apply the final solutions to the data and compress it
