@@ -13,7 +13,7 @@
 ### parameters you will need to adjust. ##
 ##########################################
 ## information about the calibrator data
-! cal_input_path           =  /data/scratch/drabent/3C286_compressed/                                               ## specify the directory where your calibrator data is stored
+! cal_input_path           =  /data/scratch/drabent                                               ## specify the directory where your calibrator data is stored
 ! cal_input_pattern        =  L228161*.MS                                                         ## regular expression pattern of all your calibrator files
 
 ## location of the software
