@@ -15,7 +15,7 @@
 
 ## information about the target data
 ! target_input_path         =  /data/scratch/drabent/                                             ## specify the directory where your target data is stored
-! target_input_pattern      =  L228163*.MS                                                        ## regular expression pattern of all your target files
+! target_input_pattern      =  L228163*SB00*.MS                                                        ## regular expression pattern of all your target files
 
 ## location of the software
 ! prefactor_directory       =  /home/drabent/prefactor                                            ## path to your prefactor copy
