@@ -28,21 +28,27 @@ def plugin_main(args, **kwargs):
 	logging.info('Reading data.')
 	pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
 	flagged_fraction_dict = pool.map(find_flagged_fraction, mslist)
-	
-	print('Apply station filter ' + str(station_filter))
-	logging.info('Apply station filter ' + str(station_filter))
-	flagged_fraction_data = {}
-	for entry in flagged_fraction_dict:
-		antennas = entry.keys()
-		selected_stations = [ station_name for station_name in antennas if re.match(station_filter, station_name) ]
-		if len(selected_stations) == 0:
-			logging.error('No stations left after filtering.')
-			return(1)
-		for antenna in selected_stations:
-			try:
-				flagged_fraction_data[antenna].append(float(entry[antenna]))
-			except KeyError:
-				flagged_fraction_data[antenna] = [float(entry[antenna])]
+	no_station_selected = True
+
+	while no_station_selected:	
+		print('Applying station filter ' + str(station_filter))
+		logging.info('Applying station filter ' + str(station_filter))
+		flagged_fraction_data = {}
+		no_station_selected = False
+		for entry in flagged_fraction_dict:
+			antennas = entry.keys()
+			selected_stations = [ station_name for station_name in antennas if re.match(station_filter, station_name) ]
+			if len(selected_stations) == 0:
+				logging.warning('No stations left after filtering. Station(s) do(es) not exist in all subbands. No filter is used.')
+				print('No stations left after filtering. Station(s) do(es) not exist in all subbands. No filter is used.')
+				station_filter = ''
+				no_station_selected = True
+				break
+			for antenna in selected_stations:
+				try:
+					flagged_fraction_data[antenna].append(float(entry[antenna]))
+				except KeyError:
+					flagged_fraction_data[antenna] = [float(entry[antenna])]
 
 	flagged_fraction_list = []
 	sorted_stations = sorted(flagged_fraction_data.keys())
