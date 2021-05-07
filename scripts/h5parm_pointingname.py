@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from losoto.h5parm import h5parm
 from losoto.lib_operations import *

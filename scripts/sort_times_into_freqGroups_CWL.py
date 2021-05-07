@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 Script to sort a list of MSs by into frequency groups by time-stamp
 """

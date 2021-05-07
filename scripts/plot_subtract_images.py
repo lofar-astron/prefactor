@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 plot image overlaid with mask contours
 Original code from Reinout

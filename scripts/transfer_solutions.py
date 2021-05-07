@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Written for prefactor by Alexander Drabent (alex@tls-tautenburg.de), 19th July 2019.
 
 from losoto.h5parm import h5parm

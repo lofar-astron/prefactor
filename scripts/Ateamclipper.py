@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## changelog
 # W.Williams 2014/11/03  add - to give input/output statistics per channel
