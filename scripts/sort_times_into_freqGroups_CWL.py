@@ -246,9 +246,12 @@ def main(MSfile, numSB=10, NDPPPfill=True, stepname=None, mergeLastGroup=False, 
         if orphan_files > 0:
             logging.info("Had %d unassigned files in time-group %xt."%(orphan_files, time))
 
-    results = {'filenames': filenames, 'groupnames': groupnames}
+    nr_of_groups = len(groupnames)
+    total_bandwidth = nr_of_groups * groupBW
+    results = {'filenames': filenames, 'groupnames': groupnames, 'total_bandwidth': total_bandwidth}
     print(filenames)
     print(groupnames)
+    print(total_bandwidth)
     return(results)
     
 ########################################################################
