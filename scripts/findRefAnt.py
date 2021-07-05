@@ -7,6 +7,19 @@ import numpy as np
 
 
 def find_flagged_fraction(ms_file):
+    """
+    Finds flagged fraction for all stations
+
+    Parameters
+    ----------
+    ms_file : str
+        Name (path) of input MS
+
+    Returns
+    -------
+    result : dict
+        Dict of station_name:flagged_fraction for all stations
+    """
     # Use taql to find the flagged fraction per station
     ant = ct.table(ms_file+'::ANTENNA', ack=False)
     station_names = ant.col('NAME')[:]
