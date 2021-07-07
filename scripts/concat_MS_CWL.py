@@ -36,7 +36,7 @@ def getsystemmemory():
 ########################################################################
 def getfilesize(MS):
    
-   size = int(os.popen('du -cks ' + MS).readlines()[0].split()[0])
+   size = int(os.popen('du -Dks ' + MS).readlines()[0].split()[0])
    return size
 
    pass
