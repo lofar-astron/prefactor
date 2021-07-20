@@ -35,20 +35,19 @@ def plugin_main(args, **kwargs):
     filter         = kwargs['filter']
     data           = DataMap.load(mapfile_in)
     mslist         = [data[i].file for i in xrange(len(data))]
-     
+
     pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
     flaggedants_list = pool.map(find_flagged_antennas, mslist)
-   
+
     flagged_antenna_list = set.intersection(*map(set, flaggedants_list)) 
 
     for flagged_antenna in flagged_antenna_list:
-        filter += ';!' + flagged_antenna + '*&&*'
-        pass
-    
+        if flagged_antenna != '':
+            filter += ';!' + flagged_antenna + '*&&*'
+
     print('Identified bad antennas: ' + str(flagged_antenna_list))
-    
+
     ## return results
     result = {'filter':str(filter)}
     return(result)
-    
-    pass    
+
