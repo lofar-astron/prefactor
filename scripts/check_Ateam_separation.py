@@ -15,6 +15,7 @@ import pyrap.measures as pm
 import sys
 import numpy
 import os
+import json
 
 targets = [ {'name' : 'CasA', 'ra' : 6.123487680622104,  'dec' : 1.0265153995604648},
             {'name' : 'CygA', 'ra' : 5.233686575770755,  'dec' : 0.7109409582180791},
@@ -104,6 +105,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
     print('SEPARATION from A-Team sources')
     print('------------------------------')
     print('The minimal accepted distance to an A-Team source is: ' + str(min_separation) + ' deg.')
+    json_output = []
     for target in targets:
    
         t = qa.quantity(time[0], 's')
@@ -131,12 +133,18 @@ def main(ms_input, min_separation = 30, outputimage = None):
         
         el = numpy.array(el)
         pylab.plot(time1, el)
-        
         if target['name'] != 'Pointing':
             print(target['name'] + ': ' + str(me.separation(pointing, direction)))
             if int(float(min_separation)) > int(float(str(me.separation(pointing, direction)).split(' deg')[0])):
                 print('WARNING: The A-Team source ' + target['name'] + ' is closer than ' + str(min_separation) + ' deg to the phase reference center. Calibration might not perform as expected.')
+                json_output.append({'source' : target['name'], 'distance' : str(me.separation(pointing, direction))})
 
+    # write JSONO file
+    
+    with open(os.path.splitext(outputimage)[0] + '.json', 'w') as fp:
+		json.dump(json_output, fp)
+
+    # plot A-Team separation
     print('------------------------------')
     pylab.title('Pointing Elevation')
     pylab.title('Elevation')

@@ -6,7 +6,7 @@ import argparse
 import json
 
 ###############################################################################
-def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = 'summary.json', structure_file = None):
+def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = 'summary.json', structure_file = None, Ateam_separation_file = None):
 	"""
 	Creates summary of a given prefactor3-CWL run
 	
@@ -15,6 +15,8 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', ba
 	filter: antenna string which is pre-selected (by user or pipeline)
 	bad_anntenas: pre-selected antennas and removed stations (separated by ";")
 	"""
+	# location of logfile
+	print('Summary logfile is written to ' + output_fname)
 	
 	bad_antennas_list = bad_antennas.lstrip(filter).replace('!','').replace('*','').replace('&','').split(';')
 
@@ -32,8 +34,19 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', ba
 				break
 		json_output['metrics'][pipeline]['diffractive_scale'] = diffractive_scale
 
+	## get Ateam_separation information
+	if Ateam_separation_file:
+        f = open(Ateam_separation_file, 'r')
+        json_output['metrics'][pipeline]['close_sources'] = json.load(f)
+        if len(json_output['metrics'][pipeline]['close_sources']) > 0:
+            Ateam_list = ''
+            for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
+                Ateam_list += i['source'] + ','
+        else:
+            Ateam_list = 'NONE'
+        print('A-Team sources close to the phase reference center: ' + Ateam_list.rstrip(','))
+        
 	## write JSON file
-	print('Summary is written to ' + output_fname)
 	with open(output_fname, 'w') as fp:
 		json.dump(json_output, fp)
 
@@ -50,6 +63,7 @@ if __name__=='__main__':
 	parser.add_argument('--bad_antennas', type=str, default='[CR]S*&', help='Antenna string to be processed')
 	parser.add_argument('--output_fname', '--output_fname', type=str, default='summary.json', help='Name of the output filename (default: summary.json)')
 	parser.add_argument('--structure_file', type=str, default=None, help='Location of the structure function logfile')
+	parser.add_argument('--Ateam_separation_file', type=str, default=None, help='Location of the Ateam_separation JSON file')
 	
 	args = parser.parse_args()
 	
