@@ -34,7 +34,7 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', ba
 				break
 		json_output['metrics'][pipeline]['diffractive_scale'] = diffractive_scale
 
-	## get Ateam_separation information
+	## get Ateam_separation info
 	if Ateam_separation_file:
 		f = open(Ateam_separation_file, 'r')
 		json_output['metrics'][pipeline]['close_sources'] = json.load(f)
@@ -68,6 +68,6 @@ if __name__=='__main__':
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.pipeline, args.run_type, args.filter, args.bad_antennas, args.output_fname, args.structure_file)
+	main(args.pipeline, args.run_type, args.filter, args.bad_antennas, args.output_fname, args.structure_file, args.Ateam_separation_file)
 	
 	sys.exit(0)
