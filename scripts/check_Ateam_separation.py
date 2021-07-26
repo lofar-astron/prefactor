@@ -142,7 +142,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
     # write JSONO file
     
     with open(os.path.splitext(outputimage)[0] + '.json', 'w') as fp:
-		json.dump(json_output, fp)
+        json.dump(json_output, fp)
 
     # plot A-Team separation
     print('------------------------------')
