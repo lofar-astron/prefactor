@@ -36,15 +36,15 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filter = '[CR]S*&', ba
 
 	## get Ateam_separation information
 	if Ateam_separation_file:
-        f = open(Ateam_separation_file, 'r')
-        json_output['metrics'][pipeline]['close_sources'] = json.load(f)
-        if len(json_output['metrics'][pipeline]['close_sources']) > 0:
-            Ateam_list = ''
-            for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
-                Ateam_list += i['source'] + ','
-        else:
-            Ateam_list = 'NONE'
-        print('A-Team sources close to the phase reference center: ' + Ateam_list.rstrip(','))
+		f = open(Ateam_separation_file, 'r')
+		json_output['metrics'][pipeline]['close_sources'] = json.load(f)
+		if len(json_output['metrics'][pipeline]['close_sources']) > 0:
+			Ateam_list = ''
+			for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
+				Ateam_list += i['source'] + ','
+		else:
+			Ateam_list = 'NONE'
+		print('A-Team sources close to the phase reference center: ' + Ateam_list.rstrip(','))
         
 	## write JSON file
 	with open(output_fname, 'w') as fp:
