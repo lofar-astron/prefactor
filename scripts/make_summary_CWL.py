@@ -6,7 +6,7 @@ import argparse
 import json
 
 ###############################################################################
-def main(pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = 'summary.json', structure_file = None, Ateam_separation_file = None):
+def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = 'summary.json', structure_file = None, Ateam_separation_file = None):
 	"""
 	Creates summary of a given prefactor3-CWL run
 	
@@ -40,6 +40,7 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[
 	if Ateam_separation_file:
 		f = open(Ateam_separation_file, 'r')
 		json_output['metrics'][pipeline]['close_sources'] = json.load(f)
+		f.close()
 		if len(json_output['metrics'][pipeline]['close_sources']) > 0:
 			Ateam_list = ''
 			for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
@@ -60,17 +61,56 @@ def main(pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[
 				break
 		json_output['metrics'][pipeline]['diffractive_scale'] = diffractive_scale
 
+	## get flag statistics from flag files
+	states = []
+	for flagFile in flagFiles:
+		f = open(flagFile, 'r')
+		flagged_fraction_antenna = json.load(f)
+		state = flagged_fraction_antenna['state']
+		states.append(state)
+		station_statistics = json_output['metrics'][pipeline]['stations']
+		for antenna in flagged_fraction_antenna.keys():
+			if antenna in bad_antennas_list or antenna == 'state':
+				continue
+			try:
+				index = [i for (i, item) in enumerate(station_statistics) if item['station'] == antenna][0]
+				json_output['metrics'][pipeline]['stations'][index]['percentage_flagged'][state] = flagged_fraction_antenna[antenna]
+			except IndexError:
+				json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {state : flagged_fraction_antenna[antenna]}})
+		f.close()
+
+	## printing results human readable
+	antennas = sorted([antenna for antenna in flagged_fraction_antenna.keys() if antenna != 'state'])
+	antenna_len  = '{:<' + str(max([ len(antenna)     for antenna in flagged_fraction_antenna.keys()])) + '}'
+	state_len    = '{:^' + str(max([ len(state)       for state   in states                         ])) + '}'
+	state_names  = ' '.join([ state_len.format(state) for state   in states                         ])
+	print('Amount of flagged data per station and steps:')
+	print(antenna_len.format('Station') + ' ' + state_names)
+	for antenna in antennas:
+		if antenna in bad_antennas_list:
+			continue
+		values_to_print = []
+		index = next(i for (i, item) in enumerate(station_statistics) if item['station'] == antenna)
+		for state in states:
+			try:
+				values_to_print.append(state_len.format('{:6.2f}'.format(100 * station_statistics[index]['percentage_flagged'][state]) + '%'))
+			except KeyError:
+				values_to_print.append(state_len.format(' '))
+		values_to_print = ' '.join(values_to_print)
+		print(antenna_len.format(antenna) + ' ' + values_to_print)
+
 	## write JSON file
 	with open(output_fname, 'w') as fp:
 		json.dump(json_output, fp)
 
-	print('Summary has been created.')
+	print('\nSummary has been created.')
 	return(0)
 
 
 if __name__=='__main__':
     
-	parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3-CWL run.') 
+	parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3-CWL run.')
+	parser.add_argument('flagFiles', nargs='+', help='List of flag files in JSON format')
 	parser.add_argument('--pipeline', type=str, default='prefactor', help='Name of the pipeline.')
 	parser.add_argument('--run_type', type=str, default='calibrator', help='Type of the pipeline')
 	parser.add_argument('--filtered_antennas', type=str, default='[CR]S*&', help='Filter these antenna string from the processing.')
@@ -82,6 +122,6 @@ if __name__=='__main__':
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.pipeline, args.run_type, args.filtered_antennas, args.bad_antennas, args.output_fname, args.structure_file, args.Ateam_separation_file)
+	main(args.flagFiles, args.pipeline, args.run_type, args.filtered_antennas, args.bad_antennas, args.output_fname, args.structure_file, args.Ateam_separation_file)
 	
 	sys.exit(0)
