@@ -7,7 +7,7 @@ import json
 import numpy
 
 ###############################################################################
-def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = None, structure_file = None, Ateam_separation_file = None, solutions = None):
+def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = None, structure_file = None, Ateam_separation_file = None, solutions = None, clip_sources = '', demix_sources = '', demix = False):
 	"""
 	Creates summary of a given prefactor3-CWL run
 	
@@ -78,6 +78,14 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		if len(json_output['metrics'][pipeline]['close_sources']) > 0:
 			Ateam_list = ''
 			for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
+				Ateam_name = json_output['metrics'][pipeline]['close_sources'][i]['source']
+				if demix:
+					if Ateam_name in demix_sources:
+						json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'demix'
+				elif Ateam_name in clip_sources:
+					json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'clip'
+				else:
+					json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'none'
 				Ateam_list += json_output['metrics'][pipeline]['close_sources'][i]['source'] + ','
 		else:
 			Ateam_list = 'NONE'
@@ -121,7 +129,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 	if solutions:
 		## print modifications from solutions file
 		if values_to_print != '':
-			print('Changes applied to ' + os.path.basename(solutions))
+			print('Changes applied to ' + os.path.basename(solutions) + ':')
 			print(values_to_print)
 		soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltabs        ])) + '}'
 		soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltabs ])
@@ -187,10 +195,13 @@ if __name__=='__main__':
 	parser.add_argument('--structure_file', type=str, default=None, help='Location of the structure function logfile')
 	parser.add_argument('--Ateam_separation_file', type=str, default=None, help='Location of the Ateam_separation JSON file')
 	parser.add_argument('--solutions', type=str, default=None, help='Location of the solutions h5parm file')
+	parser.add_argument('--clip_sources', type=str, default='', help='Comma-separated list of sources that were clipped')
+	parser.add_argument('--demix_sources', type=str, default='', help='Comma-separated list of sources that were demixed')
+	parser.add_argument('--demix', type=bool, default=None, help='Tell the summary that demixing was enabled')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(flagFiles = args.flagFiles, pipeline = args.pipeline, run_type = args.run_type, filtered_antennas = args.filtered_antennas, bad_antennas = args.bad_antennas, output_fname = args.output_fname, structure_file = args.structure_file, Ateam_separation_file = args.Ateam_separation_file, solutions = args.solutions)
+	main(flagFiles = args.flagFiles, pipeline = args.pipeline, run_type = args.run_type, filtered_antennas = args.filtered_antennas, bad_antennas = args.bad_antennas, output_fname = args.output_fname, structure_file = args.structure_file, Ateam_separation_file = args.Ateam_separation_file, solutions = args.solutions, clip_sources = args.clip_sources, demix_sources = args.demix_sources, demix = args.demix)
 	
 	sys.exit(0)
