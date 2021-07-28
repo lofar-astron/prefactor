@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+import os, sys
 import argparse
 import json
 import numpy
@@ -32,6 +32,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 
 	## read solset
 	source = ''
+	values_to_print = ''
 	if solutions:
 		flagged_solutions = {}
 		from losoto.h5parm import h5parm
@@ -41,16 +42,19 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		antennas = sorted(solset.getAnt().keys())
 		soltabs  = list([soltab.name for soltab in solset.getSoltabs()])
 		source   = solset.obj._f_get_child('source')[0][0].decode('utf-8')
-		print('Field name: ' + source)
+		print('Field name: ' + source + '\n')
 		json_output['metrics'][pipeline]['field_name'] = source
 		for antenna in antennas:
 			json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {}})
 		for soltab_name in soltabs:
-			soltab = solset.getSoltab(soltab_name)
-			ants   = soltab.ant
-			axes   = soltab.getAxesNames()
+			soltab  = solset.getSoltab(soltab_name)
+			history = soltab.getHistory()
+			ants    = soltab.ant
+			axes    = soltab.getAxesNames()
 			axes.insert(0, axes.pop(axes.index('ant')))
 			flagged_solutions[soltab_name] = {}
+			if not history.strip('\n') == '':
+				values_to_print += history + '\n'
 			for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axes, weight=True):
 				weights = losoto.reorderAxes(weights, soltab.getAxesNames(), axes)
 			for i, ant in enumerate(ants):
@@ -58,11 +62,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 				if 'percentage_flagged_solutions' not in json_output['metrics'][pipeline]['stations'][antennas.index(ant)].keys():
 					json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'] = {}
 				json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'][soltab_name] = flagged_solutions[soltab_name][ant] * 100
-
-	## location of logfile
-	if not output_fname:
-		output_fname = (source + '_' + pipeline + '_'  + run_type + '_summary.json').lstrip('_')
-	print('Summary JSON file is written to: ' + output_fname + '\n')
+		data.close()
 
 	## print antennas removed from the data
 	if bad_antennas_list == []:
@@ -78,7 +78,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		if len(json_output['metrics'][pipeline]['close_sources']) > 0:
 			Ateam_list = ''
 			for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
-				Ateam_list += i['source'] + ','
+				Ateam_list += json_output['metrics'][pipeline]['close_sources'][i]['source'] + ','
 		else:
 			Ateam_list = 'NONE'
 		print('A-Team sources close to the phase reference center: ' + Ateam_list.rstrip(',') + '\n')
@@ -119,6 +119,10 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 	antennas = sorted([item['station'] for (i, item) in enumerate(station_statistics)])
 	antenna_len      = '{:<' + str(max([ len(antenna) for antenna in antennas])) + '}'
 	if solutions:
+		## print modifications from solutions file
+		if values_to_print != '':
+			print('Changes applied to ' + os.path.basename(solutions))
+			print(values_to_print)
 		soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltabs        ])) + '}'
 		soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltabs ])
 		print('Amount of flagged solutions per station and solution table:')
@@ -159,10 +163,15 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 			json_output['metrics'][pipeline]['stations'].append(  {'station' : bad_antenna, 'removed' : 'yes'})
 
 	## write JSON file
+	if not output_fname:
+		output_fname = (source + '_' + pipeline + '_'  + run_type + '_summary.json').lstrip('_')
 	with open(output_fname, 'w') as fp:
 		json.dump(json_output, fp)
-
-	print('\nSummary has been created.')
+	
+	print('\n' + '*' * 10)
+	print('Summary file is written to: ' + output_fname)
+	print('Summary has been created.')
+	
 	return(0)
 
 

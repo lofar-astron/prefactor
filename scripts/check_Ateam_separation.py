@@ -139,10 +139,6 @@ def main(ms_input, min_separation = 30, outputimage = None):
                 print('WARNING: The A-Team source ' + target['name'] + ' is closer than ' + str(min_separation) + ' deg to the phase reference center. Calibration might not perform as expected.')
                 json_output.append({'source' : target['name'], 'distance' : str(me.separation(pointing, direction))})
 
-    # write JSONO file
-    
-    with open(os.path.splitext(outputimage)[0] + '.json', 'w') as fp:
-        json.dump(json_output, fp)
 
     # plot A-Team separation
     print('------------------------------')
@@ -153,6 +149,7 @@ def main(ms_input, min_separation = 30, outputimage = None):
     pylab.legend( [ target['name'] + '(' + separation.to_string() + ')' for target, separation in zip(targets, separations) ])
 
     if outputimage != None:
+        # write JSON file
         inspection_directory = os.path.dirname(outputimage)
         if not os.path.exists(inspection_directory) and inspection_directory != '':
             os.makedirs(inspection_directory)
@@ -161,6 +158,9 @@ def main(ms_input, min_separation = 30, outputimage = None):
             print('Directory ' + inspection_directory + ' already exists.')
         print('Plotting A-Team elevation to: ' + outputimage)
         pylab.savefig(outputimage)
+        print('Writing close A-Team sources to: ' + os.path.splitext(outputimage)[0] + '.json')
+        with open(os.path.splitext(outputimage)[0] + '.json', 'w') as fp:
+            json.dump(json_output, fp)
     return 0
 
    
