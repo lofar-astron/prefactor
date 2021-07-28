@@ -4,9 +4,10 @@
 import sys
 import argparse
 import json
+import numpy
 
 ###############################################################################
-def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = 'summary.json', structure_file = None, Ateam_separation_file = None):
+def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = None, structure_file = None, Ateam_separation_file = None, solutions = None):
 	"""
 	Creates summary of a given prefactor3-CWL run
 	
@@ -17,24 +18,57 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 	bad_anntenas: pre-selected antennas and removed stations (separated by ";")
 	
 	"""
-	# location of logfile
+	## header
 	header_string = '*** ' + pipeline + ' ' + run_type + ' pipeline summary ***'
 	print('*' * len(header_string) + '\n' + header_string + '\n' + '*' * len(header_string) + '\n')
-	print('Summary logfile is written to ' + output_fname + '\n')
 	
 	## define contents of JSON file
 	json_output = { 'metrics': { pipeline : { } } }
 	json_output['metrics'][pipeline]['run_type'] = run_type
+	json_output['metrics'][pipeline]['stations'] = []
 	
-	## print antennas removed from the data
+	## get bad antennas
 	bad_antennas_list = list(filter(None, set(bad_antennas.replace(filtered_antennas,'').replace('!','').replace('*','').replace('&','').split(';'))))
+
+	## read solset
+	source = ''
+	if solutions:
+		flagged_solutions = {}
+		from losoto.h5parm import h5parm
+		import losoto.lib_operations as losoto
+		data     = h5parm(solutions, readonly = True)
+		solset   = data.getSolset(run_type)
+		antennas = sorted(solset.getAnt().keys())
+		soltabs  = list([soltab.name for soltab in solset.getSoltabs()])
+		source   = solset.obj._f_get_child('source')[0][0].decode('utf-8')
+		print('Field name: ' + source)
+		json_output['metrics'][pipeline]['field_name'] = source
+		for antenna in antennas:
+			json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {}})
+		for soltab_name in soltabs:
+			soltab = solset.getSoltab(soltab_name)
+			ants   = soltab.ant
+			axes   = soltab.getAxesNames()
+			axes.insert(0, axes.pop(axes.index('ant')))
+			flagged_solutions[soltab_name] = {}
+			for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axes, weight=True):
+				weights = losoto.reorderAxes(weights, soltab.getAxesNames(), axes)
+			for i, ant in enumerate(ants):
+				flagged_solutions[soltab_name][ant] = 1. - float(numpy.mean(weights[i]))
+				if 'percentage_flagged_solutions' not in json_output['metrics'][pipeline]['stations'][antennas.index(ant)].keys():
+					json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'] = {}
+				json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'][soltab_name] = flagged_solutions[soltab_name][ant] * 100
+
+	## location of logfile
+	if not output_fname:
+		output_fname = (source + '_' + pipeline + '_'  + run_type + '_summary.json').lstrip('_')
+	print('Summary JSON file is written to: ' + output_fname + '\n')
+
+	## print antennas removed from the data
 	if bad_antennas_list == []:
 		print('Antennas removed from the data: NONE')
 	else:
 		print('Antennas removed from the data: ' + ', '.join(bad_antennas_list))
-	json_output['metrics'][pipeline]['stations'] = []
-	for bad_antenna in bad_antennas_list:
-		json_output['metrics'][pipeline]['stations'].append({'station' : bad_antenna, 'removed' : 'yes'})
 	
 	## get Ateam_separation info
 	if Ateam_separation_file:
@@ -68,36 +102,61 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		flagged_fraction_antenna = json.load(f)
 		state = flagged_fraction_antenna['state']
 		states.append(state)
+		antennas = sorted(flagged_fraction_antenna.keys())
+		antennas.remove('state')
 		station_statistics = json_output['metrics'][pipeline]['stations']
-		for antenna in flagged_fraction_antenna.keys():
-			if antenna in bad_antennas_list or antenna == 'state':
-				continue
-			try:
-				index = [i for (i, item) in enumerate(station_statistics) if item['station'] == antenna][0]
-				json_output['metrics'][pipeline]['stations'][index]['percentage_flagged'][state] = flagged_fraction_antenna[antenna]
-			except IndexError:
-				json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {state : flagged_fraction_antenna[antenna]}})
+		if station_statistics == []:
+			for antenna in antennas:
+				json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no'})
+		for antenna in antennas:
+			index = [i for (i, item) in enumerate(station_statistics) if item['station'] == antenna][0]
+			if 'percentage_flagged' not in json_output['metrics'][pipeline]['stations'][index].keys():
+				json_output['metrics'][pipeline]['stations'][index]['percentage_flagged'] = {}
+			json_output['metrics'][pipeline]['stations'][index]['percentage_flagged'][state] = flagged_fraction_antenna[antenna] * 100
 		f.close()
 
 	## printing results human readable
-	antennas = sorted([antenna for antenna in flagged_fraction_antenna.keys() if antenna != 'state'])
-	antenna_len  = '{:<' + str(max([ len(antenna)     for antenna in flagged_fraction_antenna.keys()])) + '}'
+	antennas = sorted([item['station'] for (i, item) in enumerate(station_statistics)])
+	antenna_len      = '{:<' + str(max([ len(antenna) for antenna in antennas])) + '}'
+	if solutions:
+		soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltabs        ])) + '}'
+		soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltabs ])
+		print('Amount of flagged solutions per station and solution table:')
+		print(antenna_len.format('Station') + ' ' + soltab_names)
+		for antenna in antennas:
+			values_to_print = []
+			for soltab_name in soltabs:
+				try:
+					values_to_print.append(soltab_len.format('{:6.2f}'.format(100 * flagged_solutions[soltab_name][antenna]) + '%'))
+				except KeyError:
+					values_to_print.append(soltab_len.format(' '))
+			values_to_print = ' '.join(values_to_print)
+			print(antenna_len.format(antenna) + ' ' + values_to_print)
+		print('')
+
 	state_len    = '{:^' + str(max([ len(state)       for state   in states                         ])) + '}'
 	state_names  = ' '.join([ state_len.format(state) for state   in states                         ])
-	print('Amount of flagged data per station and steps:')
-	print(antenna_len.format('Station') + ' ' + state_names)
+	print('Amount of flagged data per station at a given state:')
+	print(antenna_len.format('Station') + '  ' + state_names)
 	for antenna in antennas:
-		if antenna in bad_antennas_list:
-			continue
 		values_to_print = []
 		index = next(i for (i, item) in enumerate(station_statistics) if item['station'] == antenna)
 		for state in states:
 			try:
-				values_to_print.append(state_len.format('{:6.2f}'.format(100 * station_statistics[index]['percentage_flagged'][state]) + '%'))
+				values_to_print.append(state_len.format('{:6.2f}'.format(station_statistics[index]['percentage_flagged'][state]) + '%'))
 			except KeyError:
 				values_to_print.append(state_len.format(' '))
 		values_to_print = ' '.join(values_to_print)
 		print(antenna_len.format(antenna) + ' ' + values_to_print)
+
+	## write bad antenna information into JSON file
+	for bad_antenna in bad_antennas_list:
+		station_statistics = json_output['metrics'][pipeline]['stations']
+		try:
+			index = [i for (i, item) in enumerate(station_statistics) if item['station'] == bad_antenna][0]
+			json_output['metrics'][pipeline]['stations'][index] = {'station' : bad_antenna, 'removed' : 'yes'}
+		except IndexError:
+			json_output['metrics'][pipeline]['stations'].append(  {'station' : bad_antenna, 'removed' : 'yes'})
 
 	## write JSON file
 	with open(output_fname, 'w') as fp:
@@ -115,13 +174,14 @@ if __name__=='__main__':
 	parser.add_argument('--run_type', type=str, default='calibrator', help='Type of the pipeline')
 	parser.add_argument('--filtered_antennas', type=str, default='[CR]S*&', help='Filter these antenna string from the processing.')
 	parser.add_argument('--bad_antennas', type=str, default='[CR]S*&', help='Antenna string to be processed')
-	parser.add_argument('--output_fname', '--output_fname', type=str, default='summary.json', help='Name of the output filename (default: summary.json)')
+	parser.add_argument('--output_fname', type=str, default=None, help='Name of the output filename (default: summary.json)')
 	parser.add_argument('--structure_file', type=str, default=None, help='Location of the structure function logfile')
 	parser.add_argument('--Ateam_separation_file', type=str, default=None, help='Location of the Ateam_separation JSON file')
+	parser.add_argument('--solutions', type=str, default=None, help='Location of the solutions h5parm file')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(args.flagFiles, args.pipeline, args.run_type, args.filtered_antennas, args.bad_antennas, args.output_fname, args.structure_file, args.Ateam_separation_file)
+	main(flagFiles = args.flagFiles, pipeline = args.pipeline, run_type = args.run_type, filtered_antennas = args.filtered_antennas, bad_antennas = args.bad_antennas, output_fname = args.output_fname, structure_file = args.structure_file, Ateam_separation_file = args.Ateam_separation_file, solutions = args.solutions)
 	
 	sys.exit(0)
