@@ -70,10 +70,12 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 					json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'][soltab_name] = flagged_solutions[soltab_name][ant] * 100
 
 	## print antennas removed from the data
+	print('User-specified baseline filter: ' + filtered_antennas)
+	json_output['metrics'][pipeline]['filtered_baselines_by_user'] = filtered_antennas
 	if bad_antennas_list == []:
-		print('Antennas removed from the data: NONE')
+		print('Additional antennas removed from the data: NONE')
 	else:
-		print('Antennas removed from the data: ' + ', '.join(bad_antennas_list))
+		print('Additional antennas removed from the data: ' + ', '.join(bad_antennas_list))
 	
 	## get Ateam_separation info
 	if Ateam_separation_file:
