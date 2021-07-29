@@ -83,10 +83,6 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
                 sys.exit(1)
         wideband = string2bool(wideband)
 
-        outdir = os.path.dirname(output)
-        if not os.path.exists(outdir):
-            os.makedirs(outdir)
-
         badval = 0.0
         xaxisvals = []
         yaxisvals = []
@@ -219,6 +215,20 @@ def main(input, output, title='uv coverage', limits=',,,', timeslots='0,10,0', a
         plt.ylabel('unflagged fraction')
         plt.savefig('{0}_uvdist{1}'.format(*os.path.splitext(output)))
 
+if __name__=='__main__':
+    
+    parser = argparse.ArgumentParser(description='Creates summary of a given prefactor3 run.') 
+    parser.add_argument('MSfiles', type=str, nargs='+', help='One (or more MSs) to use for plotting.')
+    parser.add_argument('--output', type=str, default='uv-coverage.png', help='Output filename for the image')
+    parser.add_argument('--title', type=str, default='uv-coverage', help='Title of the plot')
+    parser.add_argument('--limits', type=str, default=',,,')
+    parser.add_argument('--timeslots', type=str, default='0,10,0')
+    parser.add_argument('--antennas', type=str, default='-1', help='List of antennas to be analysed (default: ALL)')
+    parser.add_argument('--wideband', type=bool, default=False, help='Use wideband data (default: False)')
 
+    args = parser.parse_args()
 
+    # start running script
+    main(args.MSfiles, args.output, args.title, args.limits, args.timeslots, args.antennas, args.wideband)
 
+    sys.exit(0)
