@@ -33,6 +33,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 	## read solset
 	source = ''
 	values_to_print = ''
+	soltab_names = []
 	if solutions:
 		flagged_solutions = {}
 		from losoto.h5parm import h5parm
@@ -40,29 +41,33 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		data     = h5parm(solutions, readonly = True)
 		solset   = data.getSolset(run_type)
 		antennas = sorted(solset.getAnt().keys())
-		soltabs  = list([soltab.name for soltab in solset.getSoltabs()])
+		for antenna in antennas:
+			json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {}})
 		source   = solset.obj._f_get_child('source')[0][0].decode('utf-8')
 		print('Field name: ' + source + '\n')
 		json_output['metrics'][pipeline]['field_name'] = source
-		for antenna in antennas:
-			json_output['metrics'][pipeline]['stations'].append({'station' : antenna, 'removed' : 'no', 'percentage_flagged' : {}})
-		for soltab_name in soltabs:
-			soltab  = solset.getSoltab(soltab_name)
-			history = soltab.getHistory()
-			ants    = soltab.ant
-			axes    = soltab.getAxesNames()
-			axes.insert(0, axes.pop(axes.index('ant')))
-			flagged_solutions[soltab_name] = {}
-			if not history.strip('\n') == '':
-				values_to_print += history + '\n'
-			for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axes, weight=True):
-				weights = losoto.reorderAxes(weights, soltab.getAxesNames(), axes)
-			for i, ant in enumerate(ants):
-				flagged_solutions[soltab_name][ant] = 1. - float(numpy.mean(weights[i]))
-				if 'percentage_flagged_solutions' not in json_output['metrics'][pipeline]['stations'][antennas.index(ant)].keys():
-					json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'] = {}
-				json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'][soltab_name] = flagged_solutions[soltab_name][ant] * 100
-		data.close()
+		for solset_name in data.getSolsetNames():
+			solset   = data.getSolset(solset_name)
+			soltabs  = list([soltab.name for soltab in solset.getSoltabs()])
+			for soltab_name in soltabs:
+				soltab_names.append(soltab_name)
+				soltab  = solset.getSoltab(soltab_name)
+				history = soltab.getHistory()
+				ants    = soltab.ant
+				axes    = soltab.getAxesNames()
+				axes.insert(0, axes.pop(axes.index('ant')))
+				flagged_solutions[soltab_name] = {}
+				if not history.strip('\n') == '':
+					values_to_print += history + '\n'
+				for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axes, weight=True):
+					weights = losoto.reorderAxes(weights, soltab.getAxesNames(), axes)
+				for i, ant in enumerate(ants):
+					if ant not in antennas:
+						continue
+					flagged_solutions[soltab_name][ant] = 1. - float(numpy.mean(weights[i]))
+					if 'percentage_flagged_solutions' not in json_output['metrics'][pipeline]['stations'][antennas.index(ant)].keys():
+						json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'] = {}
+					json_output['metrics'][pipeline]['stations'][antennas.index(ant)]['percentage_flagged_solutions'][soltab_name] = flagged_solutions[soltab_name][ant] * 100
 
 	## print antennas removed from the data
 	if bad_antennas_list == []:
@@ -131,20 +136,24 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		if values_to_print != '':
 			print('Changes applied to ' + os.path.basename(solutions) + ':')
 			print(values_to_print)
-		soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltabs        ])) + '}'
-		soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltabs ])
+		soltab_len   = '{:^' + str(max([ len(soltab_name) for soltab_name in soltab_names        ])) + '}'
+		soltab_names = ' '.join([ soltab_len.format(soltab_name) for soltab_name in soltab_names ])
 		print('Amount of flagged solutions per station and solution table:')
 		print(antenna_len.format('Station') + ' ' + soltab_names)
 		for antenna in antennas:
 			values_to_print = []
-			for soltab_name in soltabs:
-				try:
-					values_to_print.append(soltab_len.format('{:6.2f}'.format(100 * flagged_solutions[soltab_name][antenna]) + '%'))
-				except KeyError:
-					values_to_print.append(soltab_len.format(' '))
+			for solset_name in data.getSolsetNames():
+				solset   = data.getSolset(solset_name)
+				soltabs  = list([soltab.name for soltab in solset.getSoltabs()])
+				for soltab_name in soltabs:
+					try:
+						values_to_print.append(soltab_len.format('{:6.2f}'.format(100 * flagged_solutions[soltab_name][antenna]) + '%'))
+					except KeyError:
+						values_to_print.append(soltab_len.format(' '))
 			values_to_print = ' '.join(values_to_print)
 			print(antenna_len.format(antenna) + ' ' + values_to_print)
 		print('')
+		data.close()
 
 	state_len    = '{:^' + str(max([ len(state)       for state   in states                         ])) + '}'
 	state_names  = ' '.join([ state_len.format(state) for state   in states                         ])
