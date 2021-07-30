@@ -84,19 +84,33 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		f.close()
 		if len(json_output['metrics'][pipeline]['close_sources']) > 0:
 			Ateam_list = ''
+			clip_list  = []
+			demix_list = []
 			for i in range(len(json_output['metrics'][pipeline]['close_sources'])):
 				Ateam_name = json_output['metrics'][pipeline]['close_sources'][i]['source']
 				if demix:
 					if Ateam_name in demix_sources:
 						json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'demix'
+						demix_list.append(Ateam_name)
 				elif Ateam_name in clip_sources:
 					json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'clip'
+					clip_list.append(Ateam_name)
 				else:
 					json_output['metrics'][pipeline]['close_sources'][i]['mitigation'] = 'none'
 				Ateam_list += json_output['metrics'][pipeline]['close_sources'][i]['source'] + ','
-		else:
-			Ateam_list = 'NONE'
-		print('A-Team sources close to the phase reference center: ' + Ateam_list.rstrip(',') + '\n')
+			if clip_list != []:
+				clip_list = ', '.join(clip_list)
+				print(clip_list)
+			else:
+				clip_list = 'NONE'
+			if demix_list != []:
+				demix_list = ', '.join(demix_list)
+			else:
+				demix_list = 'NONE'
+			Ateam_list = Ateam_list.rstrip(',') + '\n\tOf which were demixed: ' + demix_list + '\n\tOf which were clipped: ' + clip_list
+	else:
+		Ateam_list = 'NONE'
+	print('A-Team sources close to the phase reference center: ' + Ateam_list + '\n')
 
 	## get diffractive_scale info
 	if structure_file:
