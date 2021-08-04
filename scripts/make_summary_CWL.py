@@ -108,9 +108,9 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 			else:
 				demix_list = 'NONE'
 			Ateam_list = Ateam_list.rstrip(',') + '\n\tOf which were demixed: ' + demix_list + '\n\tOf which were clipped: ' + clip_list
-	else:
-		Ateam_list = 'NONE'
-	print('A-Team sources close to the phase reference center: ' + Ateam_list + '\n')
+		else:
+			Ateam_list = 'NONE'
+		print('A-Team sources close to the phase reference center: ' + Ateam_list + '\n')
 
 	## get diffractive_scale info
 	if structure_file:
