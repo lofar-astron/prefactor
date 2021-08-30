@@ -29,7 +29,7 @@ setup(
     platforms='any',
     install_requires=[
         'aplpy', 'astropy', 'bdsf', 'losoto', 'lsmtool',
-        'matplotlib', 'numpy', 'python-casacore', 'scipy'],
+        'matplotlib', 'numpy', 'python-casacore', 'RMextract', 'scipy'],
     scripts=glob.glob('scripts/*'),
     data_files=[
         ('share/prefactor/rfistrategies', glob.glob('rfistrategies/*')),
