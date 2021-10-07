@@ -5,7 +5,7 @@ Here are some skymodel files, provided for your convenience. No claim is made ab
 If you have additional skymodels for calibrators that might be of interest for others, then please add them to the wiki page at: http://www.lofar.org/wiki/doku.php?id=commissioning:flux_calibrators and drop me a note.
 
 The files so far:
-* *3C196-pandey.skymodel* : Four component skymodel from Pandey on approximately the same flux scale as Scaife & Heald
+* *3C196-SH-offringa.skymodel* : 3C196 skymodel from Andre Offringa, rescaled to fit on the Scaife \& Heald flux scale
 * *3c147-SH.skymodel* : 3C147 from Scaife \& Heald, single point source
 * *3c286-SH.skymodel* : 3C286 from Scaife \& Heald, single point source
 * *3c287-SH.skymodel* : 3C287 from Scaife \& Heald, single point source
