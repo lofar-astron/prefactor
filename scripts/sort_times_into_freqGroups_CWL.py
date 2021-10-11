@@ -249,9 +249,7 @@ def main(MSfile, numSB=10, NDPPPfill=True, stepname=None, mergeLastGroup=False, 
     nr_of_groups = len(groupnames)
     total_bandwidth = nr_of_groups * groupBW
     results = {'filenames': filenames, 'groupnames': groupnames, 'total_bandwidth': total_bandwidth}
-    print(filenames)
-    print(groupnames)
-    print(total_bandwidth)
+
     return(results)
     
 ########################################################################
