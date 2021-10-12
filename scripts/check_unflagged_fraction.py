@@ -53,10 +53,10 @@ def main(ms_file, min_fraction=0.01, print_fraction=True):
 
     unflagged_fraction = find_unflagged_fraction(ms_file)
     if print_fraction:
-        print("File %s has %.2f%% unflagged data."%(os.path.basename(ms_file.rstrip('/')),unflagged_fraction*100.))
+        print("File %s has %.2f%% unflagged data."%(os.path.basename(ms_file.rstrip('/')),unflagged_fraction * 100.))
     if unflagged_fraction < min_fraction:
-        print('check_unflagged_fraction.py: Unflagged fraction of {0} is: {1}, '
-              'removing file.'.format(os.path.basename(ms_file.rstrip('/')), str(unflagged_fraction)))
+        print('Unflagged fraction of {0} is: {1}%, '
+              'removing file.'.format(os.path.basename(ms_file.rstrip('/')), str(unflagged_fraction * 100)))
         return {'flagged': 'None', 'unflagged_fraction':  unflagged_fraction}
     else:
         return {'flagged': ms_file, 'unflagged_fraction':  unflagged_fraction}

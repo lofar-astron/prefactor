@@ -7,7 +7,7 @@ import json
 import numpy
 
 ###############################################################################
-def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = None, structure_file = None, Ateam_separation_file = None, solutions = None, clip_sources = '', demix_sources = '', demix = False):
+def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filtered_antennas = '[CR]S*&', bad_antennas = '[CR]S*&', output_fname = None, structure_file = None, Ateam_separation_file = None, solutions = None, clip_sources = '', demix_sources = '', demix = False, removed_bands = '', min_unflagged = 0.5, refant = ''):
 	"""
 	Creates summary of a given prefactor3-CWL run
 	
@@ -77,6 +77,9 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 	else:
 		print('Additional antennas removed from the data: ' + ', '.join(bad_antennas_list))
 	
+	if refant != '':
+		print('Selected reference antenna: ' + refant)
+	
 	## get Ateam_separation info
 	if Ateam_separation_file:
 		f = open(Ateam_separation_file, 'r')
@@ -111,7 +114,10 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		else:
 			Ateam_list = 'NONE'
 		print('A-Team sources close to the phase reference center: ' + Ateam_list + '\n')
-
+	
+	if removed_bands != '':
+		print('Removed bands due to an unsufficient fraction of unflagged data (< ' + str(min_unflagged * 100) + '%): ' + ', '.join(list(filter(lambda a: a != 'None', removed_bands.replace('out_','').split(',')))) + '\n')
+	
 	## get diffractive_scale info
 	if structure_file:
 		diffractive_scale = { 'unit' : 'km'}
@@ -223,10 +229,13 @@ if __name__=='__main__':
 	parser.add_argument('--clip_sources', type=str, default='', help='Comma-separated list of sources that were clipped')
 	parser.add_argument('--demix_sources', type=str, default='', help='Comma-separated list of sources that were demixed')
 	parser.add_argument('--demix', type=bool, default=None, help='Tell the summary that demixing was enabled')
+	parser.add_argument('--removed_bands', type=str, default='', help='Comma-separated list of bands that were removed from the data')
+	parser.add_argument('--min_unflagged', type=float, default=0.5, help='Minimum fraction of unflagged data per band')
+	parser.add_argument('--refant', type=str, default='', help='Reference antenna used')
 	
 	args = parser.parse_args()
 	
 	# start running script
-	main(flagFiles = args.flagFiles, pipeline = args.pipeline, run_type = args.run_type, filtered_antennas = args.filtered_antennas, bad_antennas = args.bad_antennas, output_fname = args.output_fname, structure_file = args.structure_file, Ateam_separation_file = args.Ateam_separation_file, solutions = args.solutions, clip_sources = args.clip_sources, demix_sources = args.demix_sources, demix = args.demix)
+	main(flagFiles = args.flagFiles, pipeline = args.pipeline, run_type = args.run_type, filtered_antennas = args.filtered_antennas, bad_antennas = args.bad_antennas, output_fname = args.output_fname, structure_file = args.structure_file, Ateam_separation_file = args.Ateam_separation_file, solutions = args.solutions, clip_sources = args.clip_sources, demix_sources = args.demix_sources, demix = args.demix, removed_bands = args.removed_bands, min_unflagged = args.min_unflagged, refant = args.refant)
 	
 	sys.exit(0)
