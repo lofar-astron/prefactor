@@ -115,8 +115,9 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 			Ateam_list = 'NONE'
 		print('A-Team sources close to the phase reference center: ' + Ateam_list + '\n')
 	
+	removed_bands = ', '.join(list(filter(lambda a: a != 'None', removed_bands.replace('out_','').split(','))))
 	if removed_bands != '':
-		print('Removed bands due to an unsufficient fraction of unflagged data (< ' + str(min_unflagged * 100) + '%): ' + ', '.join(list(filter(lambda a: a != 'None', removed_bands.replace('out_','').split(',')))) + '\n')
+		print('Removed bands due to an unsufficient fraction of unflagged data (< ' + str(min_unflagged * 100) + '%): ' +  removed_bands + '\n')
 	
 	## get diffractive_scale info
 	if structure_file:
