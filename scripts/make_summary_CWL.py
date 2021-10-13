@@ -78,7 +78,7 @@ def main(flagFiles = None, pipeline = 'prefactor', run_type = 'calibrator', filt
 		print('Additional antennas removed from the data: ' + ', '.join(bad_antennas_list))
 	
 	if refant != '':
-		print('Selected reference antenna: ' + refant)
+		print('Selected phase reference antenna: ' + refant)
 	
 	## get Ateam_separation info
 	if Ateam_separation_file:
