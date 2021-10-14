@@ -57,9 +57,9 @@ def main(ms_file, min_fraction=0.01, print_fraction=True):
     if unflagged_fraction < min_fraction:
         print('Unflagged fraction of {0} is: {1}%, '
               'removing file.'.format(os.path.basename(ms_file.rstrip('/')), str(unflagged_fraction * 100)))
-        return {'flagged': True,  'unflagged_fraction':  unflagged_fraction, 'filename': ms_file}
+        return {'flagged': 'None',  'unflagged_fraction':  unflagged_fraction, 'filename': ms_file}
     else:
-        return {'flagged': False, 'unflagged_fraction':  unflagged_fraction, 'filename': ms_file}
+        return {'flagged': ms_file, 'unflagged_fraction':  unflagged_fraction, 'filename': ms_file}
 
 if __name__ == '__main__':
     descriptiontext = "Check a MS for a minimum fraction of unflagged data.\n"
