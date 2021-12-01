@@ -1,8 +1,8 @@
 # prefactor
-## The LOFAR pre-facet calibration pipeline.
+## The LOFAR pre-facet calibration pipeline
 
 **prefactor** is a pipeline to correct for various instrumental and ionospheric effects in both **LOFAR HBA** and **LOFAR LBA** observations.
-It will prepare your data so that you will be able to use any direction-dependent calibration software, like [factor](https://github.com/lofar-astron/factor) or [killMS](https://github.com/saopicc/killMS/).
+It will prepare your data so that you will be able to use any direction-dependent calibration software, like [Rapthor](https://github.com/darafferty/rapthor), [factor](https://github.com/lofar-astron/factor), or [killMS](https://github.com/saopicc/killMS/).
 
 It includes:
 * removal of clock offsets between core and remote stations (using clock-TEC separation)
@@ -10,17 +10,16 @@ It includes:
 * robust time-independent bandpass correction
 * ionospheric RM corrections with [RMextract](https://github.com/lofar-astron/RMextract/)
 * removal of the element beam
-* advanced flagging and interpolation of bad data
+* advanced flagging and removal of bad data
 * mitigation of broad-band RFI and bad stations
 * direction-independent phase correction of the target, using a global sky model from [TGSS ADR](https://http://tgssadr.strw.leidenuniv.nl/)  or the new Global Sky Model [GSM](http://172.104.228.177/)
 * detailled diagnostics
-* (optional) wide-band cleaning in Initial-Subtract and Pre-Facet-Image
 
 The full documentation can be found at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
 
-**WARNING**: The current skymodels used for 3C196 and 3C295 are not using the Scaife&Heald flux density scale.
+**WARNING**: The current skymodel used for 3C295 is not using the Scaife&Heald flux density scale.
 
-### Software requirements:
+### Software requirements
 * the full "offline" LOFAR software installation (version >= 3.1)
 * [DPPP](https://github.com/lofar-astron/DP3) (version v5.1)
 * [LoSoTo](https://github.com/revoltek/losoto) (version of Jun 15, 2020, commit [c8fbd61](https://github.com/revoltek/losoto/tree/c8fbd6194074bef4009cb66dd7ecd59e98664d63))
@@ -45,13 +44,15 @@ It is also possible to download tar files of releases from the [release page](ht
 
 Once downloaded, the installation is complete; to set up a run, see the detailed setup information at the [prefactor webpage](https://www.astron.nl/citt/prefactor/).
 
-### Directory Structure
+### Directory structure
 prefactor contains the following sub-directories:
-* **bin** scripts for your convenience
-* **plugins** scripts for manipulating mapfiles
-* **rfistrategies** strategies for statistical RFI mitigation using [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
-* **scripts** scripts that the pipeline calls to process data, generate plots, etc.
-* **skymodels** skymodels that are used by the pipeline (e.g. for demixing or calibrating the calibrator)
+* **bin**: scripts for your convenience
+* **docs**: contains the documentation for prefactor
+* **plugins**: scripts for manipulating mapfiles
+* **rfistrategies**: strategies for statistical RFI mitigation using [AOFlagger](https://sourceforge.net/p/aoflagger/wiki/Home/)
+* **scripts**: scripts that the pipeline calls to process data, generate plots, etc.
+* **skymodels**: skymodels that are used by the pipeline (e.g. for demixing or calibrating the calibrator)
+* **solutions**: template solutions for the use of non-supported calibrator sources
 
 
 The main directory contains the different parsets for the genericpipeline:
@@ -84,7 +85,7 @@ The Pre-Facet-Calibration pipeline and its scripts where developed by:
 
 With special thanks to Stefan Fröhlich for developing the genericpipeline.
 
-### Acknowledgement
+### Acknowledgements
 The Prefactor v3 procedure is described in this paper:
 * de Gasperin, F.; Dijkema, T. J.; Drabent, A.; Mevius, M.; Rafferty, van Weeren, R., et al. 2019, [A&A, 662, A5](http://adsabs.harvard.edu/abs/2018arXiv181107954D)
 
