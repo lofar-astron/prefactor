@@ -1,5 +1,9 @@
-# prefactor
-## The LOFAR pre-facet calibration pipeline.
+# Prefactor
+
+## IMPORTANT NOTICE
+This repository contains the old version of prefactor. A newer version is maintained at https://git.astron.nl/EOSC/prefactor3-cwl.
+
+## The (old) LOFAR pre-facet calibration pipeline.
 
 **prefactor** is a pipeline to correct for various instrumental and ionospheric effects in both **LOFAR HBA** and **LOFAR LBA** observations.
 It will prepare your data so that you will be able to use any direction-dependent calibration software, like [factor](https://github.com/lofar-astron/factor) or [killMS](https://github.com/saopicc/killMS/).
