@@ -503,7 +503,7 @@ h5imp_cal_PA.argument.outh5parm                             =   outh5parm
 prepare_losoto_PA.control.kind                              =   plugin
 prepare_losoto_PA.control.type                              =   makeLosotoParset
 prepare_losoto_PA.control.steps                             =   [plotP3,plotPd,plotRot3,plotA3,bkp,align,plotAlign,residual,plotPr,plotPr2]
-prepare_losoto_PA.control.filename                          =   {{ job_directory }}/losoto.parset
+prepare_losoto_PA.control.filename                          =   {{ job_directory }}/losoto_PA.parset
 prepare_losoto_PA.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_PA.control.plotP3.operation                  =   PLOT
 prepare_losoto_PA.control.plotP3.soltab                     =   sol000/phase000
@@ -585,7 +585,7 @@ process_losoto_PA.control.executable                        =   {{ losoto_direct
 process_losoto_PA.control.max_per_node                      =   {{ num_proc_per_node }}
 process_losoto_PA.control.mapfile_in                        =   h5imp_cal_PA.output.mapfile
 process_losoto_PA.control.inputkey                          =   h5in
-process_losoto_PA.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto.parset]
+process_losoto_PA.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto_PA.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_PA.control.kind                                   =   recipe
@@ -618,7 +618,7 @@ h5imp_cal_FR.argument.outh5parm                             =   outh5parm
 prepare_losoto_FR.control.kind                              =   plugin
 prepare_losoto_FR.control.type                              =   makeLosotoParset
 prepare_losoto_FR.control.steps                             =   [plotP3,plotPd,plotRot3,plotA3,faraday,plotFR]
-prepare_losoto_FR.control.filename                          =   {{ job_directory }}/losoto.parset
+prepare_losoto_FR.control.filename                          =   {{ job_directory }}/losoto_FR.parset
 prepare_losoto_FR.control.global.ncpu                       =   {{ num_proc_per_node }}
 prepare_losoto_FR.control.plotP3.operation                  =   PLOT
 prepare_losoto_FR.control.plotP3.soltab                     =   sol000/phase000
@@ -670,7 +670,7 @@ process_losoto_FR.control.executable                        =   {{ losoto_direct
 process_losoto_FR.control.max_per_node                      =   {{ num_proc_per_node }}
 process_losoto_FR.control.mapfile_in                        =   h5imp_cal_FR.output.mapfile
 process_losoto_FR.control.inputkey                          =   h5in
-process_losoto_FR.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto.parset]
+process_losoto_FR.argument.flags                            =   [-v,h5in,{{ job_directory }}/losoto_FR.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_FR.control.kind                                   =   recipe
@@ -703,7 +703,7 @@ h5imp_cal_bandpass.argument.outh5parm                       =   outh5parm
 prepare_losoto_bandpass.control.kind                        =   plugin
 prepare_losoto_bandpass.control.type                        =   makeLosotoParset
 prepare_losoto_bandpass.control.steps                       =   [duplicateAbkp,plotA1,flag,flagbp,flagextend,plotA2,merge,smooth,bandpass,interp,smoothb,plotB1,plotB2,plotB3]
-prepare_losoto_bandpass.control.filename                    =   {{ job_directory }}/losoto.parset
+prepare_losoto_bandpass.control.filename                    =   {{ job_directory }}/losoto_bandpass.parset
 prepare_losoto_bandpass.control.global.ncpu                 =   {{ num_proc_per_node }}
 prepare_losoto_bandpass.control.duplicateAbkp.operation     =   DUPLICATE
 prepare_losoto_bandpass.control.duplicateAbkp.soltab        =   sol000/amplitude000
@@ -832,7 +832,7 @@ process_losoto_bandpass.control.executable                  =   {{ losoto_direct
 process_losoto_bandpass.control.max_per_node                =   {{ num_proc_per_node }}
 process_losoto_bandpass.control.mapfile_in                  =   h5imp_cal_bandpass.output.mapfile
 process_losoto_bandpass.control.inputkey                    =   h5in
-process_losoto_bandpass.argument.flags                      =   [-v,h5in,{{ job_directory }}/losoto.parset]
+process_losoto_bandpass.argument.flags                      =   [-v,h5in,{{ job_directory }}/losoto_bandpass.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_bandpass.control.kind                             =   recipe
@@ -882,7 +882,7 @@ h5imp_cal_ion.argument.outh5parm                            =   outh5parm
 prepare_losoto_ion.control.kind                             =   plugin
 prepare_losoto_ion.control.type                             =   makeLosotoParset
 prepare_losoto_ion.control.steps                            =   [plotP3,duplicatePbkp,{{ cal_ion }},plotClock,plotPr,flagstation]
-prepare_losoto_ion.control.filename                         =   {{ job_directory }}/losoto.parset
+prepare_losoto_ion.control.filename                         =   {{ job_directory }}/losoto_ion.parset
 prepare_losoto_ion.control.global.ncpu                      =   {{ num_proc_per_node }}
 prepare_losoto_ion.control.plotP3.operation                 =   PLOT
 prepare_losoto_ion.control.plotP3.soltab                    =   sol000/phase000
@@ -976,7 +976,7 @@ process_losoto_ion.control.executable                       =   {{ losoto_direct
 process_losoto_ion.control.max_per_node                     =   {{ num_proc_per_node }}
 process_losoto_ion.control.mapfile_in                       =   h5imp_cal_ion.output.mapfile
 process_losoto_ion.control.inputkey                         =   h5in
-process_losoto_ion.argument.flags                           =   [-v,h5in,{{ job_directory }}/losoto.parset]
+process_losoto_ion.argument.flags                           =   [-v,h5in,{{ job_directory }}/losoto_ion.parset]
 
 # output the final soltab into an external h5parm
 h5exp_cal_ion.control.kind                                  =   recipe
