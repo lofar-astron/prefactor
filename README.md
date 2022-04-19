@@ -1,7 +1,7 @@
 # Prefactor
 
 ## IMPORTANT NOTICE
-This repository contains the old version of prefactor. The new version of prefactor can be found [here](https://git.astron.nl/EOSC/prefactor3-cwl).
+This repository contains the old version of prefactor. The new version of the pipeline is called LOFAR Initial Calibration (LINC) pipeline and can be found [here](https://git.astron.nl/RD/LINC).
 
 ## The (old) LOFAR pre-facet calibration pipeline.
 
